@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: official-business-form
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_PATH
+        value: ./data/database.db
+    autoDeploy: true 
