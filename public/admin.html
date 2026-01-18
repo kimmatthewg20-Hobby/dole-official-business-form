@@ -28,8 +28,8 @@
       font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
       background-color: #ffffff; 
       color: var(--text-color);
-      height: 100vh;
-      overflow: hidden;
+      margin: 0;
+      padding: 0;
     }
 
     /* Split Screen Layout for Login */
@@ -176,8 +176,8 @@
       max-width: 1000px;
       margin: 40px auto;
       padding: 20px;
-      height: 100vh;
-      overflow-y: auto;
+      min-height: calc(100vh - 80px);
+      box-sizing: border-box;
     }
 
     .card {
@@ -412,14 +412,12 @@
       function showLogin() { 
         loginCard.style.display = 'flex'; 
         settingsCard.style.display = 'none';
-        document.body.style.overflow = 'hidden';
         clearSessionTimer();
       }
       
       function showSettings() { 
         loginCard.style.display = 'none'; 
         settingsCard.style.display = 'block'; 
-        document.body.style.overflow = 'auto';
         fetchSettings();
         resetSessionTimer();
       }
