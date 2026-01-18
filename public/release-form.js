@@ -136,7 +136,7 @@ function generateReleaseFormHTML(data) {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Released Form</title>
-      <link rel="icon" href="doleit_logo.png" type="image/png">
+      <link rel="icon" href="logo.png" type="image/png">
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -244,7 +244,7 @@ function generateReleaseFormHTML(data) {
           <tr>
             <td colspan="6" class="header">
               <div style="display: flex; align-items: center; justify-content: center;">
-                <img src="doleit_logo.png" style="width: 40px; height: auto; margin-right: 10px;">
+                <img src="logo.png" style="width: 40px; height: auto; margin-right: 10px;">
                 RECORDS APPROVED OFFICIAL BUSINESS<br>
                 RELEASED FORM
               </div>
