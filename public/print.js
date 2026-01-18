@@ -1,3 +1,9 @@
+// Function to capitalize text (uppercase all letters)
+function capitalizeText(text) {
+  if (!text) return '';
+  return String(text).toUpperCase();
+}
+
 // Function to format date in Month DD, YYYY format
 function formatDate(dateString) {
   if (!dateString) return '';
@@ -134,6 +140,29 @@ function generatePrintableHTML(data) {
       }
     }
     
+    // Get employee info from employees_directory if available
+    const employeeInfo = employee.directory_info || {};
+    
+    // Check if employee is from Provincial Head unit
+    const isProvincialHead = (employeeInfo.assigned_unit === 'PROVINCIAL HEAD');
+    
+    // Set division and approval info based on employee's assigned_unit
+    let divisionDisplay = '';
+    let approvedBy = '';
+    let approvedByPosition = '';
+    
+    if (isProvincialHead) {
+      // For Provincial Head, use special division and approval settings
+      divisionDisplay = 'DOLE-Camarines Norte Provincial Office';
+      approvedBy = settings.assistant_regional_director || 'ATTY. NEPOMUCENO A. LEAÑO II, CPA';
+      approvedByPosition = 'Assistant Regional Director';
+    } else {
+      // For other employees, use their assigned unit as division
+      divisionDisplay = employeeInfo.assigned_unit || formData.division || '';
+      approvedBy = formData.approvedBy || formData.approved_by || settings.office_head || '';
+      approvedByPosition = formData.approvedByPosition || formData.approved_by_position || settings.office_head_position || 'Provincial Head';
+    }
+    
     // Create form for each employee
     employeeForms += `
       <div class="form-page ${needsPageBreak}">
@@ -150,7 +179,7 @@ function generatePrintableHTML(data) {
             </td>
             <td class="header-right">
               <div class="header-right-content">
-                <img src="https://dolesfo08.wordpress.com/wp-content/uploads/2015/10/logo-dole2-e1445834619773.png" class="logo">
+                <img src="https://batangmalaya.ph/wp-content/uploads/2022/12/1_dole.png" class="logo">
                 <div class="header-text">
                   Republic of the Philippines<br>
                   DEPARTMENT OF LABOR AND EMPLOYMENT<br>
@@ -166,11 +195,11 @@ function generatePrintableHTML(data) {
           <tr>
             <td style="width: 50%;">
               Name of Employee:<br>
-              <strong>${employee.name}</strong>
+              <strong>${capitalizeText(employee.name)}</strong>
             </td>
             <td style="width: 50%;">
               Position:<br>
-              <strong>${employee.position}</strong>
+              <strong>${capitalizeText(employee.position)}</strong>
             </td>
           </tr>
         </table>
@@ -180,11 +209,11 @@ function generatePrintableHTML(data) {
           <tr>
             <td style="width: 33%;">
               Office:<br>
-              <strong>${formData.office}</strong>
+              <strong>${formData.division || formData.office || divisionDisplay || 'Department of Labor and Employment'}</strong>
             </td>
             <td style="width: 33%;">
               Division:<br>
-              <strong>${formData.division}</strong>
+              <strong>${divisionDisplay || formData.division || ''}</strong>
             </td>
             <td style="width: 34%;">
               Date of Official Business:<br>
@@ -237,13 +266,13 @@ function generatePrintableHTML(data) {
         <table>
           <tr>
             <td style="width: 50%;" class="center-text approval-section">
-              <div style="margin-top: 60px;"><strong>${employee.name}</strong></div>
+              <div style="margin-top: 60px;"><strong>${capitalizeText(employee.name)}</strong></div>
               <div>Employee's Signature</div>
             </td>
             <td style="width: 50%;" class="center-text approval-section">
               <div style="text-align: left;"><strong>Approved by:</strong></div><br><br><br>
-              <strong>${formData.approvedBy || formData.approved_by || settings.office_head}</strong><br>
-              ${formData.approvedByPosition || formData.approved_by_position || settings.office_head_position || 'Provincial Head'}
+              <strong>${capitalizeText(approvedBy)}</strong><br>
+              ${capitalizeText(approvedByPosition)}
             </td>
           </tr>
         </table>
@@ -251,8 +280,8 @@ function generatePrintableHTML(data) {
         <!-- Certificate of Appearance -->
         <table>
           <tr>
-            <td class="center-text" colspan="2" style="background-color: #D3D3D3;">
-            <strong>TO BE FILLED BY THE AGENCY OR COMPANY WHERE BUSINESS IS TRANSACTED</strong>
+            <td class="center-text" colspan="2" style="background-color: #F4F6F7; border-bottom: 2px solid #1ABC9C;">
+              <strong>TO BE FILLED BY THE AGENCY OR COMPANY WHERE BUSINESS IS TRANSACTED</strong>
             </td>
           </tr>
           <tr>
@@ -292,16 +321,19 @@ function generatePrintableHTML(data) {
   // Create the complete HTML document
   const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
       <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Official Business Form - ${formData.travel_id}</title>
+      <link rel="icon" href="https://batangmalaya.ph/wp-content/uploads/2022/12/1_dole.png" type="image/png">
       <style>
         body {
-          font-family: Arial, sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
           margin: 0;
           padding: 0;
           font-size: 12px;
+          background-color: #ffffff;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -313,7 +345,7 @@ function generatePrintableHTML(data) {
           margin-bottom: -1px;
         }
         table, th, td {
-          border: 1px solid black;
+          border: 1px solid #2C3E50;
         }
         th, td {
           padding: 5px;
@@ -380,16 +412,18 @@ function generatePrintableHTML(data) {
           position: fixed;
           top: 25px;
           left: 25px;
-          padding: 10px 15px;
-          background-color: #004d40;
-          color: white;
+          padding: 10px 18px;
+          background-color: #2C3E50;
+          color: #ffffff;
           border: none;
-          border-radius: 5px;
+          border-radius: 0;
           cursor: pointer;
           z-index: 1000;
+          font-size: 14px;
+          font-weight: 500;
         }
         .print-button:hover {
-          background-color: #00796b;
+          background-color: #3498DB;
         }
         @media print {
           .print-button {
@@ -401,16 +435,57 @@ function generatePrintableHTML(data) {
           }
           body {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
             height: 100%;
             width: 100%;
+            margin: 0;
+            padding: 0;
           }
           .form-page {
             padding: 0.3cm;
-            height: auto;
+            width: 8.5in;
+            max-height: calc((13.5in - 0.6cm) / 2);
+            box-sizing: border-box;
+            overflow: hidden;
             page-break-after: avoid;
+            page-break-inside: avoid;
             margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+          }
+          .form-page table {
+            font-size: 11px;
+            table-layout: fixed;
+          }
+          .form-page th, .form-page td {
+            padding: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+          }
+          .approval-section {
+            height: 60px;
+            min-height: 60px;
+          }
+          .certificate-section {
+            height: 80px;
+            min-height: 80px;
+          }
+          .instructions {
+            font-size: 9px;
+            line-height: 1.2;
+          }
+          /* Ensure 2 forms per page - break after every 2nd form */
+          .form-page:nth-of-type(2n) {
+            page-break-after: always;
+          }
+          .form-page:nth-of-type(2n+1) {
+            page-break-after: avoid;
+          }
+          /* Prevent orphaned forms - if only 1 form left, keep with previous */
+          .form-page:last-child:nth-of-type(odd) {
+            page-break-before: auto;
           }
         }
       </style>

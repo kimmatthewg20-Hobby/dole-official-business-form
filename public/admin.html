@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Settings</title>
+  <link rel="icon" href="doleit_logo.png" type="image/png">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #004d40;
+      --primary-light: #39796b;
+      --secondary-color: #00897b;
+      --accent-color: #4db6ac;
+      --light-color: #ffffff;
+      --border-color: #e0e0e0;
+      --text-color: #2c3e50;
+      --danger-color: #e74c3c;
+      --success-color: #27ae60;
+      --input-bg: #f8f9fa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body { 
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+      background-color: #ffffff; 
+      color: var(--text-color);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Split Screen Layout for Login */
+    .login-wrapper {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+    }
+
+    /* Left Side: Form */
+    .login-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      background: white;
+    }
+
+    /* Right Side: Visual Branding */
+    .login-right {
+      flex: 1.2;
+      background: linear-gradient(135deg, var(--primary-color) 0%, #00251a 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+      padding: 40px;
+      position: relative;
+    }
+
+    .login-right::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: url('doleit_logo.png') center center no-repeat;
+      background-size: 60%;
+      opacity: 0.05;
+      pointer-events: none;
+    }
+
+    .logo-large {
+      width: 180px;
+      margin-bottom: 5px;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+      z-index: 1;
+    }
+
+    .brand-text {
+      z-index: 1;
+    }
+
+    .brand-text h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .brand-text p {
+      font-size: 1.1rem;
+      opacity: 0.8;
+      font-weight: 300;
+    }
+
+    /* Form Styling */
+    .login-form-container {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .form-header {
+      margin-bottom: 10px;
+    }
+
+    .form-header h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+
+    .form-header p {
+      color: #7f8c8d;
+      font-size: 15px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #95a5a6;
+      font-size: 20px;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 14px 14px 14px 45px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: var(--input-bg);
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .input-wrapper input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      background-color: white;
+      box-shadow: 0 0 0 4px rgba(0, 77, 64, 0.1);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.3s;
+      margin-top: 10px;
+    }
+
+    .login-btn:hover {
+      background-color: var(--primary-light);
+      transform: translateY(-1px);
+    }
+
+    /* Settings View (Full Width) */
+    .settings-container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 20px;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+      border: 1px solid var(--border-color);
+    }
+
+    .settings-header {
+      margin-bottom: 25px;
+      border-bottom: 2px solid var(--input-bg);
+      padding-bottom: 15px;
+    }
+
+    .settings-header h2 {
+      color: var(--primary-color);
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; font-size: 14px; }
+    
+    input[type="password"], input[type="text"], textarea { 
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid var(--border-color); 
+      border-radius: 6px; 
+      font-size: 15px; 
+      background: var(--input-bg);
+    }
+
+    textarea { min-height: 120px; resize: vertical; }
+
+    .btn { 
+      background-color: var(--primary-color); 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-size: 15px; 
+      font-weight: 600;
+    }
+
+    .error { 
+      color: var(--danger-color); 
+      margin-top: 10px; 
+      font-size: 14px; 
+      text-align: center;
+      padding: 10px;
+      background: #fdf2f2;
+      border-radius: 6px;
+    }
+
+    /* Toasts */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; }
+    .toast { 
+      background: white; 
+      color: var(--text-color); 
+      padding: 16px 20px; 
+      border-radius: 8px; 
+      margin-bottom: 12px; 
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15); 
+      display: flex; 
+      align-items: center; 
+      border-left: 5px solid var(--primary-color);
+      animation: slideIn 0.3s ease-out forwards;
+    }
+    .toast.success { border-left-color: var(--success-color); }
+    .toast.danger { border-left-color: var(--danger-color); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    }
+    
+    .hidden { display: none !important; }
+
+    /* Custom Mobile Adjustment */
+    @media (max-width: 768px) {
+      .login-right { display: none; }
+      .login-left { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login View -->
+  <div id="loginCard" class="login-wrapper">
+    <div class="login-left">
+      <div class="login-form-container">
+        <div class="form-header">
+          <h2>Admin Login</h2>
+          <p>Access the Official Business Processing System Settings</p>
+        </div>
+        
+        <form id="loginForm">
+          <div class="input-wrapper">
+            
+            <input type="text" id="adminUsername" placeholder="Username" required autocomplete="username">
+          </div>
+          <div class="input-wrapper">
+            
+            <input type="password" id="adminPass" placeholder="Password" required autocomplete="current-password">
+          </div>
+          <div id="loginError" class="error" style="display: none;">Incorrect username or password</div>
+          <button type="submit" class="login-btn">Sign In</button>
+        </form>
+
+        <div style="margin-top: 5px; color: #95a5a6; font-size: 12px;">
+          © 2024 DOLECNPO Kimmsg:3 | IT Unit
+        </div>
+      </div>
+    </div>
+    <div class="login-right">
+      <img src="doleit_logo.png" alt="DOLE Logo" class="logo-large">
+      <div class="brand-text">
+        <h1>Department of Labor and Employment</h1
+        <p style="margin-top: 5px; opacity: 0.6;">Camarines Norte Provincial Office | RO. No. 5</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings View -->
+  <div id="settingsCard" class="settings-container" style="display: none;">
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="card">
+      <div class="settings-header">
+        <h2><i class="material-icons">settings</i> Default Settings</h2>
+        <p style="color: #7f8c8d; font-size: 14px;">Configure system-wide default values</p>
+      </div>
+      <form id="settingsForm" onsubmit="return false;">
+        <div class="form-group">
+          <label for="divisionOptions">Division Options (comma-separated)</label>
+          <textarea id="divisionOptions" placeholder="e.g. EMPLOYMENT, LR/LS, ASSU"></textarea>
+          <small style="color: #999;">Enter names separated by commas to update dropdown menus.</small>
+        </div>
+      </form>
+    </div>
+    
+    <div class="card">
+      <div class="settings-header">
+        <h2><i class="material-icons">security</i> Security</h2>
+        <p style="color: #7f8c8d; font-size: 14px;">Update your administrative credentials</p>
+      </div>
+      <form id="changePasswordForm" onsubmit="return false;">
+        <div class="form-group">
+          <label for="oldPassword">Current Password</label>
+          <input type="password" id="oldPassword">
+        </div>
+        <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="form-group">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword">
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirm New Password</label>
+            <input type="password" id="confirmPassword">
+          </div>
+        </div>
+        <div id="passwordError" class="error" style="display: none;"></div>
+        
+        <div style="text-align: right; margin-top: 30px;">
+          <button type="button" id="saveAllBtn" class="btn">Update All Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const loginCard = document.getElementById('loginCard');
+      const settingsCard = document.getElementById('settingsCard');
+      const loginForm = document.getElementById('loginForm');
+      const loginError = document.getElementById('loginError');
+      const divisionOptionsField = document.getElementById('divisionOptions');
+      const oldPasswordField = document.getElementById('oldPassword');
+      const newPasswordField = document.getElementById('newPassword');
+      const confirmPasswordField = document.getElementById('confirmPassword');
+      const passwordError = document.getElementById('passwordError');
+      const saveAllBtn = document.getElementById('saveAllBtn');
+      const toastContainer = document.getElementById('toastContainer');
+
+      const SESSION_TIMEOUT = 5 * 60 * 1000;
+      let sessionTimer = null;
+
+      function showLogin() { 
+        loginCard.style.display = 'flex'; 
+        settingsCard.style.display = 'none';
+        document.body.style.overflow = 'hidden';
+        clearSessionTimer();
+      }
+      
+      function showSettings() { 
+        loginCard.style.display = 'none'; 
+        settingsCard.style.display = 'block'; 
+        document.body.style.overflow = 'auto';
+        fetchSettings();
+        resetSessionTimer();
+      }
+
+      function resetSessionTimer() {
+        clearSessionTimer();
+        sessionTimer = setTimeout(() => {
+          showLogin();
+          showToast('Session expired. Please login again.', 'info');
+        }, SESSION_TIMEOUT);
+      }
+
+      function clearSessionTimer() {
+        if (sessionTimer) {
+          clearTimeout(sessionTimer);
+          sessionTimer = null;
+        }
+      }
+
+      ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+        document.addEventListener(event, () => {
+          if (settingsCard.style.display !== 'none') {
+            resetSessionTimer();
+          }
+        });
+      });
+
+      // Initial View
+      showLogin();
+
+      loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        loginError.style.display = 'none';
+        
+        const username = document.getElementById('adminUsername').value.trim();
+        const password = document.getElementById('adminPass').value;
+        
+        if (username !== 'cnpoadmin') {
+          loginError.style.display = 'block';
+          return;
+        }
+        
+        fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: password }),
+          credentials: 'include'
+        })
+        .then(r => r.json())
+        .then(d => { 
+          if (d.success) { 
+            showSettings(); 
+          } else { 
+            loginError.style.display = 'block'; 
+          } 
+        })
+        .catch(() => { loginError.style.display = 'block'; });
+      });
+
+      saveAllBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        passwordError.style.display = 'none';
+        
+        const division_options = divisionOptionsField.value.trim();
+        const oldPassword = oldPasswordField.value;
+        const newPassword = newPasswordField.value;
+        const confirmPassword = confirmPasswordField.value;
+        
+        let hasPasswordChange = oldPassword || newPassword || confirmPassword;
+        
+        if (hasPasswordChange) {
+          if (!oldPassword || !newPassword || !confirmPassword) {
+            passwordError.textContent = 'All password fields are required';
+            passwordError.style.display = 'block';
+            return;
+          }
+          if (newPassword !== confirmPassword) {
+            passwordError.textContent = 'New passwords do not match';
+            passwordError.style.display = 'block';
+            return;
+          }
+          if (newPassword.length < 4) {
+            passwordError.textContent = 'Minimum 4 characters required';
+            passwordError.style.display = 'block';
+            return;
+          }
+        }
+        
+        saveSettings(division_options, hasPasswordChange ? { oldPassword, newPassword } : null);
+      });
+
+      function fetchSettings() {
+        fetch('/api/settings')
+          .then(response => response.json())
+          .then(data => {
+            divisionOptionsField.value = data.division_options || '';
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            showToast('Failed to load settings.', 'danger');
+          });
+      }
+
+      function saveSettings(division_options, passwordData) {
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ division_options })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (passwordData) {
+            changePassword(passwordData.oldPassword, passwordData.newPassword, true);
+          } else {
+            showToast('Settings updated successfully', 'success');
+          }
+        })
+        .catch(() => showToast('Failed to update settings', 'danger'));
+      }
+
+      function changePassword(oldPassword, newPassword, settingsSaved = false) {
+        fetch('/api/admin/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ oldPassword, newPassword }),
+          credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showToast(settingsSaved ? 'Settings and password updated' : 'Password changed', 'success');
+            oldPasswordField.value = '';
+            newPasswordField.value = '';
+            confirmPasswordField.value = '';
+          } else {
+            passwordError.textContent = data.error || 'Failed to change password';
+            passwordError.style.display = 'block';
+          }
+        })
+        .catch(error => {
+          passwordError.textContent = 'Server communication error';
+          passwordError.style.display = 'block';
+        });
+      }
+
+      function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<div style="flex:1">${message}</div><span style="cursor:pointer;margin-left:10px" onclick="this.parentElement.remove()">×</span>`;
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+      }
+    })();
+  </script>
+</body>
+</html>

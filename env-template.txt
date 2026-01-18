@@ -1,0 +1,7 @@
+# Use Session Pooler for IPv4 compatibility (required for Vercel, local development, etc.)
+DATABASE_URL=postgresql://postgres.vjysceloqtlaulznxzec:%2A1DOLEadmin%2A@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+ADMIN_PASSWORD=*1DOLEadmin*
+PORT=3000
+
+# Alternative: Direct connection (IPv6 only - won't work on Vercel or local IPv4 networks)
+# DATABASE_URL=postgresql://postgres:%2A1DOLEadmin%2A@db.vjysceloqtlaulznxzec.supabase.co:5432/postgres
