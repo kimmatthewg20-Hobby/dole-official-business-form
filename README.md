@@ -1,6 +1,8 @@
 # Official Business Form
+Ampagal na maray HAHAHAH
 
 An online application for managing Official Business Forms with database storage and printable HTML generation.
+Version alpha pero pwede na.
 
 ## Features
 
@@ -87,4 +89,4 @@ The server will run on port 3000 by default (http://localhost:3000).
 
 ## License
 
-© 2024 DOLECNPO | IT Unit
+© 2024 DOLECNPO Kimmsg :3 | IT Unit
