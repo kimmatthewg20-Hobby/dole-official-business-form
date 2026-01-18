@@ -7,48 +7,42 @@ An online application for managing Official Business Forms with database storage
 - Submit and manage official business forms
 - Store employee and travel information
 - Generate printable forms
-- Database storage with SQLite
+- Admin panel for settings and data management
+- Employee directory management
+- Database storage with PostgreSQL (Supabase)
 - User-friendly web interface
 
-## Deployment to Render.com
+## Tech Stack
 
-### Prerequisites
+- **Backend**: Node.js with Express.js
+- **Database**: PostgreSQL (hosted on Supabase)
+- **Frontend**: Vanilla HTML, CSS, and JavaScript
+- **Hosting**: Vercel (serverless functions)
+- **Dependencies**: 
+  - `express` - Web framework
+  - `pg` - PostgreSQL client
+  - `body-parser` - Request parsing
+  - `cookie-parser` - Cookie handling
+  - `dotenv` - Environment variable management
 
-- A GitHub account
-- Your code pushed to a GitHub repository
+## Deployment
 
-### Deployment Steps
+This application is deployed on **Vercel** with **Supabase** as the database.
 
-1. **Push your code to GitHub**
-   - Create a new repository on GitHub
-   - Push your code to the repository
+### Environment Variables
 
-2. **Sign up for Render.com**
-   - Go to [Render.com](https://render.com/) and sign up or log in
-   - Connect your GitHub account
+The following environment variables are required:
 
-3. **Create a new Web Service**
-   - Click "New +" and select "Web Service"
-   - Connect your GitHub repository
-   - Configure the following settings:
+- `DATABASE_URL` - Supabase PostgreSQL connection string (Session Pooler)
+- `ADMIN_PASSWORD` - Admin panel password
+- `PORT` - Server port (default: 3000)
 
-4. **Configuration Details**
-   - **Name**: Choose a unique name for your service
-   - **Region**: Select the closest region to your users
-   - **Branch**: main (or your preferred branch)
-   - **Runtime**: Node
-   - **Build Command**: npm install
-   - **Start Command**: npm start
-   - **Health Check Path**: /healthz
+### Database Setup
 
-5. **Select Instance Type**
-   - Choose the Free instance (512 MB RAM, 0.1 CPU)
-
-6. **Create Web Service**
-   - Click "Create Web Service"
-
-7. **Access Your Deployed Application**
-   - Once deployment is complete, your application will be available at the URL provided by Render
+1. Create a Supabase project
+2. Run the SQL migration script (`supabase_migration.sql`) in the Supabase SQL Editor
+3. Get your connection string from Supabase project settings
+4. Use the **Session Pooler** connection string (port 6543) for better compatibility
 
 ## Local Development
 
@@ -56,20 +50,41 @@ An online application for managing Official Business Forms with database storage
 # Install dependencies
 npm install
 
+# Create a .env file with your environment variables
+# DATABASE_URL=your_supabase_connection_string
+# ADMIN_PASSWORD=your_admin_password
+# PORT=3000
+
 # Start the server
 npm start
 ```
 
 The server will run on port 3000 by default (http://localhost:3000).
 
-## Important Notes for Render Deployment
+## Project Structure
 
-- The free tier has some limitations, including:
-  - The service will spin down after 15 minutes of inactivity
-  - Limited to 750 hours of usage per month
-  - Database stored on disk will be reset when the service is rebuilt
-  - Consider using a managed database service for production use
+```
+├── server.js              # Main Express server
+├── db.js                  # Database connection and helpers
+├── package.json           # Dependencies
+├── vercel.json           # Vercel deployment configuration
+├── supabase_migration.sql # Database schema
+├── public/               # Frontend files
+│   ├── index.html        # Main form page
+│   ├── admin.html        # Admin panel
+│   ├── employees.html    # Employee management
+│   ├── logo.png         # Application logo
+│   ├── print.js         # Print template generator
+│   └── release-form.js  # Release form generator
+└── README.md            # This file
+```
 
-- If you need to store persistent data, consider:
-  - Using Render's PostgreSQL service instead of SQLite
-  - Implementing data export/import functionality 
+## Admin Access
+
+- **URL**: `/admin`
+- **Username**: `cnpoadmin`
+- **Password**: Set via `ADMIN_PASSWORD` environment variable
+
+## License
+
+© 2024 DOLECNPO | IT Unit
