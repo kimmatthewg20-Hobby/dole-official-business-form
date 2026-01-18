@@ -60,6 +60,12 @@ function generatePrintableHTML(data) {
     // Determine if we need a page break (after every 2 forms)
     const needsPageBreak = index > 0 && index % 2 === 0 ? 'page-break' : '';
     
+    // Determine if this is an odd-numbered form (Form 1, 3, 5, etc.) - 0-indexed, so 0, 2, 4 are odd positions
+    const isOddForm = index % 2 === 0;
+    
+    // Determine if this is an even-numbered form (Form 2, 4, 6, etc.) - 0-indexed, so 1, 3, 5 are even positions
+    const isEvenForm = index % 2 === 1;
+    
     // Get date display - handle multiple dates or single date with improved checks
     let dateDisplay = '';
     
@@ -153,7 +159,7 @@ function generatePrintableHTML(data) {
     
     if (isProvincialHead) {
       // For Provincial Head, use special division and approval settings
-      divisionDisplay = 'DOLE-Camarines Norte Provincial Office';
+      divisionDisplay = 'Department of Labor and Employment';
       approvedBy = settings.assistant_regional_director || 'ATTY. NEPOMUCENO A. LEAÑO II, CPA';
       approvedByPosition = 'Assistant Regional Director';
     } else {
@@ -166,6 +172,8 @@ function generatePrintableHTML(data) {
     // Create form for each employee
     employeeForms += `
       <div class="form-page ${needsPageBreak}">
+        ${isOddForm ? '<br>' : ''}
+        ${isEvenForm ? '<div class="cutout-line"></div>' : ''}
         <!-- Header -->
         <table>
           <tr>
@@ -326,9 +334,7 @@ function generatePrintableHTML(data) {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Official Business Form - ${formData.travel_id}</title>
-      <link rel="icon" type="image/png" href="logo.png">
-      <link rel="shortcut icon" type="image/png" href="logo.png">
-      <link rel="apple-touch-icon" href="logo.png">
+      <link rel="icon" href="https://batangmalaya.ph/wp-content/uploads/2022/12/1_dole.png" type="image/png">
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -400,12 +406,20 @@ function generatePrintableHTML(data) {
         .instructions {
           font-size: 10px;
         }
+        .cutout-line {
+          width: 100%;
+          height: 0;
+          border-top: 1px dashed #000;
+          margin: 0;
+          padding: 3px 0;
+        }
         .form-page {
           width: 8.5in;
-          padding: 0.4cm;
+          padding: 5px 0.4cm;
           box-sizing: border-box;
           overflow: hidden;
-          margin: 0 auto;
+          margin-left: auto;
+          margin-right: auto;
         }
         .page-break {
           page-break-before: always;
@@ -414,11 +428,11 @@ function generatePrintableHTML(data) {
           position: fixed;
           top: 25px;
           left: 25px;
-          padding: 10px 18px;
+          padding: 10px 20px;
           background-color: #2C3E50;
           color: #ffffff;
           border: none;
-          border-radius: 0;
+          border-radius: 4px;
           cursor: pointer;
           z-index: 1000;
           font-size: 14px;
@@ -446,25 +460,23 @@ function generatePrintableHTML(data) {
             padding: 0;
           }
           .form-page {
-            padding: 0.3cm;
+            padding: 5px 0.3cm;
             width: 8.5in;
             max-height: calc((13.5in - 0.6cm) / 2);
             box-sizing: border-box;
             overflow: hidden;
             page-break-after: avoid;
             page-break-inside: avoid;
-            margin: 0 auto;
+            margin-left: auto;
+            margin-right: auto;
             display: flex;
             flex-direction: column;
           }
           .form-page table {
             font-size: 11px;
-            table-layout: fixed;
           }
           .form-page th, .form-page td {
             padding: 4px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
           }
           .approval-section {
             height: 60px;
@@ -488,6 +500,17 @@ function generatePrintableHTML(data) {
           /* Prevent orphaned forms - if only 1 form left, keep with previous */
           .form-page:last-child:nth-of-type(odd) {
             page-break-before: auto;
+            page-break-after: avoid;
+          }
+          /* Prevent blank pages by ensuring proper page break handling */
+          .form-page.page-break {
+            page-break-before: always;
+          }
+          /* Cutout line styling for printing */
+          .cutout-line {
+            border-top: 1px dashed #000;
+            margin: 0.1in 0;
+            page-break-inside: avoid;
           }
         }
       </style>
