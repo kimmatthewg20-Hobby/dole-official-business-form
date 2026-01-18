@@ -1237,7 +1237,12 @@ app.post('/api/employees/initialize', async (req, res) => {
   }
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-}); 
+// Start the server (only in local development)
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
+
+// Export app for Vercel serverless functions
+module.exports = app; 
