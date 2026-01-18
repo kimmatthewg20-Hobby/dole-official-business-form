@@ -136,7 +136,9 @@ function generateReleaseFormHTML(data) {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Released Form</title>
-      <link rel="icon" href="logo.png" type="image/png">
+      <link rel="icon" type="image/png" href="logo.png">
+      <link rel="shortcut icon" type="image/png" href="logo.png">
+      <link rel="apple-touch-icon" href="logo.png">
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
