@@ -365,7 +365,7 @@
     .modal-footer {
       display: flex;
       justify-content: flex-end;
-      gap: 0px;
+      gap: 10px;
       margin-top: 5px;
       padding-top: 5px;
       border-top: 1px solid var(--border);
@@ -1020,7 +1020,7 @@
               <td style="padding: 12px 14px; border: 1px solid var(--border); text-align: center; background-color: ${index % 2 === 0 ? '#FAFBFC' : 'var(--white)'};">${employee.full_name || employee.name || ''}</td>
               <td style="padding: 12px 14px; border: 1px solid var(--border); text-align: center; background-color: ${index % 2 === 0 ? '#FAFBFC' : 'var(--white)'};">${employee.position || ''}</td>
               <td style="padding: 12px 14px; border: 1px solid var(--border); text-align: center; background-color: ${index % 2 === 0 ? '#FAFBFC' : 'var(--white)'};">
-                <button type="button" class="btn-icon edit-btn" data-index="${index}" title="Edit" style="background: none; border: none; cursor: pointer; padding: 5px; margin: 0 5px;">
+                <button type="button" class="btn-icon edit-btn" data-index="${index}" title="Edit" style="background: none; border: none; cursor: pointer; padding: 5px; margin: 2 5px;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#3498DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#3498DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1186,7 +1186,18 @@
       document.getElementById('employeeAddBtn').addEventListener('click', () => {
         const n = (document.getElementById('employeeNameInput').value || '').trim().toUpperCase();
         const p = (document.getElementById('employeePositionInput').value || '').trim().toUpperCase();
-        if (!n) { showToast('Enter employee name', 'danger'); return; }
+        
+        if (!n) {
+          showToast('Please enter employee name', 'danger');
+          document.getElementById('employeeNameInput').focus();
+          return;
+        }
+        
+        if (!p) {
+          showToast('Please enter employee position', 'danger');
+          document.getElementById('employeePositionInput').focus();
+          return;
+        }
         
         const editIndex = document.getElementById('employeeForm').dataset.editIndex;
         if (editIndex !== undefined) {
@@ -1195,6 +1206,18 @@
           employees[index] = { name: n, full_name: n, position: p };
           showToast('Employee updated', 'success');
         } else {
+          // Check for duplicate employee name (case-insensitive)
+          const isDuplicate = employees.some(emp => {
+            const existingName = (emp.name || emp.full_name || '').trim().toUpperCase();
+            return existingName === n;
+          });
+          
+          if (isDuplicate) {
+            showToast('This employee name already exists. Please use a different name.', 'danger');
+            document.getElementById('employeeNameInput').focus();
+            return;
+          }
+          
           // Add new employee
           employees.push({ name: n, full_name: n, position: p });
           showToast('Employee added', 'success');
@@ -1248,6 +1271,70 @@
       // Submit form
       obForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        
+        // Validate all required fields
+        const selectedDates = getSelectedDates();
+        if (!selectedDates || selectedDates.length === 0) {
+          showToast('Please select at least one date for Official Business', 'danger');
+          dateOfOBField.focus();
+          return;
+        }
+        
+        const locationFrom = locationFromField.value.trim();
+        if (!locationFrom) {
+          showToast('Please enter the "From" location', 'danger');
+          locationFromField.focus();
+          return;
+        }
+        
+        const locationTo = locationToField.value.trim();
+        if (!locationTo) {
+          showToast('Please enter the "To" location', 'danger');
+          locationToField.focus();
+          return;
+        }
+        
+        const departureTime = departureTimeField.value;
+        if (!departureTime) {
+          showToast('Please enter the departure time', 'danger');
+          departureTimeField.focus();
+          return;
+        }
+        
+        const returnTime = returnTimeField.value;
+        if (!returnTime) {
+          showToast('Please enter the return time', 'danger');
+          returnTimeField.focus();
+          return;
+        }
+        
+        const purpose = purposeField.value.trim();
+        if (!purpose) {
+          showToast('Please enter the purpose', 'danger');
+          purposeField.focus();
+          return;
+        }
+        
+        const division = officeSelect ? officeSelect.value : '';
+        if (!division) {
+          showToast('Please select a division', 'danger');
+          if (officeSelect) officeSelect.focus();
+          return;
+        }
+        
+        const approvedBy = approvedByField ? approvedByField.value.trim() : '';
+        if (!approvedBy) {
+          showToast('Please enter the name of the person approving', 'danger');
+          if (approvedByField) approvedByField.focus();
+          return;
+        }
+        
+        const approvedByPosition = approvedByPositionField ? approvedByPositionField.value.trim() : '';
+        if (!approvedByPosition) {
+          showToast('Please enter the position of the approving person', 'danger');
+          if (approvedByPositionField) approvedByPositionField.focus();
+          return;
+        }
         
         if (employees.length === 0) {
           showToast('Please add at least one employee', 'danger');

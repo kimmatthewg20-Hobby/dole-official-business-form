@@ -73,8 +73,9 @@
     
     .table-wrapper {
       overflow-x: auto;
-      max-height: 600px;
+      max-height: 1050px;
       overflow-y: auto;
+      height: 900px;
     }
     
     table {
@@ -192,6 +193,32 @@
       margin-bottom: 10px;
     }
     
+    .search-filter-container {
+      padding: 15px 20px;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .search-box {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 0;
+    }
+    
+    .search-box input {
+      width: 360px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.15);
+    }
+    
     @media (max-width: 768px) {
       .container {
         padding: 10px;
@@ -209,7 +236,8 @@
       }
       
       .table-wrapper {
-        max-height: 500px;
+        max-height: 450px;
+        height: 450px;
       }
     }
   </style>
@@ -225,6 +253,11 @@
     </div>
     
     <div class="tracker-container">
+      <div class="search-filter-container">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search by Date, Purpose, Employee Names, or Destination..." autocomplete="off">
+        </div>
+      </div>
       <div class="table-wrapper" id="tableWrapper">
         <div class="loading" id="loading">Loading tracker data...</div>
         <table id="trackerTable" style="display: none;">
@@ -257,10 +290,96 @@
   <script>
     let currentPage = 1;
     let totalPages = 1;
+    let allEntries = [];
+    let filteredEntries = [];
+    let searchTerm = '';
+
+    // Search input handler
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      searchTerm = e.target.value.trim().toLowerCase();
+      applyFilters();
+    });
+
+    function applyFilters() {
+      filteredEntries = allEntries.filter(entry => {
+        // Search filter - case-insensitive partial matching
+        let matchesSearch = true;
+        if (searchTerm) {
+          const searchFields = [
+            entry.dateOfOB || '',
+            entry.timeOfOB || '',
+            entry.employees || '',
+            entry.purpose || '',
+            entry.destination || ''
+          ].join(' ').toLowerCase();
+          matchesSearch = searchFields.includes(searchTerm);
+        }
+
+        return matchesSearch;
+      });
+
+      currentPage = 1;
+      displayFilteredResults();
+    }
+
+    function displayFilteredResults() {
+      const body = document.getElementById('trackerBody');
+      const table = document.getElementById('trackerTable');
+      const loading = document.getElementById('loading');
+      const pagination = document.getElementById('pagination');
+
+      if (filteredEntries.length === 0) {
+        loading.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><p>No matching results found</p></div>';
+        loading.style.display = 'block';
+        table.style.display = 'none';
+        pagination.style.display = 'none';
+        return;
+      }
+
+      // Calculate pagination
+      const itemsPerPage = 20;
+      totalPages = Math.ceil(filteredEntries.length / itemsPerPage);
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pageEntries = filteredEntries.slice(startIndex, endIndex);
+
+      // Populate table
+      body.innerHTML = pageEntries.map(entry => `
+        <tr>
+          <td>${entry.dateOfOB || '-'}</td>
+          <td>${entry.timeOfOB || '-'}</td>
+          <td>${entry.employees || '-'}</td>
+          <td>${entry.purpose || '-'}</td>
+          <td>${entry.destination || '-'}</td>
+          <td>${entry.dateFiled || '-'}</td>
+          <td>
+            <button class="btn-view" onclick="viewForm(${entry.id})">View</button>
+          </td>
+        </tr>
+      `).join('');
+
+      // Update pagination
+      document.getElementById('paginationInfo').textContent = 
+        `Page ${currentPage} of ${totalPages} (${filteredEntries.length} matching entries)`;
+      document.getElementById('btnPrev').disabled = currentPage <= 1;
+      document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+      loading.style.display = 'none';
+      table.style.display = 'table';
+      pagination.style.display = 'flex';
+    }
 
     async function loadPage(page) {
       if (page < 1 || page > totalPages) return;
+      currentPage = page;
       
+      // If we have search applied, use filtered results
+      if (searchTerm) {
+        displayFilteredResults();
+        return;
+      }
+
+      // Otherwise, load from server
       const loading = document.getElementById('loading');
       const table = document.getElementById('trackerTable');
       const body = document.getElementById('trackerBody');
@@ -286,6 +405,16 @@
           loading.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><p>No OB forms found</p></div>';
           return;
         }
+
+        // Store all entries for filtering
+        if (page === 1) {
+          allEntries = data.entries;
+        } else {
+          // For subsequent pages, we might need to load all data
+          // For now, we'll work with what we have
+          allEntries = data.entries;
+        }
+        filteredEntries = allEntries;
         
         // Populate table
         body.innerHTML = data.entries.map(entry => `
@@ -317,13 +446,37 @@
         loading.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
       }
     }
+
+    // Load all data for filtering (using efficient single-query endpoint)
+    async function loadAllData() {
+      const loading = document.getElementById('loading');
+      loading.style.display = 'block';
+      
+      try {
+        // Use the /api/tracker/all endpoint for efficient single-query loading
+        const response = await fetch('/api/tracker/all');
+        const data = await response.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        allEntries = data.entries || [];
+        filteredEntries = allEntries;
+        applyFilters();
+      } catch (error) {
+        console.error('Error loading all tracker data:', error);
+        // Fallback to paginated loading
+        loadPage(1);
+      }
+    }
     
     function viewForm(id) {
       window.open(`/print/${id}`, '_blank');
     }
     
-    // Load first page on page load
-    loadPage(1);
+    // Load all data on page load for filtering
+    loadAllData();
   </script>
 </body>
 </html>

@@ -1248,6 +1248,119 @@ app.post('/api/employees/initialize', async (req, res) => {
 });
 
 // Tracker API - Get paginated OB forms for tracker view
+// Helper function to format tracker entry
+async function formatTrackerEntry(entry, employees) {
+  // Format date: mmm dd, yyyy (e.g., "Jan 15, 2024")
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      // Try parsing as ISO date first
+      let date = new Date(dateStr);
+      
+      // If invalid, try parsing common formats
+      if (isNaN(date.getTime())) {
+        // Try MM/DD/YYYY or DD/MM/YYYY
+        const parts = dateStr.split(/[\/\-]/);
+        if (parts.length === 3) {
+          // Assume MM/DD/YYYY format
+          date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+        } else {
+          return dateStr; // Return original if can't parse
+        }
+      }
+      
+      if (isNaN(date.getTime())) {
+        return dateStr;
+      }
+      
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const day = date.getDate();
+      return `${months[date.getMonth()]} ${day}, ${date.getFullYear()}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
+  
+  // Format time: HH:MM AM/PM
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '';
+    try {
+      // Remove any existing AM/PM and whitespace
+      let cleanTime = timeStr.trim().toUpperCase();
+      const hasPeriod = cleanTime.includes('AM') || cleanTime.includes('PM');
+      
+      // Extract time part
+      const timeMatch = cleanTime.match(/(\d{1,2}):(\d{2})/);
+      if (!timeMatch) return timeStr;
+      
+      let hour = parseInt(timeMatch[1]);
+      const minute = timeMatch[2];
+      
+      // If already has AM/PM, use it; otherwise determine from hour
+      let period = 'AM';
+      if (hasPeriod) {
+        period = cleanTime.includes('PM') ? 'PM' : 'AM';
+      } else {
+        period = hour >= 12 ? 'PM' : 'AM';
+      }
+      
+      // Convert to 12-hour format
+      if (hour === 0) {
+        hour = 12;
+      } else if (hour > 12) {
+        hour = hour - 12;
+      }
+      
+      return `${hour.toString().padStart(2, '0')}:${minute} ${period}`;
+    } catch (e) {
+      return timeStr;
+    }
+  };
+  
+  // Format time range: "HH:MM AM/PM to HH:MM AM/PM"
+  const formatTimeRange = (departureTime, returnTime) => {
+    const departure = formatTime(departureTime);
+    const arrival = formatTime(returnTime);
+    if (!departure && !arrival) return '-';
+    if (!departure) return arrival;
+    if (!arrival) return departure;
+    return `${departure} to ${arrival}`;
+  };
+  
+  // Get all dates from dates_of_ob or use date_of_ob
+  let obDates = [];
+  if (entry.dates_of_ob) {
+    try {
+      const dates = JSON.parse(entry.dates_of_ob);
+      if (Array.isArray(dates) && dates.length > 0) {
+        obDates = dates;
+      }
+    } catch (e) {
+      // Use date_of_ob if parsing fails
+    }
+  }
+  
+  // If no dates from dates_of_ob, use date_of_ob
+  if (obDates.length === 0 && entry.date_of_ob) {
+    obDates = [entry.date_of_ob];
+  }
+  
+  // Format all dates and join with commas
+  const dateOfOBDisplay = obDates.length > 0 
+    ? obDates.map(date => formatDate(date)).join(', ')
+    : '-';
+  
+  return {
+    id: entry.id,
+    dateOfOB: dateOfOBDisplay,
+    timeOfOB: formatTimeRange(entry.departure_time, entry.return_time),
+    employees: employees.map(e => e.name).join(', '),
+    purpose: entry.purpose || '',
+    destination: `${entry.location_from || ''} - ${entry.location_to || ''}`,
+    dateFiled: formatDate(entry.date_created || entry.timestamp)
+  };
+}
+
 app.get('/api/tracker', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -1282,123 +1395,31 @@ app.get('/api/tracker', async (req, res) => {
       [tenDaysAgoISO, limit, offset]
     );
     
-    // Get employees for each form
+    // Get all employees for these forms in one query
+    const formIds = formEntries.map(e => e.id);
+    let allEmployees = [];
+    if (formIds.length > 0) {
+      const placeholders = formIds.map((_, i) => `$${i + 1}`).join(', ');
+      allEmployees = await db.all(
+        `SELECT ob_id, name FROM employees WHERE ob_id IN (${placeholders}) ORDER BY ob_id, name`,
+        formIds
+      );
+    }
+    
+    // Group employees by ob_id
+    const employeesByFormId = {};
+    allEmployees.forEach(emp => {
+      if (!employeesByFormId[emp.ob_id]) {
+        employeesByFormId[emp.ob_id] = [];
+      }
+      employeesByFormId[emp.ob_id].push(emp);
+    });
+    
+    // Format entries with employees
     const entriesWithEmployees = await Promise.all(
       formEntries.map(async (entry) => {
-        const employees = await db.all(
-          'SELECT name FROM employees WHERE ob_id = $1 ORDER BY name',
-          [entry.id]
-        );
-        
-        // Format date: mmm dd, yyyy (e.g., "Jan 15, 2024")
-        const formatDate = (dateStr) => {
-          if (!dateStr) return '';
-          try {
-            // Try parsing as ISO date first
-            let date = new Date(dateStr);
-            
-            // If invalid, try parsing common formats
-            if (isNaN(date.getTime())) {
-              // Try MM/DD/YYYY or DD/MM/YYYY
-              const parts = dateStr.split(/[\/\-]/);
-              if (parts.length === 3) {
-                // Assume MM/DD/YYYY format
-                date = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
-              } else {
-                return dateStr; // Return original if can't parse
-              }
-            }
-            
-            if (isNaN(date.getTime())) {
-              return dateStr;
-            }
-            
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const day = date.getDate();
-            return `${months[date.getMonth()]} ${day}, ${date.getFullYear()}`;
-          } catch (e) {
-            return dateStr;
-          }
-        };
-        
-        // Format time: HH:MM AM/PM
-        const formatTime = (timeStr) => {
-          if (!timeStr) return '';
-          try {
-            // Remove any existing AM/PM and whitespace
-            let cleanTime = timeStr.trim().toUpperCase();
-            const hasPeriod = cleanTime.includes('AM') || cleanTime.includes('PM');
-            
-            // Extract time part
-            const timeMatch = cleanTime.match(/(\d{1,2}):(\d{2})/);
-            if (!timeMatch) return timeStr;
-            
-            let hour = parseInt(timeMatch[1]);
-            const minute = timeMatch[2];
-            
-            // If already has AM/PM, use it; otherwise determine from hour
-            let period = 'AM';
-            if (hasPeriod) {
-              period = cleanTime.includes('PM') ? 'PM' : 'AM';
-            } else {
-              period = hour >= 12 ? 'PM' : 'AM';
-            }
-            
-            // Convert to 12-hour format
-            if (hour === 0) {
-              hour = 12;
-            } else if (hour > 12) {
-              hour = hour - 12;
-            }
-            
-            return `${hour.toString().padStart(2, '0')}:${minute} ${period}`;
-          } catch (e) {
-            return timeStr;
-          }
-        };
-        
-        // Format time range: "HH:MM AM/PM to HH:MM AM/PM"
-        const formatTimeRange = (departureTime, returnTime) => {
-          const departure = formatTime(departureTime);
-          const arrival = formatTime(returnTime);
-          if (!departure && !arrival) return '-';
-          if (!departure) return arrival;
-          if (!arrival) return departure;
-          return `${departure} to ${arrival}`;
-        };
-        
-        // Get all dates from dates_of_ob or use date_of_ob
-        let obDates = [];
-        if (entry.dates_of_ob) {
-          try {
-            const dates = JSON.parse(entry.dates_of_ob);
-            if (Array.isArray(dates) && dates.length > 0) {
-              obDates = dates;
-            }
-          } catch (e) {
-            // Use date_of_ob if parsing fails
-          }
-        }
-        
-        // If no dates from dates_of_ob, use date_of_ob
-        if (obDates.length === 0 && entry.date_of_ob) {
-          obDates = [entry.date_of_ob];
-        }
-        
-        // Format all dates and join with commas
-        const dateOfOBDisplay = obDates.length > 0 
-          ? obDates.map(date => formatDate(date)).join(', ')
-          : '-';
-        
-        return {
-          id: entry.id,
-          dateOfOB: dateOfOBDisplay,
-          timeOfOB: formatTimeRange(entry.departure_time, entry.return_time),
-          employees: employees.map(e => e.name).join(', '),
-          purpose: entry.purpose || '',
-          destination: `${entry.location_from || ''} - ${entry.location_to || ''}`,
-          dateFiled: formatDate(entry.date_created || entry.timestamp)
-        };
+        const employees = employeesByFormId[entry.id] || [];
+        return await formatTrackerEntry(entry, employees);
       })
     );
     
@@ -1417,6 +1438,193 @@ app.get('/api/tracker', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Get all tracker data for search (single query, more efficient)
+app.get('/api/tracker/all', async (req, res) => {
+  try {
+    // Calculate date 10 days ago (ISO format for comparison)
+    const tenDaysAgo = new Date();
+    tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+    tenDaysAgo.setHours(0, 0, 0, 0);
+    const tenDaysAgoISO = tenDaysAgo.toISOString();
+    
+    // Get all entries from last 10 days in one query
+    const formEntries = await db.all(
+      `SELECT o.id, o.date_created, o.date_of_ob, o.dates_of_ob, 
+              o.location_from, o.location_to, o.departure_time, 
+              o.return_time, o.purpose, o.timestamp
+       FROM official_business o 
+       WHERE (COALESCE(o.date_created, '') >= $1 OR COALESCE(o.timestamp, '') >= $1)
+       ORDER BY o.date_created DESC, o.id DESC`,
+      [tenDaysAgoISO]
+    );
+    
+    if (formEntries.length === 0) {
+      return res.json({ entries: [] });
+    }
+    
+    // Get all employees for all forms in one query
+    const formIds = formEntries.map(e => e.id);
+    const placeholders = formIds.map((_, i) => `$${i + 1}`).join(', ');
+    const allEmployees = await db.all(
+      `SELECT ob_id, name FROM employees WHERE ob_id IN (${placeholders}) ORDER BY ob_id, name`,
+      formIds
+    );
+    
+    // Group employees by ob_id
+    const employeesByFormId = {};
+    allEmployees.forEach(emp => {
+      if (!employeesByFormId[emp.ob_id]) {
+        employeesByFormId[emp.ob_id] = [];
+      }
+      employeesByFormId[emp.ob_id].push(emp);
+    });
+    
+    // Format entries with employees
+    const entriesWithEmployees = await Promise.all(
+      formEntries.map(async (entry) => {
+        const employees = employeesByFormId[entry.id] || [];
+        return await formatTrackerEntry(entry, employees);
+      })
+    );
+    
+    res.json({ entries: entriesWithEmployees });
+  } catch (err) {
+    console.error('Error fetching all tracker data:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Cleanup function to delete records older than 25 days based on date_created
+async function cleanupOldRecords(daysOld = 25, dryRun = false) {
+  try {
+    // Calculate date X days ago (default 25)
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+    cutoffDate.setHours(0, 0, 0, 0);
+    const cutoffDateISO = cutoffDate.toISOString();
+
+    console.log(`Starting cleanup of records older than ${daysOld} days based on date_created (before ${cutoffDateISO})...`);
+    if (dryRun) {
+      console.log('DRY RUN MODE: No records will be deleted');
+    }
+
+    // Get all records to check their date_created
+    const allRecords = await db.all('SELECT id, date_created FROM official_business WHERE date_created IS NOT NULL AND date_created != \'\'', []);
+
+    const recordsToDelete = [];
+    const recordDetails = [];
+    
+    for (const record of allRecords) {
+      let recordDate = null;
+      
+      // Use date_created as the primary reference date
+      if (record.date_created) {
+        try {
+          recordDate = new Date(record.date_created);
+        } catch (e) {
+          // If parsing fails, skip this record (can't determine age)
+          console.warn(`Could not parse date_created for record ${record.id}: ${record.date_created}`);
+          continue;
+        }
+      } else {
+        // No date_created, skip this record
+        continue;
+      }
+
+      // Check if record is older than specified days based on date_created
+      if (recordDate && !isNaN(recordDate.getTime()) && recordDate < cutoffDate) {
+        recordsToDelete.push(record.id);
+        recordDetails.push({
+          id: record.id,
+          date_created: record.date_created,
+          age_days: Math.floor((new Date() - recordDate) / (1000 * 60 * 60 * 24))
+        });
+      }
+    }
+
+    if (recordsToDelete.length === 0) {
+      console.log('No old records to delete.');
+      return { deleted: 0, records: [] };
+    }
+
+    console.log(`Found ${recordsToDelete.length} record(s) to delete:`, recordDetails);
+
+    if (dryRun) {
+      console.log('DRY RUN: Would delete the above records');
+      return { deleted: 0, wouldDelete: recordsToDelete.length, records: recordDetails };
+    }
+
+    // Delete old records (employees will be deleted automatically due to CASCADE)
+    // Use transaction for safety
+    const result = await db.transaction(async (client) => {
+      let deletedCount = 0;
+      for (const id of recordsToDelete) {
+        const deleteResult = await client.query('DELETE FROM official_business WHERE id = $1', [id]);
+        deletedCount += deleteResult.rowCount || 0;
+      }
+      return { changes: deletedCount };
+    });
+
+    console.log(`Cleanup completed: Deleted ${result.changes} official business record(s) and their associated employees.`);
+    return { deleted: result.changes, ids: recordsToDelete, records: recordDetails };
+  } catch (error) {
+    console.error('Error during cleanup:', error);
+    throw error;
+  }
+}
+
+// Test endpoint to manually trigger cleanup (for testing) - Admin only
+app.get('/api/cleanup/test', adminOnly, async (req, res) => {
+  try {
+    const daysOld = parseInt(req.query.days) || 25;
+    const dryRun = req.query.dryRun === 'true';
+    
+    const result = await cleanupOldRecords(daysOld, dryRun);
+    res.json({
+      success: true,
+      message: dryRun ? 'Dry run completed' : 'Cleanup completed',
+      result
+    });
+  } catch (error) {
+    console.error('Cleanup test error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Run cleanup on server startup
+cleanupOldRecords().catch(err => {
+  console.error('Initial cleanup failed:', err);
+});
+
+// Schedule cleanup to run daily at 2 AM
+function scheduleDailyCleanup() {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(2, 0, 0, 0); // 2 AM
+
+  const msUntilCleanup = tomorrow.getTime() - now.getTime();
+
+  setTimeout(() => {
+    // Run cleanup
+    cleanupOldRecords().catch(err => {
+      console.error('Scheduled cleanup failed:', err);
+    });
+
+    // Schedule next cleanup (24 hours later)
+    setInterval(() => {
+      cleanupOldRecords().catch(err => {
+        console.error('Scheduled cleanup failed:', err);
+      });
+    }, 24 * 60 * 60 * 1000); // 24 hours
+  }, msUntilCleanup);
+
+  console.log(`Next cleanup scheduled for: ${tomorrow.toISOString()}`);
+}
+
+// Start the scheduled cleanup
+scheduleDailyCleanup();
 
 // Start the server (only in local development)
 if (require.main === module) {

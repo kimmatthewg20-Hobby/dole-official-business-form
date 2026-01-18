@@ -217,7 +217,7 @@ function generatePrintableHTML(data) {
           <tr>
             <td style="width: 33%;">
               Office:<br>
-              <strong>${formData.division || formData.office || divisionDisplay || 'Department of Labor and Employment'}</strong>
+              <strong>Department of Labor and Employment</strong>
             </td>
             <td style="width: 33%;">
               Division:<br>

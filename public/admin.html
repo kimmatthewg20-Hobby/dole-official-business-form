@@ -354,6 +354,38 @@
         </div>
       </form>
     </div>
+
+    <div class="card">
+      <div class="settings-header">
+        <h2><i class="material-icons">delete_sweep</i> Data Cleanup</h2>
+        <p style="color: #7f8c8d; font-size: 14px;">Automatically delete records older than 25 days based on date_created</p>
+      </div>
+      <div class="form-group">
+        <p style="margin-bottom: 15px; color: #666; line-height: 1.6;">
+          The system automatically deletes official business records and their associated employees after 25 days from the date of creation. 
+          This helps maintain database performance and comply with data retention policies.
+        </p>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+          <strong style="color: var(--primary-color);">Automatic Cleanup:</strong>
+          <ul style="margin: 10px 0 0 20px; color: #666;">
+            <li>Runs daily at 2:00 AM</li>
+            <li>Runs on server startup</li>
+            <li>Deletes records older than 25 days</li>
+            <li>Automatically deletes associated employees (CASCADE)</li>
+          </ul>
+        </div>
+        <div class="form-group">
+          <label for="cleanupDays">Test with custom days (for testing only)</label>
+          <input type="number" id="cleanupDays" value="25" min="1" max="365" style="max-width: 200px;">
+          <small style="color: #999; display: block; margin-top: 5px;">Default: 25 days. Use this to test with different time periods.</small>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="button" id="dryRunBtn" class="btn" style="background-color: var(--secondary-color);">Run Dry Test</button>
+          <button type="button" id="runCleanupBtn" class="btn" style="background-color: var(--danger-color);">Run Cleanup Now</button>
+        </div>
+        <div id="cleanupResult" style="margin-top: 20px; display: none;"></div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -369,6 +401,10 @@
       const passwordError = document.getElementById('passwordError');
       const saveAllBtn = document.getElementById('saveAllBtn');
       const toastContainer = document.getElementById('toastContainer');
+      const dryRunBtn = document.getElementById('dryRunBtn');
+      const runCleanupBtn = document.getElementById('runCleanupBtn');
+      const cleanupDays = document.getElementById('cleanupDays');
+      const cleanupResult = document.getElementById('cleanupResult');
 
       const SESSION_TIMEOUT = 5 * 60 * 1000;
       let sessionTimer = null;
@@ -536,6 +572,123 @@
         toastContainer.appendChild(toast);
         setTimeout(() => toast.remove(), 5000);
       }
+
+      // Cleanup functionality
+      dryRunBtn.addEventListener('click', function() {
+        const days = parseInt(cleanupDays.value) || 25;
+        cleanupResult.style.display = 'block';
+        cleanupResult.innerHTML = '<p style="color: #666;">Running dry test...</p>';
+        dryRunBtn.disabled = true;
+        
+        fetch(`/api/cleanup/test?days=${days}&dryRun=true`)
+          .then(response => response.json())
+          .then(data => {
+            dryRunBtn.disabled = false;
+            if (data.success) {
+              const result = data.result;
+              if (result.wouldDelete === 0) {
+                cleanupResult.innerHTML = `
+                  <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; border-left: 4px solid var(--success-color);">
+                    <strong style="color: var(--success-color);">No records to delete</strong>
+                    <p style="margin: 5px 0 0 0; color: #666;">No records found older than ${days} days.</p>
+                  </div>
+                `;
+              } else {
+                let recordsList = '';
+                if (result.records && result.records.length > 0) {
+                  recordsList = '<ul style="margin: 10px 0 0 20px; color: #666;">';
+                  result.records.slice(0, 10).forEach(rec => {
+                    recordsList += `<li>Record ID ${rec.id} - Created: ${rec.date_created} (${rec.age_days} days old)</li>`;
+                  });
+                  if (result.records.length > 10) {
+                    recordsList += `<li>... and ${result.records.length - 10} more</li>`;
+                  }
+                  recordsList += '</ul>';
+                }
+                cleanupResult.innerHTML = `
+                  <div style="background: #fff3e0; padding: 15px; border-radius: 6px; border-left: 4px solid #ff9800;">
+                    <strong style="color: #ff9800;">Dry Run Results</strong>
+                    <p style="margin: 5px 0; color: #666;">Would delete <strong>${result.wouldDelete}</strong> record(s) older than ${days} days.</p>
+                    ${recordsList}
+                    <p style="margin: 10px 0 0 0; color: #999; font-size: 13px;">No records were actually deleted. This was a test run.</p>
+                  </div>
+                `;
+              }
+            } else {
+              cleanupResult.innerHTML = `
+                <div style="background: #ffebee; padding: 15px; border-radius: 6px; border-left: 4px solid var(--danger-color);">
+                  <strong style="color: var(--danger-color);">Error</strong>
+                  <p style="margin: 5px 0 0 0; color: #666;">${data.error || 'Failed to run dry test'}</p>
+                </div>
+              `;
+            }
+          })
+          .catch(error => {
+            dryRunBtn.disabled = false;
+            cleanupResult.innerHTML = `
+              <div style="background: #ffebee; padding: 15px; border-radius: 6px; border-left: 4px solid var(--danger-color);">
+                <strong style="color: var(--danger-color);">Error</strong>
+                <p style="margin: 5px 0 0 0; color: #666;">${error.message}</p>
+              </div>
+            `;
+          });
+      });
+
+      runCleanupBtn.addEventListener('click', function() {
+        if (!confirm('Are you sure you want to run the cleanup now? This will permanently delete records older than the specified days and their associated employees.')) {
+          return;
+        }
+        
+        const days = parseInt(cleanupDays.value) || 25;
+        cleanupResult.style.display = 'block';
+        cleanupResult.innerHTML = '<p style="color: #666;">Running cleanup...</p>';
+        runCleanupBtn.disabled = true;
+        
+        fetch(`/api/cleanup/test?days=${days}&dryRun=false`)
+          .then(response => response.json())
+          .then(data => {
+            runCleanupBtn.disabled = false;
+            if (data.success) {
+              const result = data.result;
+              if (result.deleted === 0) {
+                cleanupResult.innerHTML = `
+                  <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; border-left: 4px solid var(--success-color);">
+                    <strong style="color: var(--success-color);">Cleanup Complete</strong>
+                    <p style="margin: 5px 0 0 0; color: #666;">No records were deleted. All records are within the retention period.</p>
+                  </div>
+                `;
+                showToast('Cleanup completed - no records deleted', 'success');
+              } else {
+                cleanupResult.innerHTML = `
+                  <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; border-left: 4px solid var(--success-color);">
+                    <strong style="color: var(--success-color);">Cleanup Complete</strong>
+                    <p style="margin: 5px 0; color: #666;">Successfully deleted <strong>${result.deleted}</strong> record(s) and their associated employees.</p>
+                    <p style="margin: 5px 0 0 0; color: #999; font-size: 13px;">Deleted record IDs: ${result.ids ? result.ids.join(', ') : 'N/A'}</p>
+                  </div>
+                `;
+                showToast(`Cleanup completed - ${result.deleted} record(s) deleted`, 'success');
+              }
+            } else {
+              cleanupResult.innerHTML = `
+                <div style="background: #ffebee; padding: 15px; border-radius: 6px; border-left: 4px solid var(--danger-color);">
+                  <strong style="color: var(--danger-color);">Error</strong>
+                  <p style="margin: 5px 0 0 0; color: #666;">${data.error || 'Failed to run cleanup'}</p>
+                </div>
+              `;
+              showToast('Cleanup failed', 'danger');
+            }
+          })
+          .catch(error => {
+            runCleanupBtn.disabled = false;
+            cleanupResult.innerHTML = `
+              <div style="background: #ffebee; padding: 15px; border-radius: 6px; border-left: 4px solid var(--danger-color);">
+                <strong style="color: var(--danger-color);">Error</strong>
+                <p style="margin: 5px 0 0 0; color: #666;">${error.message}</p>
+              </div>
+            `;
+            showToast('Cleanup failed', 'danger');
+          });
+      });
     })();
   </script>
 </body>
