@@ -751,7 +751,7 @@ app.get('/print/:id', async (req, res) => {
 });
 
 // Serve static files (must be after API routes but before catch-all routes)
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve the main HTML page
 app.get('/', (req, res) => {
