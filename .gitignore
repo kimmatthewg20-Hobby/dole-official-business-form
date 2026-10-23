@@ -18,3 +18,7 @@ database.db.bak
 # Build outputs
 dist/
 build/
+
+# Local libSQL database (npm run db:migrate)
+local.db
+local.db-*

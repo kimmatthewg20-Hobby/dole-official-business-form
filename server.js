@@ -1592,11 +1592,6 @@ app.get('/api/cleanup/test', adminOnly, async (req, res) => {
   }
 });
 
-// Run cleanup on server startup
-cleanupOldRecords().catch(err => {
-  console.error('Initial cleanup failed:', err);
-});
-
 // Schedule cleanup to run daily at 2 AM
 function scheduleDailyCleanup() {
   const now = new Date();
@@ -1623,8 +1618,15 @@ function scheduleDailyCleanup() {
   console.log(`Next cleanup scheduled for: ${tomorrow.toISOString()}`);
 }
 
-// Start the scheduled cleanup
-scheduleDailyCleanup();
+// Checks load the app against a throwaway database and must not delete or schedule anything.
+const SKIP_STARTUP_CLEANUP = process.env.SKIP_STARTUP_CLEANUP === 'true';
+
+if (!SKIP_STARTUP_CLEANUP) {
+  cleanupOldRecords().catch(err => {
+    console.error('Initial cleanup failed:', err);
+  });
+  scheduleDailyCleanup();
+}
 
 // Start the server (only in local development)
 if (require.main === module) {
