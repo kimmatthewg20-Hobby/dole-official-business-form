@@ -5,16 +5,22 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "echo 'Build completed'"
+    "build": "echo 'Build completed'",
+    "prepare": "husky"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "pg": "^8.11.3",
     "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.6",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "pg": "^8.11.3"
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.10"
   }
-} 
+}
