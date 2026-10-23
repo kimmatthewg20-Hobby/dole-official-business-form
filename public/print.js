@@ -1,7 +1,17 @@
+// Forms are printed and shown to others, so user text must never be read as markup.
+function escapeHtml(text) {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Function to capitalize text (uppercase all letters)
 function capitalizeText(text) {
   if (!text) return '';
-  return String(text).toUpperCase();
+  return escapeHtml(String(text).toUpperCase());
 }
 
 // Function to format date in Month DD, YYYY format
@@ -221,11 +231,11 @@ function generatePrintableHTML(data) {
             </td>
             <td style="width: 33%;">
               Division:<br>
-              <strong>${divisionDisplay || formData.division || ''}</strong>
+              <strong>${escapeHtml(divisionDisplay || formData.division || '')}</strong>
             </td>
             <td style="width: 34%;">
               Date of Official Business:<br>
-              <strong>${dateDisplay}</strong>
+              <strong>${escapeHtml(dateDisplay)}</strong>
             </td>
           </tr>
         </table>
@@ -243,11 +253,11 @@ function generatePrintableHTML(data) {
           <tr>
             <td style="width: 25%;" class="center-text">
               <strong>From</strong><br>
-              ${formData.location_from || formData.locationFrom || ''}
+              ${escapeHtml(formData.location_from || formData.locationFrom || '')}
             </td>
             <td style="width: 25%;" class="center-text">
               <strong>To</strong><br>
-              ${formData.location_to || formData.locationTo || ''}
+              ${escapeHtml(formData.location_to || formData.locationTo || '')}
             </td>
             <td style="width: 25%;" class="center-text">
               <strong>Departure</strong><br>
@@ -265,7 +275,7 @@ function generatePrintableHTML(data) {
           <tr>
             <td>
               <strong>Purpose:</strong><br>
-              ${formData.purpose}
+              ${escapeHtml(formData.purpose)}
             </td>
           </tr>
         </table>
@@ -333,7 +343,7 @@ function generatePrintableHTML(data) {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Official Business Form - ${formData.travel_id}</title>
+      <title>Official Business Form - ${escapeHtml(formData.travel_id)}</title>
       <link rel="icon" href="https://batangmalaya.ph/wp-content/uploads/2022/12/1_dole.png" type="image/png">
       <style>
         body {
