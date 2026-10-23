@@ -18,3 +18,17 @@ database.db.bak
 # Build outputs
 dist/
 build/
+
+# >>> AI tooling (local only, managed by project-setup)
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.mcp.json
+.agents/
+skills-lock.json
+.scratch/
+.conductor/
+docs/agents/
+GLOSSARY.md
+docs/adr/
+# <<< AI tooling
