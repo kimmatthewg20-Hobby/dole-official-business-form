@@ -17,7 +17,6 @@ const FIRST_RUN_FALLBACK_PASSWORD = 'first-run-fallback-password';
 const FIRST_RUN_NEW_PASSWORD = 'first-run-new-password';
 const SAVED_DIVISION_OPTIONS = 'TSSD, IMSD, MALSU, CHECK';
 const UNAUTHORIZED = 401;
-const REDIRECT_FOUND = 302;
 
 async function expectUnauthenticatedRejected(baseUrl) {
   const check = await fetch(`${baseUrl}/api/admin/check`);
@@ -34,9 +33,8 @@ async function expectUnauthenticatedRejected(baseUrl) {
   });
   assert.equal(saveSettings.status, UNAUTHORIZED);
 
-  const cleanupTest = await fetch(`${baseUrl}/api/cleanup/test`, { redirect: 'manual' });
-  assert.equal(cleanupTest.status, REDIRECT_FOUND);
-  assert.equal(cleanupTest.headers.get('location'), '/admin');
+  const cleanupTest = await fetch(`${baseUrl}/api/cleanup/test`);
+  assert.equal(cleanupTest.status, UNAUTHORIZED);
 
   assert.equal((await login(baseUrl, TEST_ADMIN_PASSWORD)).status, 200);
   assert.equal((await readSettings(baseUrl)).division_options, 'TSSD, IMSD, MALSU');

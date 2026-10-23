@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const db = require('./db');
-const { router: adminAuthRouter, adminOnly, adminApiOnly } = require('./routes/admin-auth');
+const { router: adminAuthRouter, adminApiOnly } = require('./routes/admin-auth');
 const { router: settingsRouter } = require('./routes/settings');
 const { router: formsRouter } = require('./routes/forms');
 const { router: entriesRouter } = require('./routes/entries');
@@ -12,6 +12,7 @@ const { router: trackerRouter } = require('./routes/tracker');
 const { router: printRouter } = require('./routes/print');
 const { router: formsEditRouter } = require('./routes/forms-edit');
 const { router: directoryRouter } = require('./routes/directory');
+const { router: cleanupRouter, cleanupOldRecords } = require('./routes/cleanup');
 const { router: directoryHistoryRouter } = require('./routes/directory-history');
 
 
@@ -42,6 +43,7 @@ app.use(printRouter);
 app.use(formsEditRouter);
 app.use(directoryRouter);
 app.use(directoryHistoryRouter);
+app.use(cleanupRouter);
 
 // Serve static files (must be after API routes but before catch-all routes)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -174,103 +176,6 @@ app.post('/api/import-data', adminApiOnly, async (req, res) => {
     });
   } catch (error) {
     console.error('Error during import:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Cleanup function to delete records older than 25 days based on date_created
-async function cleanupOldRecords(daysOld = 25, dryRun = false) {
-  try {
-    // Calculate date X days ago (default 25)
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
-    cutoffDate.setHours(0, 0, 0, 0);
-    const cutoffDateISO = cutoffDate.toISOString();
-
-    console.log(`Starting cleanup of records older than ${daysOld} days based on date_created (before ${cutoffDateISO})...`);
-    if (dryRun) {
-      console.log('DRY RUN MODE: No records will be deleted');
-    }
-
-    // Get all records to check their date_created
-    const allRecords = await db.all('SELECT id, date_created FROM official_business WHERE date_created IS NOT NULL AND date_created != \'\'', []);
-
-    const recordsToDelete = [];
-    const recordDetails = [];
-    
-    for (const record of allRecords) {
-      let recordDate = null;
-      
-      // Use date_created as the primary reference date
-      if (record.date_created) {
-        try {
-          recordDate = new Date(record.date_created);
-        } catch (e) {
-          // If parsing fails, skip this record (can't determine age)
-          console.warn(`Could not parse date_created for record ${record.id}: ${record.date_created}`);
-          continue;
-        }
-      } else {
-        // No date_created, skip this record
-        continue;
-      }
-
-      // Check if record is older than specified days based on date_created
-      if (recordDate && !isNaN(recordDate.getTime()) && recordDate < cutoffDate) {
-        recordsToDelete.push(record.id);
-        recordDetails.push({
-          id: record.id,
-          date_created: record.date_created,
-          age_days: Math.floor((new Date() - recordDate) / (1000 * 60 * 60 * 24))
-        });
-      }
-    }
-
-    if (recordsToDelete.length === 0) {
-      console.log('No old records to delete.');
-      return { deleted: 0, records: [] };
-    }
-
-    console.log(`Found ${recordsToDelete.length} record(s) to delete:`, recordDetails);
-
-    if (dryRun) {
-      console.log('DRY RUN: Would delete the above records');
-      return { deleted: 0, wouldDelete: recordsToDelete.length, records: recordDetails };
-    }
-
-    // Delete old records (employees will be deleted automatically due to CASCADE)
-    // Use transaction for safety
-    const result = await db.transaction(async (client) => {
-      let deletedCount = 0;
-      for (const id of recordsToDelete) {
-        const deleteResult = await client.query('DELETE FROM official_business WHERE id = $1', [id]);
-        deletedCount += deleteResult.rowCount || 0;
-      }
-      return { changes: deletedCount };
-    });
-
-    console.log(`Cleanup completed: Deleted ${result.changes} official business record(s) and their associated employees.`);
-    return { deleted: result.changes, ids: recordsToDelete, records: recordDetails };
-  } catch (error) {
-    console.error('Error during cleanup:', error);
-    throw error;
-  }
-}
-
-// Test endpoint to manually trigger cleanup (for testing) - Admin only
-app.get('/api/cleanup/test', adminOnly, async (req, res) => {
-  try {
-    const daysOld = parseInt(req.query.days) || 25;
-    const dryRun = req.query.dryRun === 'true';
-    
-    const result = await cleanupOldRecords(daysOld, dryRun);
-    res.json({
-      success: true,
-      message: dryRun ? 'Dry run completed' : 'Cleanup completed',
-      result
-    });
-  } catch (error) {
-    console.error('Cleanup test error:', error);
     res.status(500).json({ error: error.message });
   }
 });
