@@ -34,7 +34,7 @@ Version alpha pero pwede na.
 - **Admin panel** (`/admin`) - Secure administrative interface:
   - Settings management (division options)
   - Password change functionality
-  - Session timeout (5 minutes)
+  - The admin page logs out after 5 minutes of inactivity (the server login cookie lasts 24 hours)
 - **Data cleanup management**:
   - Automatic cleanup of records older than 25 days (based on `date_created`)
   - Runs daily at 2:00 AM
@@ -45,12 +45,12 @@ Version alpha pero pwede na.
 - **Data export/import** - Backup and restore functionality
 
 ### Database Features
-- **PostgreSQL (Supabase)** - Reliable cloud database storage
-- **Connection pooling** - Optimized pool configuration (max 10 connections) to prevent connection exhaustion
-- **Efficient queries** - Batch employee queries to reduce database connections
+- **Turso (libSQL)** - Cloud database in staging and production; a local database file in development
+- **Migration files** - The schema lives in `migrations/`, applied with `npm run db:migrate`
+- **Efficient queries** - Batch employee queries to reduce database round trips
 - **Automatic data retention** - Records older than 25 days are automatically deleted
 - **Cascade deletion** - Associated employees are automatically deleted when forms are removed
-- **Transaction support** - Safe database operations
+- **Transaction support** - Multi-step writes succeed or fail as one unit
 
 ### User Interface
 - **Modern, responsive design** - Works on desktop and mobile devices
@@ -62,12 +62,12 @@ Version alpha pero pwede na.
 ## Tech Stack
 
 - **Backend**: Node.js with Express.js
-- **Database**: PostgreSQL (hosted on Supabase)
+- **Database**: Turso (libSQL, SQLite-compatible); `file:local.db` in development
 - **Frontend**: Vanilla HTML, CSS, and JavaScript
-- **Hosting**: Vercel (serverless functions)
+- **Hosting**: Vercel (serverless functions), Node.js 20 or newer
 - **Dependencies**: 
   - `express` - Web framework
-  - `pg` - PostgreSQL client
+  - `@libsql/client` - Turso / libSQL client
   - `body-parser` - Request parsing
   - `cookie-parser` - Cookie handling
   - `dotenv` - Environment variable management
@@ -75,22 +75,22 @@ Version alpha pero pwede na.
 
 ## Deployment
 
-This application is deployed on **Vercel** with **Supabase** as the database.
+This application is deployed on **Vercel** with **Turso** as the database. Moving from Supabase to Turso, and the manual test checklist, are in [`docs/turso-cutover.md`](docs/turso-cutover.md).
 
 ### Environment Variables
 
-The following environment variables are required:
-
-- `DATABASE_URL` - Supabase PostgreSQL connection string (Session Pooler)
-- `ADMIN_PASSWORD` - Admin panel password
+- `TURSO_DATABASE_URL` - Which database to use. Unset means the local file `file:local.db`. On Vercel it must be a Turso URL (`libsql://...`); the app refuses to start there with a local file, because Vercel's disk does not keep data.
+- `TURSO_AUTH_TOKEN` - Turso database token. Needed only when `TURSO_DATABASE_URL` points at Turso.
+- `ADMIN_PASSWORD` - Fallback admin password, used only while no password is saved in the settings table
 - `PORT` - Server port (default: 3000)
+
+`DATABASE_URL` (the old Supabase setting) is no longer read. `.env.example` lists the variables.
 
 ### Database Setup
 
-1. Create a Supabase project
-2. Run the SQL migration script (`supabase_migration.sql`) in the Supabase SQL Editor
-3. Get your connection string from Supabase project settings
-4. Use the **Session Pooler** connection string (port 6543) for better compatibility
+1. Create a Turso database and a token for it
+2. Point `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` at it and run `npm run db:migrate`
+3. Set the same two variables in Vercel
 
 ## Local Development
 
@@ -98,25 +98,40 @@ The following environment variables are required:
 # Install dependencies
 npm install
 
-# Create a .env file with your environment variables
-# DATABASE_URL=your_supabase_connection_string
-# ADMIN_PASSWORD=your_admin_password
-# PORT=3000
+# Create local.db from migrations/ and fill it with fake data (no account needed)
+npm run db:migrate
+npm run db:seed
 
 # Start the server
 npm start
+
+# Run every check against a throwaway database
+npm run db:check
 ```
+
+No `.env` is needed: with `TURSO_DATABASE_URL` unset the app uses `local.db` (gitignored). The seed refuses to run against a Turso URL and holds only invented names; it sets the local admin password `local-test-admin`.
+
+| Command | What it does |
+|---|---|
+| `npm run db:migrate` | Applies new files in `migrations/`, in numeric order, to the configured database |
+| `npm run db:seed` | Replaces the local directory and settings with fake data |
+| `npm run db:check` | Migrates and seeds a throwaway database, then runs every route and import check |
+| `npm run db:import -- --help` | One-off load of a Supabase export (CSV or JSON) into the configured database |
 
 The server will run on port 3000 by default (http://localhost:3000).
 
 ## Project Structure
 
 ```
-├── server.js              # Main Express server with API endpoints
-├── db.js                  # Database connection and helpers
+├── server.js              # Express app setup, data export/import, cleanup timer
+├── db.js                  # libSQL client and query helpers
+├── routes/                # API and page routes, one module per area
+├── migrations/            # Numbered schema files (npm run db:migrate)
+├── scripts/               # migrate, seed and import-data
+├── checks/                # npm run db:check
+├── docs/                  # Decisions (adr/) and the Turso cutover guide
 ├── package.json           # Dependencies
 ├── vercel.json           # Vercel deployment configuration
-├── supabase_migration.sql # Database schema
 ├── public/               # Frontend files
 │   ├── index.html        # Main form page
 │   ├── admin.html        # Admin panel
@@ -159,7 +174,7 @@ The server will run on port 3000 by default (http://localhost:3000).
 1. **Settings Management**
    - Configure division options
    - Update admin password
-   - Session timeout: 5 minutes of inactivity
+   - The admin page logs out after 5 minutes of inactivity
 
 2. **Data Cleanup**
    - View automatic cleanup schedule
@@ -170,7 +185,7 @@ The server will run on port 3000 by default (http://localhost:3000).
 ## Data Retention Policy
 
 - **Automatic Cleanup**: Records older than 25 days (based on `date_created`) are automatically deleted
-- **Schedule**: Runs daily at 2:00 AM and on server startup
+- **Schedule**: Runs daily at 2:00 AM and on server startup on a long-running server. On Vercel serverless neither is reliable (a function instance does not stay alive); a Vercel Cron fix is a separate ticket
 - **Cascade Deletion**: Associated employee records are automatically deleted when forms are removed
 - **Manual Control**: Admins can test and trigger cleanup manually via admin panel
 
@@ -193,7 +208,7 @@ The server will run on port 3000 by default (http://localhost:3000).
 - Search with partial matching across multiple fields
 - Case-insensitive search
 - Fixed table height (900px) with scrollability for viewing multiple rows
-- Efficient single-query data loading to prevent connection pool exhaustion
+- Efficient single-query data loading
 - Pagination (15 entries per page)
 - View individual forms
 - Shows last 10 days of records by default

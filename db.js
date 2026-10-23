@@ -14,6 +14,12 @@ function isTursoUrl(url) {
   return !url.startsWith(LOCAL_URL_SCHEME);
 }
 
+// Vercel's disk is read-only and thrown away, so a forgotten setting must fail loudly
+// instead of quietly writing forms to a file that disappears.
+if (process.env.VERCEL && !isTursoUrl(databaseUrl)) {
+  throw new Error('TURSO_DATABASE_URL must point at Turso on Vercel; a local file database does not persist there');
+}
+
 // Created on first use, so scripts can refuse a Turso URL before any connection or token check.
 function getClient() {
   if (client) return client;
