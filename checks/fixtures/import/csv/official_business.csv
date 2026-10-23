@@ -1,0 +1,5 @@
+id,date_created,office,division,date_of_ob,dates_of_ob,location_from,location_to,departure_time,return_time,purpose,approved_by,approved_by_position,timestamp
+3,2026-10-01T08:00:00.000Z,Sample Regional Office,TSSD,2026-10-02,,Sample Regional Office,"Field Office, North",08:00,17:00,"Inspect ""Sample"" establishment, then report",Rosa Sample,Regional Director,2026-10-01T08:00:00.000Z
+7,2026-10-03T09:30:00.000Z,Sample Regional Office,IMSD,2026-10-04,,Sample Regional Office,Parañaque Sample Hall,09:00,12:00,"Line one
+Line two",NULL,Regional Director,2026-10-03T09:30:00.000Z
+12,2026-10-05T07:15:00.000Z,Sample Regional Office,MALSU,,"[""2026-10-05"",""2026-10-06""]",Sample Regional Office,Example Town,,16:00,Seminar,Rosa Sample,Regional Director,2026-10-05T07:15:00.000Z

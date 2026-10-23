@@ -8,6 +8,7 @@
     "build": "echo 'Build completed'",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js",
+    "db:import": "node scripts/import-data.js",
     "db:check": "node checks/run.js"
   },
   "dependencies": {

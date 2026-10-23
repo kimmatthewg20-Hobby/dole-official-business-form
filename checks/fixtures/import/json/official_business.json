@@ -1,0 +1,50 @@
+[
+  {
+    "id": 3,
+    "date_created": "2026-10-01T08:00:00.000Z",
+    "office": "Sample Regional Office",
+    "division": "TSSD",
+    "date_of_ob": "2026-10-02",
+    "dates_of_ob": null,
+    "location_from": "Sample Regional Office",
+    "location_to": "Field Office, North",
+    "departure_time": "08:00",
+    "return_time": "17:00",
+    "purpose": "Inspect \"Sample\" establishment, then report",
+    "approved_by": "Rosa Sample",
+    "approved_by_position": "Regional Director",
+    "timestamp": "2026-10-01T08:00:00.000Z"
+  },
+  {
+    "id": 7,
+    "date_created": "2026-10-03T09:30:00.000Z",
+    "office": "Sample Regional Office",
+    "division": "IMSD",
+    "date_of_ob": "2026-10-04",
+    "dates_of_ob": null,
+    "location_from": "Sample Regional Office",
+    "location_to": "Parañaque Sample Hall",
+    "departure_time": "09:00",
+    "return_time": "12:00",
+    "purpose": "Line one\nLine two",
+    "approved_by": null,
+    "approved_by_position": "Regional Director",
+    "timestamp": "2026-10-03T09:30:00.000Z"
+  },
+  {
+    "id": 12,
+    "date_created": "2026-10-05T07:15:00.000Z",
+    "office": "Sample Regional Office",
+    "division": "MALSU",
+    "date_of_ob": null,
+    "dates_of_ob": "[\"2026-10-05\",\"2026-10-06\"]",
+    "location_from": "Sample Regional Office",
+    "location_to": "Example Town",
+    "departure_time": null,
+    "return_time": "16:00",
+    "purpose": "Seminar",
+    "approved_by": "Rosa Sample",
+    "approved_by_position": "Regional Director",
+    "timestamp": "2026-10-05T07:15:00.000Z"
+  }
+]

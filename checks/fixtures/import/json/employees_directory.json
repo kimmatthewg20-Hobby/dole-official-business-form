@@ -1,0 +1,22 @@
+[
+  {
+    "id": 4,
+    "employee_id": "SAMPLE-101",
+    "firstname": "Ana",
+    "middle_name": "Bautista",
+    "last_name": "Sample",
+    "full_name": "Ana B. Sample",
+    "position": "Labor and Employment Officer III",
+    "assigned_unit": "TSSD"
+  },
+  {
+    "id": 8,
+    "employee_id": "SAMPLE-102",
+    "firstname": "José",
+    "middle_name": null,
+    "last_name": "Peña",
+    "full_name": "José Peña",
+    "position": "Administrative Aide IV",
+    "assigned_unit": "IMSD"
+  }
+]

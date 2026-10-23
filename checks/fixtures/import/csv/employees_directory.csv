@@ -1,0 +1,3 @@
+﻿id,employee_id,firstname,middle_name,last_name,full_name,position,assigned_unit
+4,SAMPLE-101,Ana,Bautista,Sample,Ana B. Sample,Labor and Employment Officer III,TSSD
+8,SAMPLE-102,José,,Peña,José Peña,Administrative Aide IV,IMSD

@@ -1,0 +1,12 @@
+[
+  {
+    "id": 2,
+    "office": "Sample Regional Office",
+    "office_head": "Rosa Sample",
+    "office_head_position": "Regional Director",
+    "location_from": "Sample Regional Office",
+    "division_options": "TSSD, IMSD, MALSU",
+    "assistant_regional_director": "Carlos Placeholder",
+    "admin_password": " s3cret, \"fake\" pw "
+  }
+]

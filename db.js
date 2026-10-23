@@ -81,6 +81,12 @@ async function transaction(callback) {
   }
 }
 
+// Sends every { sql, args } statement in one request that libSQL runs as a single
+// transaction, so a large import never holds a transaction open across many round trips.
+function batch(statements) {
+  return getClient().batch(statements, WRITE_TRANSACTION);
+}
+
 // Runs a multi-statement script such as a migration file; it takes no arguments.
 function executeScript(sql) {
   return getClient().executeMultiple(sql);
@@ -97,6 +103,7 @@ module.exports = {
   all,
   run,
   transaction,
+  batch,
   executeScript,
   close,
   databaseUrl,
