@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const db = require('./db');
+const { router: adminAuthRouter, adminOnly } = require('./routes/admin-auth');
+const { router: settingsRouter } = require('./routes/settings');
 
 // Import the print template generator
 const { generatePrintableHTML } = require('./public/print');
@@ -15,12 +17,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Admin-only middleware: protect admin routes
-function adminOnly(req, res, next) {
-  if (req.cookies && req.cookies.adminAuth) return next();
-  res.redirect('/admin');
-}
-
 // Serve favicon
 app.get('/favicon.ico', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'logo.png'));
@@ -30,121 +26,8 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Helper function to get admin password (checks database first, then env)
-async function getAdminPassword() {
-  try {
-    const row = await db.get('SELECT admin_password FROM settings ORDER BY id DESC LIMIT 1', []);
-    if (row && row.admin_password) {
-      return row.admin_password;
-    }
-  } catch (err) {
-    console.error('Error getting admin password from database:', err);
-  }
-  // Fall back to environment variable
-  return process.env.ADMIN_PASSWORD || '*1CNPOadmin*';
-}
-
-// Admin login API - checks database first, then ADMIN_PASSWORD env (default: *1CNPOadmin*)
-app.post('/api/admin/login', async (req, res) => {
-  try {
-    const { password } = req.body || {};
-    const expected = await getAdminPassword();
-    
-    if (password === expected) {
-      res.cookie('adminAuth', '1', { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
-      return res.json({ success: true });
-    }
-    res.status(401).json({ success: false, error: 'Incorrect password' });
-  } catch (err) {
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
-});
-
-app.get('/api/admin/check', (req, res) => {
-  if (req.cookies && req.cookies.adminAuth) return res.json({ ok: true });
-  res.status(401).json({ ok: false });
-});
-
-// Change admin password API
-app.post('/api/admin/change-password', async (req, res) => {
-  console.log('Change password route hit'); // Debug log
-  // Check if user is authenticated
-  if (!req.cookies || !req.cookies.adminAuth) {
-    console.log('Not authenticated - missing cookie');
-    return res.status(401).json({ success: false, error: 'Not authenticated' });
-  }
-  
-  const { oldPassword, newPassword } = req.body || {};
-  
-  if (!oldPassword || !newPassword) {
-    return res.status(400).json({ success: false, error: 'Old password and new password are required' });
-  }
-  
-  if (newPassword.length < 4) {
-    return res.status(400).json({ success: false, error: 'New password must be at least 4 characters long' });
-  }
-  
-  try {
-    // Verify old password
-    const currentPassword = await getAdminPassword();
-    
-    if (oldPassword !== currentPassword) {
-      return res.status(401).json({ success: false, error: 'Current password is incorrect' });
-    }
-    
-    // Get existing settings row
-    const row = await db.get('SELECT id FROM settings ORDER BY id DESC LIMIT 1', []);
-    
-    if (row && row.id) {
-      // Update existing settings row
-      await db.run('UPDATE settings SET admin_password = $1 WHERE id = $2', [newPassword, row.id]);
-      console.log('Password updated successfully for settings id:', row.id);
-      res.json({ success: true, message: 'Password changed successfully' });
-    } else {
-      // No settings row exists, create one with just the password
-      const result = await db.run('INSERT INTO settings (admin_password) VALUES ($1) RETURNING id', [newPassword]);
-      console.log('Password saved successfully in new settings row, id:', result.lastID);
-      res.json({ success: true, message: 'Password changed successfully' });
-    }
-  } catch (err) {
-    console.error('Error updating password:', err);
-    res.status(500).json({ success: false, error: 'Failed to update password: ' + err.message });
-  }
-});
-
-// Database tables are initialized in db.js
-// Tables are created automatically when the server starts
-
-// Get default settings (only division_options)
-app.get('/api/settings', async (req, res) => {
-  try {
-    const settings = await db.get('SELECT * FROM settings ORDER BY id DESC LIMIT 1', []);
-    
-    if (!settings) {
-      const result = await db.run(`INSERT INTO settings (division_options) VALUES ($1) RETURNING id`, ['']);
-      res.json({ division_options: '' });
-    } else {
-      res.json({ division_options: settings.division_options || '' });
-    }
-  } catch (err) {
-    console.error('Error retrieving settings:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Update settings (only division_options)
-app.post('/api/settings', async (req, res) => {
-  try {
-    const { division_options } = req.body;
-    const val = (division_options == null || division_options === undefined) ? '' : String(division_options).trim();
-    
-    const result = await db.run(`INSERT INTO settings (division_options) VALUES ($1) RETURNING id`, [val]);
-    res.json({ success: true, id: result.lastID });
-  } catch (err) {
-    console.error('Error saving settings:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
+app.use(adminAuthRouter);
+app.use(settingsRouter);
 
 // Submit form
 app.post('/api/submit', async (req, res) => {
