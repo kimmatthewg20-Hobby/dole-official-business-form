@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const db = require('./db');
-const { router: adminAuthRouter, adminOnly } = require('./routes/admin-auth');
+const { router: adminAuthRouter, adminOnly, adminApiOnly } = require('./routes/admin-auth');
 const { router: settingsRouter } = require('./routes/settings');
 const { router: formsRouter } = require('./routes/forms');
 const { router: entriesRouter } = require('./routes/entries');
@@ -11,6 +11,8 @@ const { router: entriesPaginatedRouter } = require('./routes/entries-paginated')
 const { router: trackerRouter } = require('./routes/tracker');
 const { router: printRouter } = require('./routes/print');
 const { router: formsEditRouter } = require('./routes/forms-edit');
+const { router: directoryRouter } = require('./routes/directory');
+const { router: directoryHistoryRouter } = require('./routes/directory-history');
 
 
 const app = express();
@@ -38,6 +40,8 @@ app.use(formsRouter);
 app.use(trackerRouter);
 app.use(printRouter);
 app.use(formsEditRouter);
+app.use(directoryRouter);
+app.use(directoryHistoryRouter);
 
 // Serve static files (must be after API routes but before catch-all routes)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -58,7 +62,7 @@ app.get('/healthz', (req, res) => {
 });
 
 // Export all data as JSON
-app.get('/api/export-data', async (req, res) => {
+app.get('/api/export-data', adminApiOnly, async (req, res) => {
   try {
     console.log('Exporting all data as JSON...');
     
@@ -91,7 +95,7 @@ app.get('/api/export-data', async (req, res) => {
 });
 
 // Import data from JSON
-app.post('/api/import-data', async (req, res) => {
+app.post('/api/import-data', adminApiOnly, async (req, res) => {
   try {
     const importData = req.body;
     
@@ -114,7 +118,7 @@ app.post('/api/import-data', async (req, res) => {
             id, date_created, office, division, date_of_ob, dates_of_ob,
             location_from, location_to, departure_time, return_time, purpose,
             approved_by, approved_by_position
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             entry.id,
             entry.date_created,
@@ -137,7 +141,7 @@ app.post('/api/import-data', async (req, res) => {
       for (const emp of importData.employees) {
         await client.query(
           `INSERT INTO employees (id, ob_id, name, position)
-          VALUES ($1, $2, $3, $4)`,
+          VALUES (?, ?, ?, ?)`,
           [emp.id, emp.ob_id, emp.name, emp.position]
         );
       }
@@ -147,7 +151,7 @@ app.post('/api/import-data', async (req, res) => {
         for (const setting of importData.settings) {
           await client.query(
             `INSERT INTO settings (id, office, office_head, office_head_position, location_from, division_options)
-            VALUES ($1, $2, $3, $4, $5, $6)`,
+            VALUES (?, ?, ?, ?, ?, ?)`,
             [
               setting.id,
               setting.office,
@@ -171,291 +175,6 @@ app.post('/api/import-data', async (req, res) => {
   } catch (error) {
     console.error('Error during import:', error);
     res.status(500).json({ error: error.message });
-  }
-});
-
-// Get all employees in directory
-app.get('/api/employees', async (req, res) => {
-  try {
-    const searchQuery = req.query.search || '';
-    
-    let query = 'SELECT * FROM employees_directory';
-    let params = [];
-    
-    if (searchQuery) {
-      query += ' WHERE full_name LIKE $1 OR position LIKE $2 OR assigned_unit LIKE $3';
-      params = [`%${searchQuery}%`, `%${searchQuery}%`, `%${searchQuery}%`];
-    }
-    
-    query += ' ORDER BY full_name';
-    
-    const employees = await db.all(query, params);
-    res.json({ employees });
-  } catch (err) {
-    console.error('Error getting employees:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get employee by ID
-app.get('/api/employees/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const employee = await db.get('SELECT * FROM employees_directory WHERE id = $1', [id]);
-    
-    if (!employee) {
-      return res.status(404).json({ error: 'Employee not found' });
-    }
-    
-    res.json({ employee });
-  } catch (err) {
-    console.error('Error getting employee:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Add employee to directory
-app.post('/api/employees', async (req, res) => {
-  try {
-    const { employee_id, firstname, middle_name, last_name, position, assigned_unit } = req.body;
-    
-    if (!firstname || !last_name || !position || !assigned_unit) {
-      return res.status(400).json({ error: 'Required fields are missing' });
-    }
-    
-    // Create full_name with middle initial
-    const middleInitial = middle_name ? middle_name.charAt(0) + '.' : '';
-    const full_name = `${firstname} ${middleInitial} ${last_name}`.replace(/\s+/g, ' ').trim();
-    
-    const result = await db.run(
-      'INSERT INTO employees_directory (employee_id, firstname, middle_name, last_name, full_name, position, assigned_unit) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-      [employee_id, firstname, middle_name, last_name, full_name, position, assigned_unit]
-    );
-    
-    res.json({ 
-      success: true, 
-      id: result.lastID,
-      message: 'Employee added successfully' 
-    });
-  } catch (err) {
-    console.error('Error adding employee:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Update employee in directory
-app.put('/api/employees/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { employee_id, firstname, middle_name, last_name, position, assigned_unit } = req.body;
-    
-    if (!firstname || !last_name || !position || !assigned_unit) {
-      return res.status(400).json({ error: 'Required fields are missing' });
-    }
-    
-    // Create full_name with middle initial
-    const middleInitial = middle_name ? middle_name.charAt(0) + '.' : '';
-    const full_name = `${firstname} ${middleInitial} ${last_name}`.replace(/\s+/g, ' ').trim();
-    
-    const result = await db.run(
-      'UPDATE employees_directory SET employee_id = $1, firstname = $2, middle_name = $3, last_name = $4, full_name = $5, position = $6, assigned_unit = $7 WHERE id = $8',
-      [employee_id, firstname, middle_name, last_name, full_name, position, assigned_unit, id]
-    );
-    
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Employee not found' });
-    }
-    
-    res.json({ 
-      success: true, 
-      message: 'Employee updated successfully' 
-    });
-  } catch (err) {
-    console.error('Error updating employee:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Delete employee from directory
-app.delete('/api/employees/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const result = await db.run('DELETE FROM employees_directory WHERE id = $1', [id]);
-    
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Employee not found' });
-    }
-    
-    res.json({ 
-      success: true, 
-      message: 'Employee deleted successfully' 
-    });
-  } catch (err) {
-    console.error('Error deleting employee:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get employee travel history
-app.get('/api/employees/:id/history', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // First get the employee details
-    const employee = await db.get('SELECT * FROM employees_directory WHERE id = $1', [id]);
-    
-    if (!employee) {
-      return res.status(404).json({ error: 'Employee not found' });
-    }
-
-    // Create different name variations for better matching
-    const fullName = employee.full_name;
-    const firstLastName = `${employee.firstname} ${employee.last_name}`;
-    const lastFirstName = `${employee.last_name}, ${employee.firstname}`;
-    
-    console.log(`Searching history for employee ${id} (${fullName})`);
-    
-    // Now search for this employee in the travel records by exact name patterns
-    const historyEntries = await db.all(
-      `SELECT 
-         ob.id, 
-         ob.date_of_ob, 
-         ob.dates_of_ob, 
-         ob.date_created,
-         ob.office,
-         ob.division,
-         ob.location_from, 
-         ob.location_to, 
-         ob.purpose,
-         ob.departure_time,
-         ob.return_time
-       FROM official_business ob 
-       JOIN employees e ON ob.id = e.ob_id 
-       WHERE 
-         e.name = $1 OR 
-         e.name = $2 OR 
-         e.name = $3
-       ORDER BY ob.date_created DESC`,
-      [fullName, firstLastName, lastFirstName]
-    );
-    
-    // If no history entries found, return empty array
-    if (!historyEntries || historyEntries.length === 0) {
-      console.log(`No history found for employee ${id} (${fullName}).`);
-      return res.json({ 
-        employee,
-        history: []
-      });
-    }
-    
-    console.log(`Found ${historyEntries.length} history entries for employee ${id} (${fullName})`);
-    
-    // Format the data to match what the history modal expects
-    const formattedHistory = formatHistoryEntries(historyEntries);
-    
-    res.json({ 
-      employee,
-      history: formattedHistory || []
-    });
-  } catch (err) {
-    console.error('Error getting employee history:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Helper function to format history entries
-function formatHistoryEntries(entries) {
-  return entries.map(entry => {
-    // Parse dates_of_ob if it exists
-    let datesOfOB = null;
-    if (entry.dates_of_ob) {
-      try {
-        datesOfOB = JSON.parse(entry.dates_of_ob);
-      } catch (e) {
-        // If parsing fails, create a single-item array
-        datesOfOB = entry.date_of_ob ? [entry.date_of_ob] : [];
-      }
-    }
-    
-    return {
-      id: entry.id,
-      date: entry.date_created,
-      created_at: entry.date_created,
-      formData: {
-        datesOfOB: datesOfOB,
-        dates_of_ob: entry.date_of_ob,
-        office: entry.office || '',
-        division: entry.division || '',
-        location_from: entry.location_from || '',
-        location_to: entry.location_to || '',
-        from: entry.location_from || '',
-        to: entry.location_to || '',
-        purpose: entry.purpose || '',
-        departure_time: entry.departure_time || '',
-        return_time: entry.return_time || ''
-      }
-    };
-  });
-}
-
-// Insert initial employees data
-app.post('/api/employees/initialize', async (req, res) => {
-  try {
-    // Initial employees data from the provided table
-    const initialEmployees = [
-      { employee_id: '4780', firstname: 'CHERRY', middle_name: 'BAJAMUNDI', last_name: 'MOSATALLA', position: 'CHIEF', assigned_unit: 'PROVINCIAL HEAD' },
-      { employee_id: '4728', firstname: 'RENALYN', middle_name: 'ENRIQUEZ', last_name: 'ALANO', position: 'SENIOR LABOR AND EMPLOYMENT OFFICER', assigned_unit: 'LR/LS' },
-      { employee_id: '4745', firstname: 'LORA JOY', middle_name: 'LUNA', last_name: 'BOONGALING', position: 'LABOR AND EMPLOYMENT OFFICER III', assigned_unit: 'EMPLOYMENT' },
-      { employee_id: '4766', firstname: 'RICKY', middle_name: 'AZUELA', last_name: 'HERNANDEZ', position: 'LABOR AND EMPLOYMENT OFFICER III', assigned_unit: 'LIVELIHOOD' },
-      { employee_id: '15974', firstname: 'CARL CEDRIC', middle_name: 'PAJARIN', last_name: 'ALBUÑAN', position: 'LABOR AND EMPLOYMENT OFFICER II', assigned_unit: 'TUPAD' },
-      { employee_id: '14280', firstname: 'ROBERT', middle_name: 'MATALOTE', last_name: 'MAGANA', position: 'ASSISTANT LABOR INSPECTOR', assigned_unit: 'LR/LS' },
-      { employee_id: '1302001', firstname: 'MARIA THERESA', middle_name: 'SALEN', last_name: 'RITO', position: 'COMMUNITY FACILITATOR', assigned_unit: 'LIVELIHOOD (CLPEP)' },
-      { employee_id: '1301003', firstname: 'LEONNY', middle_name: 'GUINTO', last_name: 'ROMERO', position: 'LIVELIHOOD DEVELOPMENT SPECIALIST', assigned_unit: 'LIVELIHOOD (DILP)' },
-      { employee_id: '1305001', firstname: 'JEORSHWIN IVANE', middle_name: 'SALAYON', last_name: 'JO', position: 'JOB ORDER', assigned_unit: 'LIVELIHOOD (DILP)' },
-      { employee_id: '1305002', firstname: 'EDMUNDO', middle_name: 'RADA', last_name: 'NIEVA', position: 'JOB ORDER-DRIVER', assigned_unit: 'ASSU' },
-      { employee_id: '1303001', firstname: 'AMANDA', middle_name: 'SORIA', last_name: 'ALBAÑO', position: 'PROGRAM COORDINATOR', assigned_unit: 'TUPAD' },
-      { employee_id: '1303002', firstname: 'DANICA', middle_name: 'ROMERO', last_name: 'BAÑAGA', position: 'PROGRAM COORDINATOR', assigned_unit: 'LR/LS' },
-      { employee_id: '1303012', firstname: 'RICO', middle_name: 'QUIZON', last_name: 'BERJA', position: 'PROGRAM COORDINATOR', assigned_unit: 'TUPAD' },
-      { employee_id: '1303005', firstname: 'KIM MATTHEW', middle_name: 'SOLANA', last_name: 'GUTIERREZ', position: 'PROGRAM COORDINATOR', assigned_unit: 'LIVELIHOOD (CLPEP)' },
-      { employee_id: '1303004', firstname: 'DARLENE', middle_name: 'BALON', last_name: 'IBIAS', position: 'PROGRAM COORDINATOR', assigned_unit: 'TUPAD' },
-      { employee_id: '1303006', firstname: 'ROWENA', middle_name: 'RIGODON', last_name: 'LABRADOR', position: 'PROGRAM COORDINATOR', assigned_unit: 'TUPAD' },
-      { employee_id: '1303014', firstname: 'SHYBERLYN', middle_name: 'MONTUYA', last_name: 'LARGO', position: 'PROGRAM COORDINATOR', assigned_unit: 'TUPAD' },
-      { employee_id: '1303007', firstname: 'RHODORA', middle_name: 'FERMO', last_name: 'LEVANTINO', position: 'PROGRAM COORDINATOR', assigned_unit: 'TUPAD' },
-      { employee_id: '1303009', firstname: 'EMMA', middle_name: 'RAMOREZ', last_name: 'RIVERA', position: 'PROGRAM COORDINATOR', assigned_unit: 'TUPAD' },
-      { employee_id: '1303010', firstname: 'REBECCA', middle_name: 'PALACIO', last_name: 'VILLAGEN', position: 'PROGRAM COORDINATOR', assigned_unit: 'EMPLOYMENT' },
-      { employee_id: '1503001', firstname: 'ARVIN', middle_name: 'NERI', last_name: 'MABEZA', position: 'PG-JOB ORDER', assigned_unit: 'LR/LS' },
-      { employee_id: '1503002', firstname: 'HANNAH CARLOTA', middle_name: 'OJEDA', last_name: 'SEVA', position: 'PG-JOB ORDER', assigned_unit: 'EMPLOYMENT' },
-      { employee_id: '1503003', firstname: 'JEFFREY', middle_name: 'FRANCISCO', last_name: 'VALLES', position: 'PG-JOB ORDER', assigned_unit: 'LIVELIHOOD (DILP)' },
-      { employee_id: '1503004', firstname: 'JOE MARIE', middle_name: '', last_name: 'SALAMANCA', position: 'PG-JOB ORDER', assigned_unit: 'ASSU' },
-    ];
-    
-    await db.transaction(async (client) => {
-      // Clear existing employees directory data first
-      await client.query('DELETE FROM employees_directory');
-      
-      // Insert each employee
-      for (const emp of initialEmployees) {
-        // Create full_name with middle initial
-        const middleInitial = emp.middle_name ? emp.middle_name.charAt(0) + '.' : '';
-        const full_name = `${emp.firstname} ${middleInitial} ${emp.last_name}`.replace(/\s+/g, ' ').trim();
-        
-        await client.query(
-          'INSERT INTO employees_directory (employee_id, firstname, middle_name, last_name, full_name, position, assigned_unit) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-          [emp.employee_id, emp.firstname, emp.middle_name, emp.last_name, full_name, emp.position, emp.assigned_unit]
-        );
-      }
-    });
-    
-    res.json({ 
-      success: true, 
-      message: 'Employees initialized successfully',
-      count: initialEmployees.length
-    });
-  } catch (err) {
-    console.error('Error initializing employees:', err);
-    res.status(500).json({ error: err.message });
   }
 });
 
