@@ -10,6 +10,7 @@ const { router: entriesRouter } = require('./routes/entries');
 const { router: entriesPaginatedRouter } = require('./routes/entries-paginated');
 const { router: trackerRouter } = require('./routes/tracker');
 const { router: printRouter } = require('./routes/print');
+const { router: formsEditRouter } = require('./routes/forms-edit');
 
 
 const app = express();
@@ -36,129 +37,7 @@ app.use(entriesPaginatedRouter);
 app.use(formsRouter);
 app.use(trackerRouter);
 app.use(printRouter);
-
-// Delete an entry by id
-app.delete('/api/delete/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const row = await db.get(`SELECT id FROM official_business WHERE id = $1`, [id]);
-    
-    if (!row) {
-      return res.status(404).json({ error: 'Entry not found' });
-    }
-    
-    const obId = row.id;
-    
-    // Use transaction to delete the entry and its associated employees
-    await db.transaction(async (client) => {
-      // Delete associated employees first (CASCADE should handle this, but being explicit)
-      await client.query('DELETE FROM employees WHERE ob_id = $1', [obId]);
-      
-      // Then delete the main entry
-      await client.query('DELETE FROM official_business WHERE id = $1', [obId]);
-    });
-    
-    res.json({ success: true, message: 'Entry deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Delete all data
-app.delete('/api/delete-all', async (req, res) => {
-  try {
-    // Use transaction to delete all entries
-    await db.transaction(async (client) => {
-      // Delete all employees
-      await client.query('DELETE FROM employees');
-      
-      // Delete all official business entries
-      await client.query('DELETE FROM official_business');
-      
-      // Note: PostgreSQL uses SEQUENCE for auto-increment, but we don't need to reset it
-      // The sequence will continue from where it left off, which is fine
-    });
-    
-    res.json({ success: true, message: 'All data deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Update an entry by ID
-app.put('/api/update/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const { formData, employees } = req.body;
-    
-    if (!employees || employees.length === 0) {
-      return res.status(400).json({ error: 'No employees provided' });
-    }
-    
-    const row = await db.get(`SELECT id FROM official_business WHERE id = $1`, [id]);
-    
-    if (!row) {
-      return res.status(404).json({ error: 'Entry not found' });
-    }
-    
-    const obId = row.id;
-    
-    // Process the dates data
-    let dateOfOB = formData.date_of_ob;
-    let datesOfOBJson = null;
-    
-    if (formData.datesOfOB && Array.isArray(formData.datesOfOB)) {
-      datesOfOBJson = JSON.stringify(formData.datesOfOB);
-      // Use the first date for the single date field if available
-      dateOfOB = formData.datesOfOB.length > 0 ? formData.datesOfOB[0] : dateOfOB;
-    }
-    
-    // Use transaction
-    await db.transaction(async (client) => {
-      // Update form data
-      await client.query(
-        `UPDATE official_business SET 
-          office = $1,
-          division = $2, 
-          date_of_ob = $3,
-          dates_of_ob = $4,
-          location_from = $5,
-          location_to = $6, 
-          purpose = $7,
-          approved_by = $8,
-          approved_by_position = $9
-        WHERE id = $10`,
-        [
-          formData.office || formData.division,
-          formData.division,
-          dateOfOB,
-          datesOfOBJson,
-          formData.location_from || '',
-          formData.location_to,
-          formData.purpose,
-          formData.approved_by || '',
-          formData.approved_by_position || '',
-          obId
-        ]
-      );
-      
-      // Delete existing employees
-      await client.query('DELETE FROM employees WHERE ob_id = $1', [obId]);
-      
-      // Insert new employees
-      for (const emp of employees) {
-        await client.query(
-          'INSERT INTO employees (ob_id, name, position) VALUES ($1, $2, $3)',
-          [obId, emp.name, emp.position]
-        );
-      }
-    });
-    
-    res.json({ success: true, id });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+app.use(formsEditRouter);
 
 // Serve static files (must be after API routes but before catch-all routes)
 app.use(express.static(path.join(__dirname, 'public')));
