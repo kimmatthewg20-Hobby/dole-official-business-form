@@ -22,7 +22,7 @@ module.exports = [
     },
   },
   {
-    name: 'loading the app for tests runs no startup cleanup and starts no daily timer',
+    name: 'loading the app runs no cleanup and starts no timer (Vercel Cron runs the cleanup)',
     async run({ db }) {
       const oldDate = new Date(Date.now() - DAYS_PAST_CLEANUP_CUTOFF * MS_PER_DAY).toISOString();
       const oldForm = await db.run(

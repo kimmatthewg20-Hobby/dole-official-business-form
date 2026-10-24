@@ -37,8 +37,7 @@ Version alpha pero pwede na.
   - The admin page logs out after 5 minutes of inactivity (the server login cookie lasts 24 hours)
 - **Data cleanup management**:
   - Automatic cleanup of records older than 25 days (based on `date_created`)
-  - Runs daily at 2:00 AM
-  - Runs on server startup
+  - Runs daily at about 2:00 AM Philippine time through Vercel Cron (`GET /api/cron/cleanup`)
   - Manual cleanup with dry run testing
   - Cascading deletion of associated employees
 - **Employee directory management** - Manage employee database
@@ -82,6 +81,7 @@ This application is deployed on **Vercel** with **Turso** as the database. Movin
 - `TURSO_DATABASE_URL` - Which database to use. Unset means the local file `file:local.db`. On Vercel it must be a Turso URL (`libsql://...`); the app refuses to start there with a local file, because Vercel's disk does not keep data.
 - `TURSO_AUTH_TOKEN` - Turso database token. Needed only when `TURSO_DATABASE_URL` points at Turso.
 - `ADMIN_PASSWORD` - Fallback admin password, used only while no password is saved in the settings table
+- `CRON_SECRET` - Shared secret for the daily cleanup call. Vercel sends it as `Authorization: Bearer <CRON_SECRET>`. Set it in Vercel for **Production** (a long random value, e.g. `openssl rand -hex 32`); without it the cleanup endpoint refuses every call and no automatic cleanup happens
 - `PORT` - Server port (default: 3000)
 
 `DATABASE_URL` (the old Supabase setting) is no longer read. `.env.example` lists the variables.
@@ -123,7 +123,7 @@ The server will run on port 3000 by default (http://localhost:3000).
 ## Project Structure
 
 ```
-├── server.js              # Express app setup, data export/import, cleanup timer
+├── server.js              # Express app setup, data export/import
 ├── db.js                  # libSQL client and query helpers
 ├── routes/                # API and page routes, one module per area
 ├── migrations/            # Numbered schema files (npm run db:migrate)
@@ -164,6 +164,9 @@ The server will run on port 3000 by default (http://localhost:3000).
 - `POST /api/settings` - Update settings
 - `GET /api/cleanup/test` - Test/run data cleanup (with query params: `days`, `dryRun`)
 
+### Scheduled Endpoint
+- `GET /api/cron/cleanup` - Runs the 25-day cleanup and returns `{ success, deleted }`. Called by Vercel Cron; it needs `Authorization: Bearer <CRON_SECRET>` and refuses every call (401) when `CRON_SECRET` is not set
+
 ## Admin Access
 
 - **URL**: `/admin`
@@ -185,7 +188,7 @@ The server will run on port 3000 by default (http://localhost:3000).
 ## Data Retention Policy
 
 - **Automatic Cleanup**: Records older than 25 days (based on `date_created`) are automatically deleted
-- **Schedule**: Runs daily at 2:00 AM and on server startup on a long-running server. On Vercel serverless neither is reliable (a function instance does not stay alive); a Vercel Cron fix is a separate ticket
+- **Schedule**: Vercel Cron calls `GET /api/cron/cleanup` daily at 18:00 UTC (02:00 Philippine time), set in `vercel.json`. Vercel may run it up to about an hour late. The server itself runs no cleanup at startup and keeps no timer. Locally nothing runs on a schedule; use the admin panel
 - **Cascade Deletion**: Associated employee records are automatically deleted when forms are removed
 - **Manual Control**: Admins can test and trigger cleanup manually via admin panel
 

@@ -50,9 +50,10 @@ Before you start: install the Turso CLI (`brew install tursodatabase/tap/turso`,
 
 9. **Create the production database** (`turso db create ob-production`, URL and token as in step 1) and point your terminal at it (step 2).
 10. **Migrate and check foreign keys:** steps 3 and 4 against `ob-production`.
-11. **Switch the variables.** In Vercel, add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` with the production values, scoped to **Production**. Set `ADMIN_PASSWORD` too (see step 6). Keep `DATABASE_URL` for now.
+11. **Switch the variables.** In Vercel, add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` with the production values, scoped to **Production**. Set `ADMIN_PASSWORD` too (see step 6). Add `CRON_SECRET` scoped to **Production**: a long random value (`openssl rand -hex 32`), kept nowhere else. Without it the daily cleanup is refused. Keep `DATABASE_URL` for now.
 12. **Deploy.** Merge to `main` (or redeploy) so production builds with the new code and the new variables. A production deployment without `TURSO_DATABASE_URL` refuses to start on purpose, instead of saving forms to a file Vercel throws away.
 13. **First login and setup** as in steps 6 and 7, then a short walkthrough: submit, tracker, print, admin login, cleanup dry run. Delete the test form afterwards.
+    **Check the daily cleanup.** In Vercel, Project, Settings, Cron Jobs: `/api/cron/cleanup` is listed with schedule `0 18 * * *` (18:00 UTC = 02:00 Philippine time). After the first night, open its **View Logs** (or Logs, filtered on `/api/cron/cleanup`): the call shows status 200. A 401 means `CRON_SECRET` is missing in Production or the deployment predates it: set it and redeploy. In a private window, `/api/cron/cleanup` must also answer 401.
 14. Close the Turso terminal. Supabase stays untouched until you decide to retire it.
 
 ### Rollback
@@ -66,6 +67,6 @@ The new code no longer reads `DATABASE_URL`, so switching variables back on the 
 
 ## Known notes
 
-- **The 25-day cleanup does not run reliably on Vercel.** It runs when a server instance starts and on a 24-hour timer, but serverless instances do not stay alive. Fixing it with Vercel Cron is ticket 09. Until then, run the dry test and "Run Cleanup Now" by hand from `/admin` when needed.
+- **The 25-day cleanup runs on Vercel Cron.** Once a day at 18:00 UTC (02:00 Philippine time; Vercel may be up to about an hour late) Vercel calls `/api/cron/cleanup` with `CRON_SECRET`. Cron jobs run on the production deployment only, so staging previews never clean up on their own. The dry test and "Run Cleanup Now" on `/admin` stay as a backup.
 - **The admin password is stored in plain text.** Hashing it is ticket 10.
 - **Clean start means the old forms are not copied.** They stay in Supabase. If you later want them in Turso, `npm run db:import -- --help` loads a Supabase CSV export into an empty database (it refuses a database that already has rows unless you pass `--force`, which deletes them first).

@@ -72,7 +72,7 @@ module.exports = [
     },
   },
   {
-    name: 'cleanupOldRecords called directly (as the startup run does) deletes the old form and keeps the recent one',
+    name: 'cleanupOldRecords called directly (as the cron route does) deletes the old form and keeps the recent one',
     async run({ db }) {
       await withFormsRestored(db, async () => {
         const { oldId, recentId } = await seed(db);

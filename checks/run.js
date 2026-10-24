@@ -19,7 +19,6 @@ function useThrowawayDatabase(tempDir) {
   // Set before db.js loads so dotenv cannot point the check at a shared database.
   process.env.TURSO_DATABASE_URL = `file:${path.join(tempDir, CHECK_DATABASE_FILE)}`;
   process.env.TURSO_AUTH_TOKEN = '';
-  process.env.SKIP_STARTUP_CLEANUP = 'true';
 }
 
 function listCheckFiles() {

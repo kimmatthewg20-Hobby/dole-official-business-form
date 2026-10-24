@@ -12,7 +12,8 @@ const { router: trackerRouter } = require('./routes/tracker');
 const { router: printRouter } = require('./routes/print');
 const { router: formsEditRouter } = require('./routes/forms-edit');
 const { router: directoryRouter } = require('./routes/directory');
-const { router: cleanupRouter, cleanupOldRecords } = require('./routes/cleanup');
+const { router: cleanupRouter } = require('./routes/cleanup');
+const { router: cronCleanupRouter } = require('./routes/cron-cleanup');
 const { router: directoryHistoryRouter } = require('./routes/directory-history');
 
 
@@ -44,6 +45,7 @@ app.use(formsEditRouter);
 app.use(directoryRouter);
 app.use(directoryHistoryRouter);
 app.use(cleanupRouter);
+app.use(cronCleanupRouter);
 
 // Serve static files (must be after API routes but before catch-all routes)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -179,42 +181,6 @@ app.post('/api/import-data', adminApiOnly, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-// Schedule cleanup to run daily at 2 AM
-function scheduleDailyCleanup() {
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(2, 0, 0, 0); // 2 AM
-
-  const msUntilCleanup = tomorrow.getTime() - now.getTime();
-
-  setTimeout(() => {
-    // Run cleanup
-    cleanupOldRecords().catch(err => {
-      console.error('Scheduled cleanup failed:', err);
-    });
-
-    // Schedule next cleanup (24 hours later)
-    setInterval(() => {
-      cleanupOldRecords().catch(err => {
-        console.error('Scheduled cleanup failed:', err);
-      });
-    }, 24 * 60 * 60 * 1000); // 24 hours
-  }, msUntilCleanup);
-
-  console.log(`Next cleanup scheduled for: ${tomorrow.toISOString()}`);
-}
-
-// Checks load the app against a throwaway database and must not delete or schedule anything.
-const SKIP_STARTUP_CLEANUP = process.env.SKIP_STARTUP_CLEANUP === 'true';
-
-if (!SKIP_STARTUP_CLEANUP) {
-  cleanupOldRecords().catch(err => {
-    console.error('Initial cleanup failed:', err);
-  });
-  scheduleDailyCleanup();
-}
 
 // Start the server (only in local development)
 if (require.main === module) {
