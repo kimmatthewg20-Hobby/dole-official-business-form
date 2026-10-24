@@ -20,7 +20,7 @@ Edit, delete and directory replace have no button in the pages; those three item
 - [ ] **Delete.** Log in on `/admin` first, then in the console on that tab run:
   `fetch('/api/delete/ID', {method: 'DELETE'}).then(r => r.json()).then(console.log)`
   It prints `success: true`. The form is gone from the tracker, and `/print/ID` no longer shows it.
-- [ ] **Print two per page.** Submit a form with three or four employees and click **View** in the tracker (opens `/print/<id>`). The browser's print preview shows one form per employee, two forms on each 8.5" x 13.5" page with the cutout line between them, and every name is right.
+- [ ] **Print two per page.** Submit a form with three or four employees and click **View** in the tracker (opens `/print/<id>`). The browser's print preview shows one form per employee, two forms on each 8.5" x 13" page with the cutout line between them, and every name is right.
 - [ ] **Admin login.** Open `/admin`, user `cnpoadmin`. A wrong password is refused. The right password opens the admin page. On staging and production: the password that works on Supabase today still works after the import.
 - [ ] **Admin routes are protected.** In a private window (not logged in), open `/api/cleanup/test?dryRun=true`. You get an error, not a list.
 - [ ] **Settings.** On `/admin`, change the division options and save. Reload `/`: the division list shows your new options. Change the admin password, log in again with the new one, then change it back.

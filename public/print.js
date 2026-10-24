@@ -456,7 +456,7 @@ function generatePrintableHTML(data) {
             display: none;
           }
           @page {
-            size: 8.5in 13.5in;
+            size: 8.5in 13in;
             margin: 0;
           }
           body {
@@ -472,7 +472,7 @@ function generatePrintableHTML(data) {
           .form-page {
             padding: 5px 0.3cm;
             width: 8.5in;
-            max-height: calc((13.5in - 0.6cm) / 2);
+            max-height: calc((13in - 0.6cm) / 2);
             box-sizing: border-box;
             overflow: hidden;
             page-break-after: avoid;

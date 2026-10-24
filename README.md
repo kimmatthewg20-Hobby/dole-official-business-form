@@ -198,7 +198,7 @@ The server will run on port 3000 by default (http://localhost:3000).
 - Time inputs for departure and return
 
 ### Print Features
-- Optimized for 8.5" x 13.5" paper (2 forms per page)
+- Optimized for 8.5" x 13" paper (2 forms per page)
 - Cutout line guides for even-numbered forms
 - Proper spacing and page breaks
 - Department of Labor and Employment branding
