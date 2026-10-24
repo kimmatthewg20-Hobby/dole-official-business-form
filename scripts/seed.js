@@ -4,6 +4,7 @@
 // is invented: real staff names must never land in a development database.
 
 const db = require('../db');
+const { hashPassword } = require('../routes/password-hash');
 
 const TEST_ADMIN_PASSWORD = 'local-test-admin';
 
@@ -33,6 +34,7 @@ async function seedDatabase() {
   if (db.isTursoUrl(db.databaseUrl)) {
     throw new Error('Refusing to seed: TURSO_DATABASE_URL points at Turso, not a local file');
   }
+  const adminPasswordHash = await hashPassword(TEST_ADMIN_PASSWORD);
   // Replacing rather than adding keeps a repeated seed from piling up duplicates.
   await db.transaction(async (client) => {
     await client.query('DELETE FROM employees_directory', []);
@@ -53,7 +55,7 @@ async function seedDatabase() {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [FAKE_SETTINGS.office, FAKE_SETTINGS.office_head, FAKE_SETTINGS.office_head_position,
         FAKE_SETTINGS.location_from, FAKE_SETTINGS.division_options,
-        FAKE_SETTINGS.assistant_regional_director, TEST_ADMIN_PASSWORD]
+        FAKE_SETTINGS.assistant_regional_director, adminPasswordHash]
     );
   });
   return { directoryEntries: FAKE_DIRECTORY.length };

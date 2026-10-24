@@ -389,6 +389,8 @@
 
   <script>
     (function() {
+      // Mirrors the server's rule so the admin sees it before sending; the server enforces it.
+      const MIN_PASSWORD_LENGTH = 10;
       const loginCard = document.getElementById('loginCard');
       const settingsCard = document.getElementById('settingsCard');
       const loginForm = document.getElementById('loginForm');
@@ -454,15 +456,10 @@
         const username = document.getElementById('adminUsername').value.trim();
         const password = document.getElementById('adminPass').value;
         
-        if (username !== 'cnpoadmin') {
-          loginError.style.display = 'block';
-          return;
-        }
-        
         fetch('/api/admin/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: password }),
+          body: JSON.stringify({ username: username, password: password }),
           credentials: 'include'
         })
         .then(r => r.json())
@@ -498,8 +495,8 @@
             passwordError.style.display = 'block';
             return;
           }
-          if (newPassword.length < 4) {
-            passwordError.textContent = 'Minimum 4 characters required';
+          if (newPassword.length < MIN_PASSWORD_LENGTH) {
+            passwordError.textContent = `Minimum ${MIN_PASSWORD_LENGTH} characters required`;
             passwordError.style.display = 'block';
             return;
           }

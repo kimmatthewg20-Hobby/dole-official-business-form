@@ -80,7 +80,7 @@ This application is deployed on **Vercel** with **Turso** as the database. Movin
 
 - `TURSO_DATABASE_URL` - Which database to use. Unset means the local file `file:local.db`. On Vercel it must be a Turso URL (`libsql://...`); the app refuses to start there with a local file, because Vercel's disk does not keep data.
 - `TURSO_AUTH_TOKEN` - Turso database token. Needed only when `TURSO_DATABASE_URL` points at Turso.
-- `ADMIN_PASSWORD` - Fallback admin password, used only while no password is saved in the settings table
+- `ADMIN_PASSWORD` - First-run bootstrap admin password: accepted only while no password is stored in the settings table, ignored once one is saved. With neither, nobody can log in. There is no built-in default
 - `CRON_SECRET` - Shared secret for the daily cleanup call. Vercel sends it as `Authorization: Bearer <CRON_SECRET>`. Set it in Vercel for **Production** (a long random value, e.g. `openssl rand -hex 32`); without it the cleanup endpoint refuses every call and no automatic cleanup happens
 - `PORT` - Server port (default: 3000)
 
@@ -171,7 +171,7 @@ The server will run on port 3000 by default (http://localhost:3000).
 
 - **URL**: `/admin`
 - **Username**: `cnpoadmin`
-- **Password**: Set via `ADMIN_PASSWORD` environment variable
+- **Password**: stored as a salted `scrypt` hash; at least 10 characters when set or changed. On a fresh database, log in with `ADMIN_PASSWORD` once and change it. An old plain-text password is upgraded to a hash at its next correct login. Locally, `npm run db:seed` sets the test password `local-test-admin`
 
 ### Admin Panel Features
 1. **Settings Management**

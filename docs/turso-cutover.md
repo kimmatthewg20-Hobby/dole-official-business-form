@@ -42,7 +42,7 @@ Before you start: install the Turso CLI (`brew install tursodatabase/tap/turso`,
 3. **Apply migrations.** `npm run db:migrate`. It lists `0001_initial_schema.sql` as applied. Run it again: nothing new is applied.
 4. **Check foreign keys.** `turso db shell ob-staging "PRAGMA foreign_keys;"` must print `1`. If it prints `0`, stop: deleting a form would leave its employees behind.
 5. **Preview deploy.** In Vercel, Project Settings, Environment Variables: add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` with the staging values, scoped to **Preview** only. Push the branch; Vercel builds a preview.
-6. **First login on the empty database.** There is no admin password stored yet, so `/admin` accepts the value of the `ADMIN_PASSWORD` variable in Vercel, or if that is not set, the default written in `routes/admin-auth.js`. Log in with username `cnpoadmin`, then change the password straight away (Admin, Change Password). Set `ADMIN_PASSWORD` in Vercel first if you do not want the default to be usable even for a minute.
+6. **First login on the empty database.** There is no admin password stored yet, so `/admin` accepts only the value of the `ADMIN_PASSWORD` variable in Vercel; set it first, or nobody can log in (there is no built-in default). Log in with username `cnpoadmin`, then change the password straight away (Admin, Change Password; at least 10 characters). From then on `ADMIN_PASSWORD` is ignored.
 7. **Fill the empty tables.** In Admin, save the settings (office, division options). Open `/employees.html` while logged in as admin and load the employee directory (it offers to initialize an empty directory), or add people one by one.
 8. **Walk through** the TEST IT YOURSELF list on the preview URL. Forms you create here go to staging only.
 

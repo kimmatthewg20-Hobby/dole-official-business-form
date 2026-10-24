@@ -46,7 +46,10 @@ module.exports = [
     async run({ baseUrl }) {
       const response = await login(baseUrl, WRONG_PASSWORD);
       assert.equal(response.status, UNAUTHORIZED);
-      assert.deepEqual(await response.json(), { success: false, error: 'Incorrect password' });
+      assert.deepEqual(await response.json(), {
+        success: false,
+        error: 'Incorrect username or password',
+      });
       assert.equal(response.headers.getSetCookie().length, 0);
     },
   },

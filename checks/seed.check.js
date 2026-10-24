@@ -15,7 +15,7 @@ module.exports = [
       const response = await fetch(`${baseUrl}/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: TEST_ADMIN_PASSWORD }),
+        body: JSON.stringify({ username: 'cnpoadmin', password: TEST_ADMIN_PASSWORD }),
       });
       assert.equal(response.status, 200);
       assert.deepEqual(await response.json(), { success: true });

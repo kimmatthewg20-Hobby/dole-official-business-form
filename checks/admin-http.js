@@ -6,6 +6,7 @@
 const assert = require('node:assert/strict');
 
 const AUTH_COOKIE_NAME = 'adminAuth';
+const ADMIN_USERNAME = 'cnpoadmin';
 
 function postJson(baseUrl, route, body, cookie) {
   const headers = { 'Content-Type': 'application/json' };
@@ -13,8 +14,8 @@ function postJson(baseUrl, route, body, cookie) {
   return fetch(`${baseUrl}${route}`, { method: 'POST', headers, body: JSON.stringify(body) });
 }
 
-function login(baseUrl, password) {
-  return postJson(baseUrl, '/api/admin/login', { password });
+function login(baseUrl, password, username = ADMIN_USERNAME) {
+  return postJson(baseUrl, '/api/admin/login', { username, password });
 }
 
 async function loginCookie(baseUrl, password) {
@@ -53,12 +54,13 @@ async function withSettingsRestored(db, callback) {
   }
 }
 
-// With no settings row the app falls back to ADMIN_PASSWORD; a known value keeps
-// the check independent of any developer's own environment.
+// With no stored password the app accepts ADMIN_PASSWORD; a known value (or none,
+// when password is undefined) keeps the check independent of any developer's environment.
 async function withFallbackPassword(password, callback) {
   const hadValue = Object.prototype.hasOwnProperty.call(process.env, 'ADMIN_PASSWORD');
   const previous = process.env.ADMIN_PASSWORD;
-  process.env.ADMIN_PASSWORD = password;
+  if (password === undefined) delete process.env.ADMIN_PASSWORD;
+  else process.env.ADMIN_PASSWORD = password;
   try {
     await callback();
   } finally {
