@@ -395,6 +395,7 @@
       const settingsCard = document.getElementById('settingsCard');
       const loginForm = document.getElementById('loginForm');
       const loginError = document.getElementById('loginError');
+      const LOGIN_FAILED_MESSAGE = loginError.textContent;
       const divisionOptionsField = document.getElementById('divisionOptions');
       const oldPasswordField = document.getElementById('oldPassword');
       const newPasswordField = document.getElementById('newPassword');
@@ -467,10 +468,14 @@
           if (d.success) { 
             showSettings(); 
           } else { 
+            loginError.textContent = d.error || LOGIN_FAILED_MESSAGE;
             loginError.style.display = 'block'; 
           } 
         })
-        .catch(() => { loginError.style.display = 'block'; });
+        .catch(() => {
+          loginError.textContent = LOGIN_FAILED_MESSAGE;
+          loginError.style.display = 'block';
+        });
       });
 
       saveAllBtn.addEventListener('click', function(e) {

@@ -1,5 +1,6 @@
 const express = require('express');
 const { isAdminPassword, saveAdminPassword } = require('./admin-password');
+const { refuseLockedOutLogin, recordFailedLogin, clearFailedLogins } = require('./login-lockout');
 
 const ADMIN_COOKIE_NAME = 'adminAuth';
 const ADMIN_COOKIE_VALUE = '1';
@@ -28,12 +29,14 @@ async function login(req, res) {
   try {
     const { username, password } = req.body || {};
     if (username === ADMIN_USERNAME && (await isAdminPassword(password))) {
+      await clearFailedLogins(req);
       res.cookie(ADMIN_COOKIE_NAME, ADMIN_COOKIE_VALUE, {
         httpOnly: true,
         maxAge: ADMIN_SESSION_MS,
       });
       return res.json({ success: true });
     }
+    await recordFailedLogin(req);
     res.status(401).json({ success: false, error: 'Incorrect username or password' });
   } catch (err) {
     console.error('Error checking admin login:', err);
@@ -76,7 +79,7 @@ async function changePassword(req, res) {
 }
 
 const router = express.Router();
-router.post('/api/admin/login', login);
+router.post('/api/admin/login', refuseLockedOutLogin, login);
 router.get('/api/admin/check', check);
 router.post('/api/admin/change-password', adminApiOnly, changePassword);
 

@@ -39,7 +39,7 @@ Before you start: install the Turso CLI (`brew install tursodatabase/tap/turso`,
 
 1. **Create the staging database.** `turso db create ob-staging`, then `turso db show ob-staging --url` (the `libsql://...` URL) and `turso db tokens create ob-staging` (the token).
 2. **Point your terminal at staging.** `export TURSO_DATABASE_URL=libsql://...` and `export TURSO_AUTH_TOKEN=...` (these win over any `.env`).
-3. **Apply migrations.** `npm run db:migrate`. It lists `0001_initial_schema.sql` as applied. Run it again: nothing new is applied.
+3. **Apply migrations.** `npm run db:migrate`. It lists `0001_initial_schema.sql` and `0002_login_attempts.sql` as applied. Run it again: nothing new is applied.
 4. **Check foreign keys.** `turso db shell ob-staging "PRAGMA foreign_keys;"` must print `1`. If it prints `0`, stop: deleting a form would leave its employees behind.
 5. **Preview deploy.** In Vercel, Project Settings, Environment Variables: add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` with the staging values, scoped to **Preview** only. Push the branch; Vercel builds a preview.
 6. **First login on the empty database.** There is no admin password stored yet, so `/admin` accepts only the value of the `ADMIN_PASSWORD` variable in Vercel; set it first, or nobody can log in (there is no built-in default). Log in with username `cnpoadmin`, then change the password straight away (Admin, Change Password; at least 10 characters). From then on `ADMIN_PASSWORD` is ignored.
