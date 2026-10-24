@@ -43,4 +43,4 @@ async function isAdminPassword(candidate) {
   return true;
 }
 
-module.exports = { isAdminPassword, saveAdminPassword };
+module.exports = { isAdminPassword, saveAdminPassword, readStoredPassword };

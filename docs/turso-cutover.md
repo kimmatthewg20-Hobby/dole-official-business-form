@@ -6,7 +6,7 @@ The decision is in [adr/0001](adr/0001-turso-libsql-replaces-supabase-postgres.m
 ## TEST IT YOURSELF
 
 Do this once on your laptop (local file database), then again on the staging Vercel preview (step 8 below), then a short pass on production (step 13).
-Locally: `npm run db:migrate`, `npm run db:seed`, `npm start`, open http://localhost:3000. The local admin password is `local-test-admin`.
+Locally: `npm run db:migrate`, `npm run db:seed`, `SESSION_SECRET=$(openssl rand -hex 32) npm start`, open http://localhost:3000. The local admin password is `local-test-admin`.
 On staging and production, log in with the password you set in step 6.
 
 Edit, delete and directory replace have no button in the pages; those three items use the browser console (F12, Console tab) on the open site, so the request goes to that same site. Replace `ID` with the form number shown in the tracker.
@@ -22,6 +22,8 @@ Edit, delete and directory replace have no button in the pages; those three item
   It prints `success: true`. The form is gone from the tracker, and `/print/ID` no longer shows it.
 - [ ] **Print two per page.** Submit a form with three or four employees and click **View** in the tracker (opens `/print/<id>`). The browser's print preview shows one form per employee, two forms on each 8.5" x 13" page with the cutout line between them, and every name is right.
 - [ ] **Admin login.** Open `/admin`, user `cnpoadmin`. A wrong password is refused. The right password opens the admin page. On staging and production: the password you set in step 6 works.
+- [ ] **Logout.** Logged in on `/admin`, click **Logout**: the login screen shows. In the console run `fetch('/api/admin/check').then(r => r.status).then(console.log)`: it prints `401`. Log in again and leave the page untouched for 5 minutes: it returns to the login screen, and the same command prints `401`.
+- [ ] **Password change ends other sessions.** Log in on `/admin` in two browsers (or a normal and a private window). Change the password in the first: it stays logged in (the command above prints `200`); in the second it prints `401`. Change the password back.
 - [ ] **Admin routes are protected.** In a private window (not logged in), open `/api/cleanup/test?dryRun=true`. You get an error, not a list.
 - [ ] **Settings.** On `/admin`, change the division options and save. Reload `/`: the division list shows your new options. Change the admin password, log in again with the new one, then change it back.
 - [ ] **Directory replace (local and staging only, never production).** Open `/employees.html`: add an entry, edit it, delete it; the list follows each step. Then, logged in on `/admin`, in the console run a replace with one bad row:
@@ -39,9 +41,9 @@ Before you start: install the Turso CLI (`brew install tursodatabase/tap/turso`,
 
 1. **Create the staging database.** `turso db create ob-staging`, then `turso db show ob-staging --url` (the `libsql://...` URL) and `turso db tokens create ob-staging` (the token).
 2. **Point your terminal at staging.** `export TURSO_DATABASE_URL=libsql://...` and `export TURSO_AUTH_TOKEN=...` (these win over any `.env`).
-3. **Apply migrations.** `npm run db:migrate`. It lists `0001_initial_schema.sql` and `0002_login_attempts.sql` as applied. Run it again: nothing new is applied.
+3. **Apply migrations.** `npm run db:migrate`. It lists `0001_initial_schema.sql`, `0002_login_attempts.sql` and `0003_admin_sessions.sql` as applied. Run it again: nothing new is applied.
 4. **Check foreign keys.** `turso db shell ob-staging "PRAGMA foreign_keys;"` must print `1`. If it prints `0`, stop: deleting a form would leave its employees behind.
-5. **Preview deploy.** In Vercel, Project Settings, Environment Variables: add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` with the staging values, scoped to **Preview** only. Push the branch; Vercel builds a preview.
+5. **Preview deploy.** In Vercel, Project Settings, Environment Variables: add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` with the staging values, scoped to **Preview** only. Add `SESSION_SECRET` scoped to **Preview**: a long random value (`openssl rand -hex 32`), kept nowhere else. Without it admin login is refused. Push the branch; Vercel builds a preview.
 6. **First login on the empty database.** There is no admin password stored yet, so `/admin` accepts only the value of the `ADMIN_PASSWORD` variable in Vercel; set it first, or nobody can log in (there is no built-in default). Log in with username `cnpoadmin`, then change the password straight away (Admin, Change Password; at least 10 characters). From then on `ADMIN_PASSWORD` is ignored.
 7. **Fill the empty tables.** In Admin, save the settings (office, division options). Open `/employees.html` while logged in as admin and load the employee directory (it offers to initialize an empty directory), or add people one by one.
 8. **Walk through** the TEST IT YOURSELF list on the preview URL. Forms you create here go to staging only.
@@ -50,7 +52,7 @@ Before you start: install the Turso CLI (`brew install tursodatabase/tap/turso`,
 
 9. **Create the production database** (`turso db create ob-production`, URL and token as in step 1) and point your terminal at it (step 2).
 10. **Migrate and check foreign keys:** steps 3 and 4 against `ob-production`.
-11. **Switch the variables.** In Vercel, add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` with the production values, scoped to **Production**. Set `ADMIN_PASSWORD` too (see step 6). Add `CRON_SECRET` scoped to **Production**: a long random value (`openssl rand -hex 32`), kept nowhere else. Without it the daily cleanup is refused. Keep `DATABASE_URL` for now.
+11. **Switch the variables.** In Vercel, add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` with the production values, scoped to **Production**. Set `ADMIN_PASSWORD` too (see step 6). Add `SESSION_SECRET` scoped to **Production**: a new random value (`openssl rand -hex 32`), not the staging one; without it admin login is refused. Add `CRON_SECRET` scoped to **Production**: a long random value (`openssl rand -hex 32`), kept nowhere else. Without it the daily cleanup is refused. Keep `DATABASE_URL` for now.
 12. **Deploy.** Merge to `main` (or redeploy) so production builds with the new code and the new variables. A production deployment without `TURSO_DATABASE_URL` refuses to start on purpose, instead of saving forms to a file Vercel throws away.
 13. **First login and setup** as in steps 6 and 7, then a short walkthrough: submit, tracker, print, admin login, cleanup dry run. Delete the test form afterwards.
     **Check the daily cleanup.** In Vercel, Project, Settings, Cron Jobs: `/api/cron/cleanup` is listed with schedule `0 18 * * *` (18:00 UTC = 02:00 Philippine time). After the first night, open its **View Logs** (or Logs, filtered on `/api/cron/cleanup`): the call shows status 200. A 401 means `CRON_SECRET` is missing in Production or the deployment predates it: set it and redeploy. In a private window, `/api/cron/cleanup` must also answer 401.
@@ -68,5 +70,5 @@ The new code no longer reads `DATABASE_URL`, so switching variables back on the 
 ## Known notes
 
 - **The 25-day cleanup runs on Vercel Cron.** Once a day at 18:00 UTC (02:00 Philippine time; Vercel may be up to about an hour late) Vercel calls `/api/cron/cleanup` with `CRON_SECRET`. Cron jobs run on the production deployment only, so staging previews never clean up on their own. The dry test and "Run Cleanup Now" on `/admin` stay as a backup.
-- **The admin password is stored in plain text.** Hashing it is ticket 10.
+- **The admin password is stored as a salted scrypt hash.** A plain-text value from before the move is accepted once and re-saved as a hash at the next correct login.
 - **Clean start means the old forms are not copied.** They stay in Supabase. If you later want them in Turso, `npm run db:import -- --help` loads a Supabase CSV export into an empty database (it refuses a database that already has rows unless you pass `--force`, which deletes them first).

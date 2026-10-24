@@ -8,6 +8,7 @@ const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 const {
   postJson,
   login,
+  sessionCookie,
   loginCookie,
   readSettings,
   withSettingsRestored,
@@ -82,7 +83,8 @@ module.exports = [
           cookie,
         );
         assert.equal(changed.status, 200);
-        await saveDivisionOptions(baseUrl, cookie);
+        // As a browser would, the save uses the fresh session the change handed out.
+        await saveDivisionOptions(baseUrl, sessionCookie(changed));
         assert.equal((await login(baseUrl, CHANGED_PASSWORD)).status, 200);
         assert.equal((await login(baseUrl, TEST_ADMIN_PASSWORD)).status, UNAUTHORIZED);
       });

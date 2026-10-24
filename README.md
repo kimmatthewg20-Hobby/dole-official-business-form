@@ -34,7 +34,8 @@ Version alpha pero pwede na.
 - **Admin panel** (`/admin`) - Secure administrative interface:
   - Settings management (division options)
   - Password change functionality
-  - The admin page logs out after 5 minutes of inactivity (the server login cookie lasts 24 hours)
+  - Logout button; the admin page also logs out after 5 minutes of inactivity
+  - The admin session is a signed cookie that lasts one hour. It ends on logout, and every session ends when the admin password is changed (the admin who changed it gets a fresh one)
 - **Data cleanup management**:
   - Automatic cleanup of records older than 25 days (based on `date_created`)
   - Runs daily at about 2:00 AM Philippine time through Vercel Cron (`GET /api/cron/cleanup`)
@@ -81,6 +82,7 @@ This application is deployed on **Vercel** with **Turso** as the database. Movin
 - `TURSO_DATABASE_URL` - Which database to use. Unset means the local file `file:local.db`. On Vercel it must be a Turso URL (`libsql://...`); the app refuses to start there with a local file, because Vercel's disk does not keep data.
 - `TURSO_AUTH_TOKEN` - Turso database token. Needed only when `TURSO_DATABASE_URL` points at Turso.
 - `ADMIN_PASSWORD` - First-run bootstrap admin password: accepted only while no password is stored in the settings table, ignored once one is saved. With neither, nobody can log in. There is no built-in default
+- `SESSION_SECRET` - Signs the admin session cookie. Required in every environment: when it is missing or empty, admin login is refused (there is no fallback). Use a long random value (`openssl rand -hex 32`), different per environment and kept nowhere else. Changing it logs the admin out everywhere
 - `CRON_SECRET` - Shared secret for the daily cleanup call. Vercel sends it as `Authorization: Bearer <CRON_SECRET>`. Set it in Vercel for **Production** (a long random value, e.g. `openssl rand -hex 32`); without it the cleanup endpoint refuses every call and no automatic cleanup happens
 - `PORT` - Server port (default: 3000)
 
@@ -109,7 +111,7 @@ npm start
 npm run db:check
 ```
 
-No `.env` is needed: with `TURSO_DATABASE_URL` unset the app uses `local.db` (gitignored). The seed refuses to run against a Turso URL and holds only invented names; it sets the local admin password `local-test-admin`.
+No `.env` is needed: with `TURSO_DATABASE_URL` unset the app uses `local.db` (gitignored). The seed refuses to run against a Turso URL and holds only invented names; it sets the local admin password `local-test-admin`. Admin login needs `SESSION_SECRET`: start with `SESSION_SECRET=$(openssl rand -hex 32) npm start` (or put it in your own `.env`). `npm run db:check` sets its own.
 
 | Command | What it does |
 |---|---|
@@ -159,7 +161,9 @@ The server will run on port 3000 by default (http://localhost:3000).
 
 ### Admin Endpoints (Protected)
 - `GET /admin` - Admin panel
-- `POST /api/admin/login` - Admin login
+- `POST /api/admin/login` - Admin login (sets the signed session cookie)
+- `POST /api/admin/logout` - Ends the admin session and clears the cookie
+- `GET /api/admin/check` - 200 with a valid admin session, 401 otherwise
 - `POST /api/admin/change-password` - Change admin password
 - `POST /api/settings` - Update settings
 - `GET /api/cleanup/test` - Test/run data cleanup (with query params: `days`, `dryRun`)

@@ -4,6 +4,7 @@
 // local database that is created from the migrations and the seed, and deleted
 // afterwards. Each check module exports an array of { name, run(context) }.
 
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -14,11 +15,18 @@ const TEMP_DIR_PREFIX = 'ob-db-check-';
 const CHECK_DATABASE_FILE = 'check.db';
 const LOOPBACK_HOST = '127.0.0.1';
 const ANY_FREE_PORT = 0;
+const SESSION_SECRET_BYTES = 32;
 
 function useThrowawayDatabase(tempDir) {
   // Set before db.js loads so dotenv cannot point the check at a shared database.
   process.env.TURSO_DATABASE_URL = `file:${path.join(tempDir, CHECK_DATABASE_FILE)}`;
   process.env.TURSO_AUTH_TOKEN = '';
+}
+
+// Admin login is refused without SESSION_SECRET. A fresh random value per run keeps any
+// developer's own secret out of the checks and keeps a secret out of the source.
+function useCheckSessionSecret() {
+  process.env.SESSION_SECRET = crypto.randomBytes(SESSION_SECRET_BYTES).toString('hex');
 }
 
 function listCheckFiles() {
@@ -56,6 +64,7 @@ async function runChecks(context) {
 async function main() {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), TEMP_DIR_PREFIX));
   useThrowawayDatabase(tempDir);
+  useCheckSessionSecret();
   let db = null;
   let server = null;
   let failures = 0;

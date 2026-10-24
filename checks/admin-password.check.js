@@ -5,7 +5,14 @@
 
 const assert = require('node:assert/strict');
 const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
-const { postJson, login, loginCookie, withSettingsRestored } = require('./admin-http');
+const {
+  postJson,
+  login,
+  sessionCookie,
+  loginCookie,
+  withSettingsRestored,
+  captureConsole,
+} = require('./admin-http');
 
 // The scheme name, then three numeric parameters, then salt and hash in base64.
 const SCRYPT_HASH_FORMAT = /^scrypt\$\d+\$\d+\$\d+\$[A-Za-z0-9+/]+=*\$[A-Za-z0-9+/]+=*$/;
@@ -33,26 +40,6 @@ function changePassword(baseUrl, cookie, oldPassword, newPassword) {
   return postJson(baseUrl, '/api/admin/change-password', { oldPassword, newPassword }, cookie);
 }
 
-const CONSOLE_METHODS = ['log', 'info', 'warn', 'error', 'debug'];
-
-// The server runs in this process, so its console output can be collected here.
-async function captureConsole(callback) {
-  const originals = CONSOLE_METHODS.map((method) => console[method]);
-  const lines = [];
-  for (const method of CONSOLE_METHODS) {
-    console[method] = (...args) =>
-      lines.push(args.map((arg) => String(arg && arg.stack ? arg.stack : arg)).join(' '));
-  }
-  try {
-    await callback();
-  } finally {
-    CONSOLE_METHODS.forEach((method, index) => {
-      console[method] = originals[index];
-    });
-  }
-  return lines.join('\n');
-}
-
 module.exports = [
   {
     name: 'the seed stores the test admin password as a scrypt hash',
@@ -70,7 +57,12 @@ module.exports = [
         const first = await changePassword(baseUrl, cookie, TEST_ADMIN_PASSWORD, CHANGED_PASSWORD);
         assert.equal(first.status, 200);
         const firstHash = await storedPassword(db);
-        const second = await changePassword(baseUrl, cookie, CHANGED_PASSWORD, CHANGED_PASSWORD);
+        const second = await changePassword(
+          baseUrl,
+          sessionCookie(first),
+          CHANGED_PASSWORD,
+          CHANGED_PASSWORD,
+        );
         assert.equal(second.status, 200);
         const secondHash = await storedPassword(db);
         assert.match(firstHash, SCRYPT_HASH_FORMAT);
@@ -138,7 +130,7 @@ module.exports = [
           bodies.push(await wrong.text());
           const right = await login(baseUrl, OLD_PLAIN_PASSWORD);
           bodies.push(await right.text());
-          const cookie = right.headers.getSetCookie()[0].split(';')[0];
+          const cookie = sessionCookie(right);
           const changed = await changePassword(
             baseUrl,
             cookie,

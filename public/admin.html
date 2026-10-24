@@ -313,6 +313,10 @@
   <div id="settingsCard" class="settings-container" style="display: none;">
     <div id="toastContainer" class="toast-container"></div>
 
+    <div style="text-align: right; margin-bottom: 15px;">
+      <button type="button" id="logoutBtn" class="btn" style="background-color: var(--secondary-color);">Logout</button>
+    </div>
+
     <div class="card">
       <div class="settings-header">
         <h2><i class="material-icons">settings</i> Default Settings</h2>
@@ -407,6 +411,7 @@
       const runCleanupBtn = document.getElementById('runCleanupBtn');
       const cleanupDays = document.getElementById('cleanupDays');
       const cleanupResult = document.getElementById('cleanupResult');
+      const logoutBtn = document.getElementById('logoutBtn');
 
       const SESSION_TIMEOUT = 5 * 60 * 1000;
       let sessionTimer = null;
@@ -426,11 +431,21 @@
 
       function resetSessionTimer() {
         clearSessionTimer();
-        sessionTimer = setTimeout(() => {
-          showLogin();
-          showToast('Session expired. Please login again.', 'info');
-        }, SESSION_TIMEOUT);
+        sessionTimer = setTimeout(() => logout('Session expired. Please login again.'), SESSION_TIMEOUT);
       }
+
+      // Ends the session on the server too, so the cookie stops working even if it was copied.
+      // The login screen is shown even when the server cannot be reached.
+      function logout(message) {
+        fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+          .catch(() => {})
+          .finally(() => {
+            showLogin();
+            showToast(message, 'info');
+          });
+      }
+
+      logoutBtn.addEventListener('click', () => logout('You have logged out.'));
 
       function clearSessionTimer() {
         if (sessionTimer) {

@@ -18,4 +18,5 @@ The admin password is stored as a salted `scrypt` hash using Node's built-in `cr
 - Changing `SESSION_SECRET` logs the admin out everywhere; it must be set in every environment or login is refused.
 - Changing the admin password ends all other sessions, because each session carries a fingerprint of the stored hash.
 - The login-attempt table needs migration `0002`, applied by Kim.
+- Each session also has a row in `admin_sessions` (migration `0003`, applied by Kim), because a signed cookie alone cannot be taken back: logout deletes its row, and a password change deletes them all.
 - `ADMIN_PASSWORD` is only a first-run bootstrap; the default password in source is gone.
