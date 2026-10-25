@@ -1,0 +1,138 @@
+.toast-container {
+  position: fixed;
+  top: var(--ui-space-4);
+  right: var(--ui-space-4);
+  z-index: 2000;
+  max-width: 350px;
+}
+
+.toast {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--ui-space-2);
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-small);
+  background-color: var(--ui-color-text);
+  color: var(--ui-color-accent-text);
+  box-shadow: var(--ui-shadow-raised);
+  opacity: 0;
+  transform: translateY(-20px);
+  animation: fadeIn 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.success {
+  background-color: #145c32;
+}
+
+.toast.danger {
+  background-color: var(--ui-color-danger);
+}
+
+.toast.info {
+  background-color: var(--ui-color-accent);
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-close {
+  margin-left: var(--ui-space-2);
+  border: none;
+  background: transparent;
+  color: var(--ui-color-accent-text);
+  font-size: var(--ui-font-size-heading);
+  cursor: pointer;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1100;
+  width: 0;
+  height: 100%;
+  padding-top: 60px;
+  background-color: var(--ui-color-text);
+  overflow-x: hidden;
+  transition: width 0.25s;
+}
+
+.sidebar.active {
+  width: 250px;
+}
+
+.sidebar a {
+  display: flex;
+  align-items: center;
+  padding: var(--ui-space-2) var(--ui-space-2) var(--ui-space-2) var(--ui-space-6);
+  color: var(--ui-color-accent-text);
+  font-size: var(--ui-font-size-body);
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.sidebar a:hover {
+  background-color: #2e3640;
+}
+
+.sidebar a.active {
+  border-left: 3px solid var(--ui-color-accent);
+  background-color: #2e3640;
+}
+
+.sidebar a i {
+  margin-right: var(--ui-space-4);
+  vertical-align: middle;
+}
+
+.sidebar .close-btn {
+  position: absolute;
+  top: var(--ui-space-4);
+  right: var(--ui-space-4);
+  margin-left: 50px;
+  border: none;
+  background: none;
+  color: var(--ui-color-accent-text);
+  font-size: 2.25rem;
+  cursor: pointer;
+}
+
+#main {
+  padding: var(--ui-space-4);
+  transition: margin-left 0.5s;
+}
+
+.material-icons {
+  display: inline-block;
+  font-family: 'Material Icons';
+  font-size: 24px;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}

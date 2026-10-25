@@ -1,0 +1,186 @@
+/* Official Business form page. Built on tokens.css; panels, modals and the
+   sidebar live in form-page-panels.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--ui-font-family);
+  font-size: var(--ui-font-size-body);
+  line-height: 1.5;
+  background-color: var(--ui-color-page);
+  color: var(--ui-color-text);
+}
+
+h1 {
+  font-size: var(--ui-font-size-heading);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+label {
+  display: block;
+  margin-bottom: var(--ui-space-2);
+  font-size: var(--ui-font-size-small);
+  font-weight: var(--ui-font-weight-semibold);
+  color: var(--ui-color-text);
+}
+
+.main-container {
+  max-width: 880px;
+  margin: var(--ui-space-6) auto;
+  padding: var(--ui-space-6);
+  background-color: var(--ui-color-surface);
+  min-height: 100vh;
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-medium);
+}
+
+.container {
+  max-width: 100%;
+}
+
+.header-section {
+  text-align: center;
+  margin-bottom: var(--ui-space-6);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo,
+.header-section .logo {
+  width: 64px;
+  height: auto;
+  margin: 0 var(--ui-space-3) 0 0;
+  cursor: pointer;
+}
+
+.header-section .header-text {
+  font-size: var(--ui-font-size-small);
+  color: var(--ui-color-muted);
+}
+
+.header-section .header-text.department {
+  font-weight: var(--ui-font-weight-semibold);
+  color: var(--ui-color-text);
+}
+
+.header-section .header-text.regional {
+  margin-bottom: var(--ui-space-1);
+}
+
+.header-section .header-text.title {
+  margin-top: var(--ui-space-1);
+  font-size: 1.75rem;
+  font-weight: var(--ui-font-weight-semibold);
+  color: var(--ui-color-text);
+}
+
+.settings-btn {
+  padding: var(--ui-space-2) var(--ui-space-4);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-small);
+  background-color: var(--ui-color-surface);
+  color: var(--ui-color-text);
+  font-size: var(--ui-font-size-small);
+  cursor: pointer;
+}
+
+.settings-btn:hover {
+  border-color: var(--ui-color-accent);
+  color: var(--ui-color-accent);
+}
+
+.Background-container {
+  padding: var(--ui-space-6);
+  background-color: var(--ui-color-surface);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-medium);
+}
+
+.form-section {
+  margin-bottom: var(--ui-space-8);
+  padding-bottom: var(--ui-space-6);
+  border-bottom: 1px solid var(--ui-color-border);
+}
+
+.form-section:last-of-type {
+  margin-bottom: var(--ui-space-6);
+  border-bottom: none;
+}
+
+.form-section h2 {
+  margin-bottom: var(--ui-space-4);
+  font-size: var(--ui-font-size-body);
+  font-weight: var(--ui-font-weight-semibold);
+  color: var(--ui-color-text);
+}
+
+.form-group {
+  margin-bottom: var(--ui-space-4);
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-4);
+  margin-bottom: var(--ui-space-4);
+}
+
+.form-control {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-small);
+  background-color: var(--ui-color-surface);
+  color: var(--ui-color-text);
+  font: inherit;
+  font-size: var(--ui-font-size-body);
+}
+
+/* Radios and checkboxes sit beside their label, not full width above it. */
+input[type="radio"],
+input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin-right: var(--ui-space-2);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--ui-color-focus);
+  box-shadow: var(--ui-focus-ring);
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid var(--ui-color-focus);
+  outline-offset: 2px;
+}
+
