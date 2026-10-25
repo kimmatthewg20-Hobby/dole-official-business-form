@@ -1,0 +1,64 @@
+/* Admin toast messages and the icon font setup. */
+
+.material-icons {
+  display: inline-block;
+  font-family: 'Material Icons';
+  font-size: 24px;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+.toast-container {
+  position: fixed;
+  top: var(--ui-space-4);
+  right: var(--ui-space-4);
+  left: var(--ui-space-4);
+  z-index: 2000;
+  max-width: 22rem;
+  margin-left: auto;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--ui-space-2);
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border-radius: var(--ui-radius-medium);
+  background: var(--ui-color-text);
+  color: var(--ui-color-accent-text);
+  font-size: var(--ui-font-size-small);
+  box-shadow: var(--ui-shadow-raised);
+}
+
+.toast.success {
+  background: #145c32;
+}
+
+.toast.danger {
+  background: var(--ui-color-danger);
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-close {
+  margin-left: var(--ui-space-2);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: var(--ui-font-size-heading);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toast-close:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+  border-radius: var(--ui-radius-small);
+}

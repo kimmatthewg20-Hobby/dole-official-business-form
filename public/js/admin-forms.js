@@ -14,8 +14,10 @@
   const next = document.getElementById('adminFormNext');
   let page = FIRST_PAGE;
 
-  function cell(text, className) {
+  // data-label lets the phone layout show each cell with its column name.
+  function cell(label, text, className) {
     const td = document.createElement('td');
+    td.dataset.label = label;
     td.textContent = text;
     if (className) td.className = className;
     return td;
@@ -24,12 +26,12 @@
   function row(form) {
     const tr = document.createElement('tr');
     tr.append(
-      cell(String(form.id)),
-      cell(form.dateCreated ? new Date(form.dateCreated).toLocaleDateString() : ''),
-      cell(form.division),
-      cell(window.DateWording.formatDateWording(form.datesOfOB)),
-      cell(form.employees.join(', ')),
-      cell(form.referenceCode || NO_CODE, 'admin-form-code'),
+      cell('No.', String(form.id)),
+      cell('Submitted', form.dateCreated ? new Date(form.dateCreated).toLocaleDateString() : ''),
+      cell('Division', form.division),
+      cell('Dates', window.DateWording.formatDateWording(form.datesOfOB)),
+      cell('Employees', form.employees.join(', ')),
+      cell('Reference code', form.referenceCode || NO_CODE, 'admin-form-code'),
     );
     return tr;
   }

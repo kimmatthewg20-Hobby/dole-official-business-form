@@ -1,0 +1,135 @@
+/* Employees page chrome: header, search and buttons. Built on tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--ui-color-page);
+  color: var(--ui-color-text);
+  font-family: var(--ui-font-family);
+  font-size: var(--ui-font-size-body);
+  line-height: 1.5;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+header {
+  border-bottom: 1px solid var(--ui-color-border);
+  background-color: var(--ui-color-surface);
+}
+
+.container {
+  width: 100%;
+  max-width: 75rem;
+  margin: 0 auto;
+  padding: var(--ui-space-4);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+}
+
+.logo {
+  width: 3rem;
+  height: auto;
+}
+
+h1 {
+  font-size: var(--ui-font-size-heading);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.hamburger-menu {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-small);
+  background: var(--ui-color-surface);
+  color: var(--ui-color-text);
+  font-size: var(--ui-font-size-heading);
+  cursor: pointer;
+}
+
+.hamburger-menu:focus-visible,
+.sidebar .close-btn:focus-visible,
+.sidebar a:focus-visible,
+.close-modal:focus-visible,
+.action-btn:focus-visible,
+.pagination-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.sidebar a:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--ui-color-surface);
+}
+
+.top-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ui-space-3);
+  margin-bottom: var(--ui-space-4);
+}
+
+.search-container {
+  flex: 1;
+  max-width: 25rem;
+}
+
+#alert-container {
+  margin-bottom: var(--ui-space-3);
+}
+
+.error-message,
+.success-message {
+  padding: var(--ui-space-3);
+  border: 1px solid;
+  border-radius: var(--ui-radius-small);
+  font-size: var(--ui-font-size-small);
+}
+
+.error-message {
+  border-color: var(--ui-color-danger);
+  background: #fef3f2;
+  color: var(--ui-color-danger);
+}
+
+.success-message {
+  border-color: #145c32;
+  background: #ecfdf3;
+  color: #145c32;
+}
+
+.site-footer p {
+  color: var(--ui-color-muted);
+  font-size: var(--ui-font-size-small);
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .top-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-container {
+    max-width: none;
+  }
+}

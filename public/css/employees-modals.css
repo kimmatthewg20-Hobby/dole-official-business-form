@@ -1,0 +1,135 @@
+/* Employees page modals: add/edit, history, summary and delete. Open state is set by openModal(). */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ui-space-4);
+  background: var(--ui-color-overlay);
+}
+
+.modal {
+  width: 100%;
+  max-width: 32rem;
+  max-height: calc(100vh - 2 * var(--ui-space-4));
+  overflow-y: auto;
+  border-radius: var(--ui-radius-medium);
+  background: var(--ui-color-surface);
+  box-shadow: var(--ui-shadow-raised);
+}
+
+.modal--wide {
+  max-width: 62rem;
+}
+
+.modal:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-shadow-raised), var(--ui-focus-ring);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ui-space-4);
+  border-bottom: 1px solid var(--ui-color-border);
+}
+
+.modal-header h3 {
+  font-size: var(--ui-font-size-heading);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.modal-body {
+  padding: var(--ui-space-4);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-4);
+  border-top: 1px solid var(--ui-color-border);
+}
+
+.close-modal {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border: none;
+  border-radius: var(--ui-radius-small);
+  background: none;
+  color: var(--ui-color-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close-modal:hover {
+  color: var(--ui-color-text);
+}
+
+.form-group {
+  margin-bottom: var(--ui-space-4);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--ui-space-1);
+  font-size: var(--ui-font-size-small);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--ui-color-muted);
+}
+
+.view-details-btn {
+  min-height: 2.25rem;
+}
+
+.view-details-btn .material-icons {
+  font-size: 1.125rem;
+}
+
+.delete-name {
+  margin-top: var(--ui-space-2);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.data-summary-content {
+  padding: var(--ui-space-4);
+}
+
+.summary-item {
+  margin-bottom: var(--ui-space-2);
+  padding-bottom: var(--ui-space-2);
+  border-bottom: 1px solid var(--ui-color-page);
+  overflow-wrap: anywhere;
+}
+
+.summary-item strong {
+  display: inline-block;
+  min-width: 7.5rem;
+  color: var(--ui-color-muted);
+}
+
+@media (max-width: 600px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    max-width: none;
+    max-height: 90vh;
+    border-radius: var(--ui-radius-medium) var(--ui-radius-medium) 0 0;
+  }
+
+  .modal-footer .ui-btn {
+    flex: 1 1 auto;
+  }
+}

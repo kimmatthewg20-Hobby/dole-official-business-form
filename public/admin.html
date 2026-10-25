@@ -10,282 +10,10 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/components.css">
-  <style>
-    :root {
-      --primary-color: #004d40;
-      --primary-light: #39796b;
-      --secondary-color: #00897b;
-      --accent-color: #4db6ac;
-      --light-color: #ffffff;
-      --border-color: #e0e0e0;
-      --text-color: #2c3e50;
-      --danger-color: #e74c3c;
-      --success-color: #27ae60;
-      --input-bg: #f8f9fa;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body { 
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-      background-color: #ffffff; 
-      color: var(--text-color);
-      margin: 0;
-      padding: 0;
-    }
-
-    /* Split Screen Layout for Login */
-    .login-wrapper {
-      display: flex;
-      height: 100vh;
-      width: 100%;
-    }
-
-    /* Left Side: Form */
-    .login-left {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 40px;
-      background: white;
-    }
-
-    /* Right Side: Visual Branding */
-    .login-right {
-      flex: 1.2;
-      background: linear-gradient(135deg, var(--primary-color) 0%, #00251a 100%);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      text-align: center;
-      padding: 40px;
-      position: relative;
-    }
-
-    .login-right::after {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: url('logo.png') center center no-repeat;
-      background-size: 60%;
-      opacity: 0.05;
-      pointer-events: none;
-    }
-
-    .logo-large {
-      width: 180px;
-      margin-bottom: 5px;
-      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
-      z-index: 1;
-    }
-
-    .brand-text {
-      z-index: 1;
-    }
-
-    .brand-text h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-    }
-
-    .brand-text p {
-      font-size: 1.1rem;
-      opacity: 0.8;
-      font-weight: 300;
-    }
-
-    /* Form Styling */
-    .login-form-container {
-      width: 100%;
-      max-width: 380px;
-    }
-
-    .form-header {
-      margin-bottom: 10px;
-    }
-
-    .form-header h2 {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--primary-color);
-      margin-bottom: 10px;
-    }
-
-    .form-header p {
-      color: #7f8c8d;
-      font-size: 15px;
-    }
-
-    .input-wrapper {
-      position: relative;
-      margin-bottom: 10px;
-    }
-
-    .input-wrapper i {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #95a5a6;
-      font-size: 20px;
-    }
-
-    .input-wrapper input {
-      width: 100%;
-      padding: 14px 14px 14px 45px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      background-color: var(--input-bg);
-      font-size: 15px;
-      transition: all 0.3s ease;
-    }
-
-    .input-wrapper input:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      background-color: white;
-      box-shadow: 0 0 0 4px rgba(0, 77, 64, 0.1);
-    }
-
-    .login-btn {
-      width: 100%;
-      padding: 14px;
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, background 0.3s;
-      margin-top: 10px;
-    }
-
-    .login-btn:hover {
-      background-color: var(--primary-light);
-      transform: translateY(-1px);
-    }
-
-    /* Settings View (Full Width) */
-    .settings-container {
-      max-width: 1000px;
-      margin: 40px auto;
-      padding: 20px;
-      min-height: calc(100vh - 80px);
-      box-sizing: border-box;
-    }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      margin-bottom: 30px;
-      border: 1px solid var(--border-color);
-    }
-
-    .settings-header {
-      margin-bottom: 25px;
-      border-bottom: 2px solid var(--input-bg);
-      padding-bottom: 15px;
-    }
-
-    .settings-header h2 {
-      color: var(--primary-color);
-      font-size: 22px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; font-size: 14px; }
-    
-    input[type="password"], input[type="text"], textarea { 
-      width: 100%; 
-      padding: 12px; 
-      border: 1px solid var(--border-color); 
-      border-radius: 6px; 
-      font-size: 15px; 
-      background: var(--input-bg);
-    }
-
-    textarea { min-height: 120px; resize: vertical; }
-
-    .btn { 
-      background-color: var(--primary-color); 
-      color: white; 
-      border: none; 
-      padding: 12px 24px; 
-      border-radius: 6px; 
-      cursor: pointer; 
-      font-size: 15px; 
-      font-weight: 600;
-    }
-
-    .error { 
-      color: var(--danger-color); 
-      margin-top: 10px; 
-      font-size: 14px; 
-      text-align: center;
-      padding: 10px;
-      background: #fdf2f2;
-      border-radius: 6px;
-    }
-
-    /* Toasts */
-    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 2000; }
-    .toast { 
-      background: white; 
-      color: var(--text-color); 
-      padding: 16px 20px; 
-      border-radius: 8px; 
-      margin-bottom: 12px; 
-      box-shadow: 0 15px 30px rgba(0,0,0,0.15); 
-      display: flex; 
-      align-items: center; 
-      border-left: 5px solid var(--primary-color);
-      animation: slideIn 0.3s ease-out forwards;
-    }
-    .toast.success { border-left-color: var(--success-color); }
-    .toast.danger { border-left-color: var(--danger-color); }
-
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-
-    }
-    
-    .hidden { display: none !important; }
-
-    /* Custom Mobile Adjustment */
-    @media (max-width: 768px) {
-      .login-right { display: none; }
-      .login-left { flex: 1; }
-    }
-    .admin-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-    .admin-tab { flex: 1 1 100px; padding: 10px 14px; border: 1px solid #ccd; background: #fff; border-radius: 6px; cursor: pointer; font-size: 15px; }
-    .admin-tab[aria-selected="true"] { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
-    [data-tab-panel][hidden] { display: none; }
-    @media (max-width: 600px) { #changePasswordForm .grid { grid-template-columns: 1fr !important; } }
-    .list-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    .list-table th, .list-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border-color); }
-    .list-table td:last-child { text-align: right; }
-    .admin-form-table td:last-child { text-align: left; }
-    .admin-form-code { font-family: ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
-    .list-empty { color: #7f8c8d; margin-bottom: 15px; }
-    .list-modal-title { margin-bottom: 15px; color: var(--primary-color); }
-    .list-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-    .list-modal-remove { margin-right: auto; }
-  </style>
+  <link rel="stylesheet" href="/css/admin-page.css">
+  <link rel="stylesheet" href="/css/admin-toast.css">
+  <link rel="stylesheet" href="/css/admin-login.css">
+  <link rel="stylesheet" href="/css/admin-lists.css">
 </head>
 <body>
 
@@ -299,19 +27,19 @@
         </div>
         
         <form id="loginForm">
-          <div class="input-wrapper">
-            
-            <input type="text" id="adminUsername" placeholder="Username" required autocomplete="username">
+          <div class="form-group">
+            <label for="adminUsername">Username</label>
+            <input type="text" id="adminUsername" class="ui-input" required autocomplete="username">
           </div>
-          <div class="input-wrapper">
-            
-            <input type="password" id="adminPass" placeholder="Password" required autocomplete="current-password">
+          <div class="form-group">
+            <label for="adminPass">Password</label>
+            <input type="password" id="adminPass" class="ui-input" required autocomplete="current-password">
           </div>
-          <div id="loginError" class="error" style="display: none;">Incorrect username or password</div>
-          <button type="submit" class="login-btn">Sign In</button>
+          <div id="loginError" class="error" role="alert" style="display: none;">Incorrect username or password</div>
+          <button type="submit" class="ui-btn login-btn">Sign In</button>
         </form>
 
-        <div style="margin-top: 5px; color: #95a5a6; font-size: 12px;">
+        <div class="login-footer">
           © 2024 DOLECNPO Kimmsg:3 | IT Unit
         </div>
       </div>
@@ -319,18 +47,18 @@
     <div class="login-right">
       <img src="logo.png" alt="DOLE Logo" class="logo-large">
       <div class="brand-text">
-        <h1>Department of Labor and Employment</h1
-        <p style="margin-top: 5px; opacity: 0.6;">Camarines Norte Provincial Office | RO. No. 5</p>
+        <h1>Department of Labor and Employment</h1>
+        <p>Camarines Norte Provincial Office | RO. No. 5</p>
       </div>
     </div>
   </div>
 
   <!-- Settings View -->
   <div id="settingsCard" class="settings-container" style="display: none;">
-    <div id="toastContainer" class="toast-container"></div>
+    <div id="toastContainer" class="toast-container" role="status"></div>
 
-    <div style="text-align: right; margin-bottom: 15px;">
-      <button type="button" id="logoutBtn" class="btn" style="background-color: var(--secondary-color);">Logout</button>
+    <div class="settings-bar">
+      <button type="button" id="logoutBtn" class="ui-btn ui-btn--secondary">Logout</button>
     </div>
 
     <div class="admin-tabs" role="tablist" aria-label="Settings categories">
@@ -340,10 +68,10 @@
     </div>
 
     <div role="tabpanel" id="panel-form-options" aria-labelledby="tab-form-options" data-tab-panel="form-options">
-    <div class="card">
+    <div class="card ui-card">
       <div class="settings-header">
-        <h2><i class="material-icons">account_tree</i> Divisions</h2>
-        <p style="color: #7f8c8d; font-size: 14px;">Staff pick a Division on the form. Its code goes into each new Reference code; changing it does not change forms already made.</p>
+        <h2><i class="material-icons" aria-hidden="true">account_tree</i> Divisions</h2>
+        <p class="settings-note">Staff pick a Division on the form. Its code goes into each new Reference code; changing it does not change forms already made.</p>
       </div>
       <table class="list-table">
         <thead><tr><th>Name</th><th>Code</th><th aria-label="Actions"></th></tr></thead>
@@ -352,10 +80,10 @@
       <p id="divisionEmpty" class="list-empty hidden">No Divisions yet.</p>
       <button type="button" id="addDivisionBtn" class="ui-btn">Add Division</button>
     </div>
-    <div class="card">
+    <div class="card ui-card">
       <div class="settings-header">
-        <h2><i class="material-icons">how_to_reg</i> Approvers</h2>
-        <p style="color: #7f8c8d; font-size: 14px;">Staff pick who approves a form. Changing or removing an Approver does not change forms already made.</p>
+        <h2><i class="material-icons" aria-hidden="true">how_to_reg</i> Approvers</h2>
+        <p class="settings-note">Staff pick who approves a form. Changing or removing an Approver does not change forms already made.</p>
       </div>
       <table class="list-table">
         <thead><tr><th>Name</th><th>Position</th><th aria-label="Actions"></th></tr></thead>
@@ -407,63 +135,63 @@
     </div>
 
     <div role="tabpanel" id="panel-security" aria-labelledby="tab-security" data-tab-panel="security" hidden>
-    <div class="card">
+    <div class="card ui-card">
       <div class="settings-header">
-        <h2><i class="material-icons">security</i> Security</h2>
-        <p style="color: #7f8c8d; font-size: 14px;">Update your administrative credentials</p>
+        <h2><i class="material-icons" aria-hidden="true">security</i> Security</h2>
+        <p class="settings-note">Update your administrative credentials</p>
       </div>
       <form id="changePasswordForm" onsubmit="return false;">
         <div class="form-group">
           <label for="oldPassword">Current Password</label>
-          <input type="password" id="oldPassword">
+          <input type="password" id="oldPassword" class="ui-input" autocomplete="current-password">
         </div>
-        <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="grid">
           <div class="form-group">
             <label for="newPassword">New Password</label>
-            <input type="password" id="newPassword">
+            <input type="password" id="newPassword" class="ui-input" autocomplete="new-password">
           </div>
           <div class="form-group">
             <label for="confirmPassword">Confirm New Password</label>
-            <input type="password" id="confirmPassword">
+            <input type="password" id="confirmPassword" class="ui-input" autocomplete="new-password">
           </div>
         </div>
-        <div id="passwordError" class="error" style="display: none;"></div>
+        <div id="passwordError" class="error" role="alert" style="display: none;"></div>
       </form>
     </div>
     </div>
 
     <div role="tabpanel" id="panel-data" aria-labelledby="tab-data" data-tab-panel="data" hidden>
-    <div class="card">
+    <div class="card ui-card">
       <div class="settings-header">
-        <h2><i class="material-icons">description</i> Forms</h2>
-        <p style="color: #7f8c8d; font-size: 14px;">Each form's Reference code, newest first. Only the admin sees codes here; give a code only to the staff member who made the form. Forms made before codes existed show a dash.</p>
+        <h2><i class="material-icons" aria-hidden="true">description</i> Forms</h2>
+        <p class="settings-note">Each form's Reference code, newest first. Only the admin sees codes here; give a code only to the staff member who made the form. Forms made before codes existed show a dash.</p>
       </div>
-      <div style="overflow-x: auto;">
+      <div class="table-scroll">
         <table class="list-table admin-form-table">
           <thead><tr><th>No.</th><th>Submitted</th><th>Division</th><th>Dates</th><th>Employees</th><th>Reference code</th></tr></thead>
           <tbody id="adminFormList"></tbody>
         </table>
       </div>
       <p id="adminFormEmpty" class="list-empty hidden">No forms yet.</p>
-      <div style="display: flex; align-items: center; gap: 10px;">
+      <div class="pager">
         <button type="button" id="adminFormPrev" class="ui-btn ui-btn--secondary" disabled>Previous</button>
-        <span id="adminFormStatus" aria-live="polite"></span>
+        <span id="adminFormStatus" class="pager-status" aria-live="polite"></span>
         <button type="button" id="adminFormNext" class="ui-btn ui-btn--secondary" disabled>Next</button>
       </div>
     </div>
-    <div class="card">
+    <div class="card ui-card">
       <div class="settings-header">
-        <h2><i class="material-icons">delete_sweep</i> Data Cleanup</h2>
-        <p style="color: #7f8c8d; font-size: 14px;">Automatically delete records older than 25 days based on date_created</p>
+        <h2><i class="material-icons" aria-hidden="true">delete_sweep</i> Data Cleanup</h2>
+        <p class="settings-note">Automatically delete records older than 25 days based on date_created</p>
       </div>
       <div class="form-group">
-        <p style="margin-bottom: 15px; color: #666; line-height: 1.6;">
+        <p class="cleanup-text">
           The system automatically deletes official business records and their associated employees after 25 days from the date of creation. 
           This helps maintain database performance and comply with data retention policies.
         </p>
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-          <strong style="color: var(--primary-color);">Automatic Cleanup:</strong>
-          <ul style="margin: 10px 0 0 20px; color: #666;">
+        <div class="cleanup-schedule">
+          <strong>Automatic Cleanup:</strong>
+          <ul>
             <li>Runs daily at about 2:00 AM (Philippine time)</li>
             <li>Deletes records older than 25 days</li>
             <li>Automatically deletes associated employees (CASCADE)</li>
@@ -471,23 +199,25 @@
         </div>
         <div class="form-group">
           <label for="cleanupDays">Test with custom days (for testing only)</label>
-          <input type="number" id="cleanupDays" value="25" min="1" max="365" style="max-width: 200px;">
-          <small style="color: #999; display: block; margin-top: 5px;">Default: 25 days. Use this to test with different time periods.</small>
+          <input type="number" id="cleanupDays" class="ui-input cleanup-days" value="25" min="1" max="365">
+          <small class="settings-note">Default: 25 days. Use this to test with different time periods.</small>
         </div>
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-          <button type="button" id="dryRunBtn" class="btn" style="background-color: var(--secondary-color);">Run Dry Test</button>
-          <button type="button" id="runCleanupBtn" class="btn" style="background-color: var(--danger-color);">Run Cleanup Now</button>
+        <div class="cleanup-actions">
+          <button type="button" id="dryRunBtn" class="ui-btn ui-btn--secondary">Run Dry Test</button>
+          <button type="button" id="runCleanupBtn" class="ui-btn ui-btn--danger">Run Cleanup Now</button>
         </div>
-        <div id="cleanupResult" style="margin-top: 20px; display: none;"></div>
+        <div id="cleanupResult" class="cleanup-result" aria-live="polite" hidden></div>
       </div>
     </div>
     </div>
 
-    <div style="text-align: right; margin-top: 20px;">
-      <button type="button" id="saveAllBtn" class="btn">Update All Settings</button>
+    <div class="settings-save">
+      <button type="button" id="saveAllBtn" class="ui-btn">Update All Settings</button>
     </div>
   </div>
 
+  <script src="/js/escape-html.js"></script>
+  <script src="/js/admin-cleanup-views.js"></script>
   <script src="/js/admin-tabs.js"></script>
   <script src="/js/admin-list-modal.js"></script>
   <script src="/js/admin-divisions.js"></script>
@@ -516,6 +246,9 @@
       const logoutBtn = document.getElementById('logoutBtn');
 
       const SESSION_TIMEOUT = 5 * 60 * 1000;
+      const TOAST_DURATION_MS = 5000;
+      const DEFAULT_CLEANUP_DAYS = 25;
+      const Views = window.AdminCleanupViews;
       let sessionTimer = null;
 
       function showLogin() { 
@@ -654,69 +387,51 @@
       function showToast(message, type) {
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
-        toast.innerHTML = `<div style="flex:1">${message}</div><span style="cursor:pointer;margin-left:10px" onclick="this.parentElement.remove()">×</span>`;
+        const text = document.createElement('div');
+        text.className = 'toast-content';
+        text.textContent = message;
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'toast-close';
+        close.setAttribute('aria-label', 'Dismiss message');
+        close.textContent = '×';
+        close.addEventListener('click', () => toast.remove());
+        toast.append(text, close);
         toastContainer.appendChild(toast);
-        setTimeout(() => toast.remove(), 5000);
+        setTimeout(() => toast.remove(), TOAST_DURATION_MS);
       }
 
       // Cleanup functionality
-      dryRunBtn.addEventListener('click', function() {
-        const days = parseInt(cleanupDays.value) || 25;
-        cleanupResult.style.display = 'block';
-        cleanupResult.innerHTML = '<p style="color: #666;">Running dry test...</p>';
-        dryRunBtn.disabled = true;
-        
-        fetch(`/api/cleanup/test?days=${days}&dryRun=true`)
+      function showCleanupResult(html) {
+        cleanupResult.hidden = false;
+        cleanupResult.innerHTML = html;
+      }
+
+      function cleanupRequest(dryRun) {
+        const days = parseInt(cleanupDays.value) || DEFAULT_CLEANUP_DAYS;
+        return fetch(`/api/cleanup/test?days=${days}&dryRun=${dryRun}`)
           .then(response => response.json())
-          .then(data => {
+          .then(data => ({ data, days }));
+      }
+
+      dryRunBtn.addEventListener('click', function() {
+        showCleanupResult(Views.progressHtml('Running dry test...'));
+        dryRunBtn.disabled = true;
+
+        cleanupRequest(true)
+          .then(({ data, days }) => {
             dryRunBtn.disabled = false;
-            if (data.success) {
-              const result = data.result;
-              if (result.wouldDelete === 0) {
-                cleanupResult.innerHTML = `
-                  <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; border-left: 4px solid var(--success-color);">
-                    <strong style="color: var(--success-color);">No records to delete</strong>
-                    <p style="margin: 5px 0 0 0; color: #666;">No records found older than ${days} days.</p>
-                  </div>
-                `;
-              } else {
-                let recordsList = '';
-                if (result.records && result.records.length > 0) {
-                  recordsList = '<ul style="margin: 10px 0 0 20px; color: #666;">';
-                  result.records.slice(0, 10).forEach(rec => {
-                    recordsList += `<li>Record ID ${rec.id} - Created: ${rec.date_created} (${rec.age_days} days old)</li>`;
-                  });
-                  if (result.records.length > 10) {
-                    recordsList += `<li>... and ${result.records.length - 10} more</li>`;
-                  }
-                  recordsList += '</ul>';
-                }
-                cleanupResult.innerHTML = `
-                  <div style="background: #fff3e0; padding: 15px; border-radius: 6px; border-left: 4px solid #ff9800;">
-                    <strong style="color: #ff9800;">Dry Run Results</strong>
-                    <p style="margin: 5px 0; color: #666;">Would delete <strong>${result.wouldDelete}</strong> record(s) older than ${days} days.</p>
-                    ${recordsList}
-                    <p style="margin: 10px 0 0 0; color: #999; font-size: 13px;">No records were actually deleted. This was a test run.</p>
-                  </div>
-                `;
-              }
+            if (!data.success) {
+              showCleanupResult(Views.errorHtml(data.error || 'Failed to run dry test'));
+            } else if (data.result.wouldDelete === 0) {
+              showCleanupResult(Views.nothingToDeleteHtml(days));
             } else {
-              cleanupResult.innerHTML = `
-                <div style="background: #ffebee; padding: 15px; border-radius: 6px; border-left: 4px solid var(--danger-color);">
-                  <strong style="color: var(--danger-color);">Error</strong>
-                  <p style="margin: 5px 0 0 0; color: #666;">${data.error || 'Failed to run dry test'}</p>
-                </div>
-              `;
+              showCleanupResult(Views.dryRunHtml(data.result, days));
             }
           })
           .catch(error => {
             dryRunBtn.disabled = false;
-            cleanupResult.innerHTML = `
-              <div style="background: #ffebee; padding: 15px; border-radius: 6px; border-left: 4px solid var(--danger-color);">
-                <strong style="color: var(--danger-color);">Error</strong>
-                <p style="margin: 5px 0 0 0; color: #666;">${error.message}</p>
-              </div>
-            `;
+            showCleanupResult(Views.errorHtml(error.message));
           });
       });
 
@@ -724,54 +439,26 @@
         if (!confirm('Are you sure you want to run the cleanup now? This will permanently delete records older than the specified days and their associated employees.')) {
           return;
         }
-        
-        const days = parseInt(cleanupDays.value) || 25;
-        cleanupResult.style.display = 'block';
-        cleanupResult.innerHTML = '<p style="color: #666;">Running cleanup...</p>';
+
+        showCleanupResult(Views.progressHtml('Running cleanup...'));
         runCleanupBtn.disabled = true;
-        
-        fetch(`/api/cleanup/test?days=${days}&dryRun=false`)
-          .then(response => response.json())
-          .then(data => {
+
+        cleanupRequest(false)
+          .then(({ data }) => {
             runCleanupBtn.disabled = false;
-            if (data.success) {
-              const result = data.result;
-              if (result.deleted === 0) {
-                cleanupResult.innerHTML = `
-                  <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; border-left: 4px solid var(--success-color);">
-                    <strong style="color: var(--success-color);">Cleanup Complete</strong>
-                    <p style="margin: 5px 0 0 0; color: #666;">No records were deleted. All records are within the retention period.</p>
-                  </div>
-                `;
-                showToast('Cleanup completed - no records deleted', 'success');
-              } else {
-                cleanupResult.innerHTML = `
-                  <div style="background: #e8f5e9; padding: 15px; border-radius: 6px; border-left: 4px solid var(--success-color);">
-                    <strong style="color: var(--success-color);">Cleanup Complete</strong>
-                    <p style="margin: 5px 0; color: #666;">Successfully deleted <strong>${result.deleted}</strong> record(s) and their associated employees.</p>
-                    <p style="margin: 5px 0 0 0; color: #999; font-size: 13px;">Deleted record IDs: ${result.ids ? result.ids.join(', ') : 'N/A'}</p>
-                  </div>
-                `;
-                showToast(`Cleanup completed - ${result.deleted} record(s) deleted`, 'success');
-              }
-            } else {
-              cleanupResult.innerHTML = `
-                <div style="background: #ffebee; padding: 15px; border-radius: 6px; border-left: 4px solid var(--danger-color);">
-                  <strong style="color: var(--danger-color);">Error</strong>
-                  <p style="margin: 5px 0 0 0; color: #666;">${data.error || 'Failed to run cleanup'}</p>
-                </div>
-              `;
+            if (!data.success) {
+              showCleanupResult(Views.errorHtml(data.error || 'Failed to run cleanup'));
               showToast('Cleanup failed', 'danger');
+              return;
             }
+            showCleanupResult(Views.cleanupDoneHtml(data.result));
+            showToast(data.result.deleted === 0
+              ? 'Cleanup completed - no records deleted'
+              : `Cleanup completed - ${data.result.deleted} record(s) deleted`, 'success');
           })
           .catch(error => {
             runCleanupBtn.disabled = false;
-            cleanupResult.innerHTML = `
-              <div style="background: #ffebee; padding: 15px; border-radius: 6px; border-left: 4px solid var(--danger-color);">
-                <strong style="color: var(--danger-color);">Error</strong>
-                <p style="margin: 5px 0 0 0; color: #666;">${error.message}</p>
-              </div>
-            `;
+            showCleanupResult(Views.errorHtml(error.message));
             showToast('Cleanup failed', 'danger');
           });
       });

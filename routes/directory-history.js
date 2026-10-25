@@ -3,6 +3,17 @@
 const express = require('express');
 const db = require('../db');
 
+// Entries added from a form have only a full name, so first/last variations are used only when
+// both parts exist; otherwise the text "null null" would be searched. Forms keep the name as typed,
+// so the match ignores capitals.
+function nameVariations(employee) {
+  const names = [employee.full_name];
+  if (employee.firstname && employee.last_name) {
+    names.push(`${employee.firstname} ${employee.last_name}`, `${employee.last_name}, ${employee.firstname}`);
+  }
+  return names.filter(Boolean).map((name) => name.trim().toLowerCase());
+}
+
 // Get employee travel history
 async function readHistory(req, res) {
   try {
@@ -15,12 +26,9 @@ async function readHistory(req, res) {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
-    // Create different name variations for better matching
-    const fullName = employee.full_name;
-    const firstLastName = `${employee.firstname} ${employee.last_name}`;
-    const lastFirstName = `${employee.last_name}, ${employee.firstname}`;
+    const names = nameVariations(employee);
     
-    console.log(`Searching history for employee ${id} (${fullName})`);
+    console.log(`Searching history for employee ${id} (${employee.full_name})`);
     
     // Now search for this employee in the travel records by exact name patterns
     const historyEntries = await db.all(
@@ -38,24 +46,21 @@ async function readHistory(req, res) {
          ob.return_time
        FROM official_business ob 
        JOIN employees e ON ob.id = e.ob_id 
-       WHERE 
-         e.name = ? OR 
-         e.name = ? OR 
-         e.name = ?
+       WHERE lower(e.name) IN (${names.map(() => '?').join(', ')})
        ORDER BY ob.date_created DESC`,
-      [fullName, firstLastName, lastFirstName]
+      names
     );
     
     // If no history entries found, return empty array
     if (!historyEntries || historyEntries.length === 0) {
-      console.log(`No history found for employee ${id} (${fullName}).`);
+      console.log(`No history found for employee ${id} (${employee.full_name}).`);
       return res.json({ 
         employee,
         history: []
       });
     }
     
-    console.log(`Found ${historyEntries.length} history entries for employee ${id} (${fullName})`);
+    console.log(`Found ${historyEntries.length} history entries for employee ${id} (${employee.full_name})`);
     
     // Format the data to match what the history modal expects
     const formattedHistory = formatHistoryEntries(historyEntries);
