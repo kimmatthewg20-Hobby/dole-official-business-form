@@ -67,4 +67,4 @@ function validateEntries(entries) {
   return { values };
 }
 
-module.exports = { validateEntry, validateEntries, buildFullName };
+module.exports = { validateEntry, validateEntries, buildFullName, MAX_FIELD_LENGTH };

@@ -6,11 +6,15 @@
 const assert = require('node:assert/strict');
 const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 const { postJson, login, loginCookie, withFallbackPassword } = require('./admin-http');
+const {
+  EXPORT_ROUTE,
+  IMPORT_ROUTE,
+  withTablesRestored,
+  exportData,
+  importData,
+} = require('./data-transfer-helpers');
 
-const EXPORT_ROUTE = '/api/export-data';
-const IMPORT_ROUTE = '/api/import-data';
 const UNAUTHORIZED = 401;
-const RESTORED_TABLES = ['employees', 'official_business', 'settings'];
 const OLD_EXPORTED_PASSWORD = 'password-from-an-old-export';
 const BOOTSTRAP_PASSWORD = 'bootstrap-admin-password';
 const IMPORTED_SETTING = {
@@ -38,41 +42,8 @@ const IMPORTED_FORM = {
 };
 const IMPORTED_EMPLOYEE = { id: 601, ob_id: 501, name: 'Sample Person', position: 'Inspector' };
 
-// Import replaces whole tables that later checks rely on, so put every row back.
-async function withTablesRestored(db, callback) {
-  const saved = {};
-  for (const table of RESTORED_TABLES) saved[table] = await db.all(`SELECT * FROM ${table}`, []);
-  try {
-    await callback();
-  } finally {
-    await db.transaction(async (client) => {
-      for (const table of RESTORED_TABLES) await client.query(`DELETE FROM ${table}`, []);
-      for (const table of [...RESTORED_TABLES].reverse()) {
-        for (const row of saved[table]) {
-          const columns = Object.keys(row);
-          await client.query(
-            `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
-            columns.map((column) => row[column]),
-          );
-        }
-      }
-    });
-  }
-}
-
 function oldExport(settings) {
   return { official_business: [IMPORTED_FORM], employees: [IMPORTED_EMPLOYEE], settings };
-}
-
-async function exportData(baseUrl, cookie) {
-  const response = await fetch(`${baseUrl}${EXPORT_ROUTE}`, { headers: { Cookie: cookie } });
-  assert.equal(response.status, 200);
-  return response.json();
-}
-
-async function importData(baseUrl, cookie, body) {
-  const response = await postJson(baseUrl, IMPORT_ROUTE, body, cookie);
-  assert.equal(response.status, 200);
 }
 
 function storedPassword(db) {

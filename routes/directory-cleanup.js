@@ -57,4 +57,4 @@ async function cleanupUnusedEmployees(dryRun = false) {
   return { deleted: ids.length, ids };
 }
 
-module.exports = { cleanupUnusedEmployees, sixMonthCutoff, UNUSED_EMPLOYEE_MONTHS };
+module.exports = { cleanupUnusedEmployees, sixMonthCutoff, isRealDay, UNUSED_EMPLOYEE_MONTHS };
