@@ -4,6 +4,7 @@
 // checked before anything is written, so a bad file changes nothing.
 
 const { normaliseReferenceCode } = require('./reference-code');
+const DateMode = require('../public/js/date-mode');
 const {
   validateDivisions,
   validateApprovers,
@@ -13,24 +14,40 @@ const {
 
 const INVALID_FORMAT = 'Invalid import data format';
 const BAD_REFERENCE_CODE = 'the Reference code must be text';
+const BAD_DATE_MODE = 'the Date mode must be empty or one of: ' + DateMode.DATE_MODES.join(', ');
 const OPTIONAL_LISTS = {
   divisions: validateDivisions,
   approvers: validateApprovers,
   employees_directory: validateDirectory,
 };
 
+function isMissing(value) {
+  return value === undefined || value === null;
+}
+
+// An unknown mode is refused rather than dropped: dropping it would quietly change how the
+// form prints. Older files carry no mode, and such forms print as All Dates.
+function validDateMode(raw) {
+  if (isMissing(raw)) return { value: null };
+  return DateMode.isDateMode(raw) ? { value: raw } : { error: BAD_DATE_MODE };
+}
+
+function validReferenceCode(raw) {
+  if (isMissing(raw)) return { value: null };
+  const code = typeof raw === 'string' ? normaliseReferenceCode(raw) : '';
+  return code ? { value: code } : { error: BAD_REFERENCE_CODE };
+}
+
 // Codes are the edit secret (ADR 0003), so messages name the forms by position, never by code.
 function validateForms(forms) {
   const values = [];
   for (let index = 0; index < forms.length; index += 1) {
-    const raw = forms[index] && forms[index].reference_code;
-    if (raw === undefined || raw === null) {
-      values.push({ ...forms[index], reference_code: null });
-      continue;
-    }
-    const code = typeof raw === 'string' ? normaliseReferenceCode(raw) : '';
-    if (!code) return { error: `Form ${index + 1}: ${BAD_REFERENCE_CODE}` };
-    values.push({ ...forms[index], reference_code: code });
+    const entry = forms[index] || {};
+    const code = validReferenceCode(entry.reference_code);
+    const dateMode = validDateMode(entry.date_mode);
+    const error = code.error || dateMode.error;
+    if (error) return { error: `Form ${index + 1}: ${error}` };
+    values.push({ ...forms[index], reference_code: code.value, date_mode: dateMode.value });
   }
   const repeat = firstRepeat(
     values.map((form) => form.reference_code).filter((code) => code !== null),

@@ -20,6 +20,7 @@ const FORM_COLUMNS = [
   'approved_by',
   'approved_by_position',
   'reference_code',
+  'date_mode',
 ];
 const LIST_COLUMNS = {
   divisions: ['id', 'name', 'code'],

@@ -52,8 +52,8 @@ function isCodeUnavailable(error) {
   return Boolean(error) && error.name === CODE_UNAVAILABLE_NAME;
 }
 
-// Runs inside the submit transaction, so codes given to earlier forms of the same submission
-// count as taken; the unique index still refuses a code if two writers ever raced.
+// Runs inside the submit transaction; the unique index still refuses a code if two writers
+// ever raced.
 async function assignReferenceCode(client, { divisionCode, now, randomIndex = crypto.randomInt }) {
   for (let attempt = 0; attempt < MAX_CODE_ATTEMPTS; attempt += 1) {
     const code = makeReferenceCode(divisionCode, now, randomIndex);

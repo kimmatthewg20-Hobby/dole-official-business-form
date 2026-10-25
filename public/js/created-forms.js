@@ -1,4 +1,4 @@
-// The success screen's list of created forms, each with its Reference code and a Copy button.
+// The success screen's line for the created form, with its Reference code and a Copy button.
 // The code is shown only here (ADR 0003), so staff are told to keep it.
 (function (root) {
   const CODES_NOT_SHOWN_AGAIN =
@@ -80,11 +80,11 @@
     return link;
   }
 
-  function formLine(form, index) {
+  function formLine(form) {
     const line = document.createElement('div');
     line.className = 'created-form';
     const dates = document.createElement('div');
-    dates.textContent = `Form ${index + 1} (No. ${form.id}): ` + root.DateWording.formatDateWording(form.datesOfOB);
+    dates.textContent = `Form No. ${form.id}: ` + root.DateWording.formatDateWording(form.datesOfOB);
     line.appendChild(dates);
     if (!form.referenceCode) {
       const none = document.createElement('div');

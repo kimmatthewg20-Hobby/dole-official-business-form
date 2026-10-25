@@ -1,6 +1,7 @@
 const { formatDateWording } = require('./js/date-wording');
 const { PRINT_STYLES, CUT_GUIDE_HTML } = require('./print-styles');
 const { DEFAULT_PAPER, toolbarHtml } = require('./print-papers');
+const { printedForms } = require('./print-pages');
 
 // Forms are printed and shown to others, so user text must never be read as markup.
 function escapeHtml(text) {
@@ -72,10 +73,10 @@ function generatePrintableHTML(data) {
   // Extract form data and employees
   const { formData, employees, settings } = data;
   
-  // One form per employee; every FORMS_PER_SHEET forms share one sheet of paper.
+  // The stored Date mode decides the printed forms; every FORMS_PER_SHEET share one sheet of paper.
   const formPages = [];
   
-  employees.forEach((employee, index) => {
+  printedForms(formData, employees).forEach(({ employee, dates }) => {
     // Get date display - handle multiple dates or single date with improved checks
     let dateDisplay = '';
     
@@ -156,6 +157,9 @@ function generatePrintableHTML(data) {
       }
     }
     
+    // A Separated Dates form prints only its own date.
+    if (dates) dateDisplay = formatMultipleDates(dates);
+
     // Get employee info from employees_directory if available
     const employeeInfo = employee.directory_info || {};
     
@@ -179,7 +183,7 @@ function generatePrintableHTML(data) {
       approvedByPosition = formData.approvedByPosition || formData.approved_by_position || settings.office_head_position || 'Provincial Head';
     }
     
-    // Create form for each employee
+    // Create one printed form
     formPages.push(`
       <div class="form-page">
         <!-- Header -->

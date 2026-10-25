@@ -93,7 +93,10 @@ module.exports = [
     name: 'no public response or printout carries a Reference code',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const { forms } = await (await submit(baseUrl, SEPARATE)).json();
+        const forms = [];
+        for (const dateMode of DateMode.DATE_MODES) {
+          forms.push(...(await (await submit(baseUrl, { ...SEPARATE, dateMode })).json()).forms);
+        }
         const codes = forms.map((form) => form.referenceCode);
         assert.equal(codes.length, 2);
         assert.ok(codes.every(Boolean));

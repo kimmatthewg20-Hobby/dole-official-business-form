@@ -1,23 +1,29 @@
 'use strict';
 
-// Date mode decides how many forms one submission creates; all are stored or none.
+// One submission stores one form with every employee and every date, whichever Date mode is
+// chosen; the mode is stored with it and only changes how the form prints (GLOSSARY.md).
 
 const assert = require('node:assert/strict');
 const { VALID_SUBMISSION, withFormsRestored, countRows, submit } = require('./form-helpers');
 const DateMode = require('../public/js/date-mode');
-const { insertForms, expandSubmission, insertForm } = require('../routes/form-creation');
+const { insertSubmission, expandSubmission, insertForm } = require('../routes/form-creation');
 
 const BAD_REQUEST = 400;
 const OK = 200;
-const THREE_DATES = ['2026-03-02', '2026-03-03', '2026-03-05'];
-const TWO_EMPLOYEES = VALID_SUBMISSION.employees.slice(0, 2);
-const SEPARATE = { ...VALID_SUBMISSION, dateMode: DateMode.MULTIPLE_SEPARATE_DAYS, datesOfOB: THREE_DATES, employees: TWO_EMPLOYEES };
+const MAX_PRINTED = 60;
+const UNSORTED_DATES = ['2026-03-05', '2026-03-02', '2026-03-03'];
+const SORTED_DATES = ['2026-03-02', '2026-03-03', '2026-03-05'];
+const SEPARATE = { ...VALID_SUBMISSION, dateMode: DateMode.MULTIPLE_SEPARATE_DAYS, datesOfOB: UNSORTED_DATES };
+const ALL_DATES = { ...SEPARATE, dateMode: DateMode.MORE_THAN_ONE_DAY };
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const FAIL_ON_FORM_NUMBER = 3;
 
 function manyDates(count) {
   const start = Date.UTC(2026, 3, 1);
   return Array.from({ length: count }, (_, index) => new Date(start + index * MS_PER_DAY).toISOString().slice(0, 10));
+}
+
+function manyEmployees(count) {
+  return Array.from({ length: count }, (_, index) => ({ name: `Person ${index}`, position: 'Clerk' }));
 }
 
 async function assertNothingStored(db) {
@@ -25,26 +31,32 @@ async function assertNothingStored(db) {
   assert.equal(await countRows(db, 'employees'), 0);
 }
 
+async function expectOneStoredForm(baseUrl, db, body) {
+  const response = await submit(baseUrl, body);
+  assert.equal(response.status, OK);
+  const { success, id, forms } = await response.json();
+  assert.equal(success, true);
+  assert.equal(forms.length, 1);
+  assert.equal(forms[0].id, id);
+  assert.deepEqual(forms[0].datesOfOB, SORTED_DATES);
+  assert.match(forms[0].referenceCode, /^DOLETSSD\d{4}[A-HJKMNP-Z2-9]{4}$/);
+  const rows = await db.all('SELECT id, dates_of_ob, date_of_ob, date_mode, reference_code FROM official_business', []);
+  assert.deepEqual(rows, [{
+    id, dates_of_ob: JSON.stringify(SORTED_DATES), date_of_ob: SORTED_DATES[0],
+    date_mode: body.dateMode, reference_code: forms[0].referenceCode,
+  }]);
+  const employees = await db.all('SELECT ob_id, name, position FROM employees ORDER BY id', []);
+  assert.deepEqual(employees, VALID_SUBMISSION.employees.map((employee) => ({ ob_id: id, ...employee })));
+}
+
 module.exports = [
   {
-    name: 'date-mode: Multiple Separate Days makes one form per date per employee',
-    async run({ baseUrl, db }) {
-      await withFormsRestored(db, async () => {
-        const response = await submit(baseUrl, SEPARATE);
-        assert.equal(response.status, OK);
-        const { success, id, forms } = await response.json();
-        assert.equal(success, true);
-        assert.equal(forms.length, 6);
-        assert.equal(id, forms[0].id);
-        assert.ok(forms.every((form) => form.datesOfOB.length === 1));
-        assert.equal(new Set(forms.map((form) => form.id)).size, 6);
-        assert.equal(await countRows(db, 'official_business'), 6);
-        assert.equal(await countRows(db, 'employees'), 6);
-        const pairs = await db.all(
-          'SELECT o.date_of_ob AS date, e.name FROM official_business o JOIN employees e ON e.ob_id = o.id', []);
-        assert.equal(new Set(pairs.map((row) => `${row.date}|${row.name}`)).size, 6);
-      });
-    },
+    name: 'date-mode: Separated Dates stores one form with all employees, all dates, the mode and one code',
+    run: ({ baseUrl, db }) => withFormsRestored(db, () => expectOneStoredForm(baseUrl, db, SEPARATE)),
+  },
+  {
+    name: 'date-mode: All Dates stores one form with all employees, all dates, the mode and one code',
+    run: ({ baseUrl, db }) => withFormsRestored(db, () => expectOneStoredForm(baseUrl, db, ALL_DATES)),
   },
   {
     name: 'date-mode: the default and first mode is More Than One Day',
@@ -54,19 +66,12 @@ module.exports = [
     },
   },
   {
-    name: 'date-mode: More Than One Day makes one form per employee, each with all dates and its own code',
-    async run({ baseUrl, db }) {
-      await withFormsRestored(db, async () => {
-        const body = { ...SEPARATE, dateMode: DateMode.MORE_THAN_ONE_DAY };
-        const { forms } = await (await submit(baseUrl, body)).json();
-        assert.equal(forms.length, TWO_EMPLOYEES.length);
-        assert.ok(forms.every((form) => JSON.stringify(form.datesOfOB) === JSON.stringify(THREE_DATES)));
-        assert.equal(new Set(forms.map((form) => form.referenceCode)).size, TWO_EMPLOYEES.length);
-        assert.equal(await countRows(db, 'official_business'), TWO_EMPLOYEES.length);
-        const stored = await db.all('SELECT ob_id, name FROM employees ORDER BY id', []);
-        assert.deepEqual(stored.map((row) => row.name), TWO_EMPLOYEES.map((employee) => employee.name));
-        assert.equal(new Set(stored.map((row) => row.ob_id)).size, TWO_EMPLOYEES.length);
-      });
+    name: 'date-mode: printed forms are one per employee for All Dates and one per employee per date for Separated Dates',
+    async run() {
+      assert.equal(DateMode.countForms(DateMode.MORE_THAN_ONE_DAY, 3, 3), 3);
+      assert.equal(DateMode.countForms(DateMode.MULTIPLE_SEPARATE_DAYS, 3, 3), 9);
+      assert.equal(DateMode.formLimitMessage(61),
+        'This would print 61 forms, but one submission can print at most 60. Remove some dates or employees.');
     },
   },
   {
@@ -96,54 +101,51 @@ module.exports = [
     },
   },
   {
-    name: 'date-mode: more forms than the cap is refused with a clear message',
+    name: 'date-mode: Separated Dates refuses more than 60 printed forms (dates x employees) and stores nothing',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const dates = manyDates(DateMode.MAX_FORMS_PER_SUBMISSION / 2 + 1);
-        const response = await submit(baseUrl, { ...SEPARATE, datesOfOB: dates });
-        assert.equal(response.status, BAD_REQUEST);
-        assert.equal((await response.json()).error, DateMode.formLimitMessage(dates.length * 2));
-        await assertNothingStored(db);
-
-        const atCap = manyDates(DateMode.MAX_FORMS_PER_SUBMISSION / 2);
-        const accepted = await (await submit(baseUrl, { ...SEPARATE, datesOfOB: atCap })).json();
-        assert.equal(accepted.forms.length, DateMode.MAX_FORMS_PER_SUBMISSION);
-        await db.run('DELETE FROM employees', []);
-        await db.run('DELETE FROM official_business', []);
-        const manyDatesInOneForm = await submit(baseUrl, { ...SEPARATE, dateMode: DateMode.MORE_THAN_ONE_DAY, datesOfOB: dates });
-        assert.equal(manyDatesInOneForm.status, OK, 'in All Dates mode dates do not multiply the forms');
-      });
-    },
-  },
-  {
-    name: 'date-mode: All Dates mode counts one form per employee against the cap',
-    async run({ baseUrl, db }) {
-      await withFormsRestored(db, async () => {
-        const employees = (count) => Array.from({ length: count }, (_, index) => ({ name: `Person ${index}`, position: 'Clerk' }));
-        const oneForm = (count) => ({ ...SEPARATE, dateMode: DateMode.MORE_THAN_ONE_DAY, employees: employees(count) });
-        const tooMany = DateMode.MAX_FORMS_PER_SUBMISSION + 1;
-        const refused = await submit(baseUrl, oneForm(tooMany));
+        const twoEmployees = VALID_SUBMISSION.employees.slice(0, 2);
+        const refused = await submit(baseUrl, { ...SEPARATE, employees: twoEmployees, datesOfOB: manyDates(31) });
         assert.equal(refused.status, BAD_REQUEST);
-        assert.equal((await refused.json()).error, DateMode.formLimitMessage(tooMany));
+        assert.equal((await refused.json()).error, DateMode.formLimitMessage(MAX_PRINTED + 2));
         await assertNothingStored(db);
 
-        const accepted = await (await submit(baseUrl, oneForm(DateMode.MAX_FORMS_PER_SUBMISSION))).json();
-        assert.equal(accepted.forms.length, DateMode.MAX_FORMS_PER_SUBMISSION);
+        const accepted = await submit(baseUrl, { ...SEPARATE, employees: twoEmployees, datesOfOB: manyDates(30) });
+        assert.equal(accepted.status, OK);
+        assert.equal((await accepted.json()).forms.length, 1);
+        assert.equal(await countRows(db, 'official_business'), 1);
       });
     },
   },
   {
-    name: 'date-mode: a failure part-way stores no forms at all',
+    name: 'date-mode: All Dates counts one printed form per employee: 60 accepted, 61 refused',
+    async run({ baseUrl, db }) {
+      await withFormsRestored(db, async () => {
+        const refused = await submit(baseUrl, { ...ALL_DATES, employees: manyEmployees(MAX_PRINTED + 1) });
+        assert.equal(refused.status, BAD_REQUEST);
+        assert.equal((await refused.json()).error, DateMode.formLimitMessage(MAX_PRINTED + 1));
+        await assertNothingStored(db);
+
+        const manyDatesOneForm = await submit(baseUrl, { ...ALL_DATES, datesOfOB: manyDates(31) });
+        assert.equal(manyDatesOneForm.status, OK, 'in All Dates mode dates do not multiply the printed forms');
+        const accepted = await submit(baseUrl, { ...ALL_DATES, employees: manyEmployees(MAX_PRINTED) });
+        assert.equal(accepted.status, OK);
+        assert.equal((await accepted.json()).forms.length, 1);
+        assert.equal(await countRows(db, 'official_business'), 2);
+      });
+    },
+  },
+  {
+    name: 'date-mode: a failure after the form is written stores nothing at all',
     async run({ db }) {
       await withFormsRestored(db, async () => {
-        const records = expandSubmission(SEPARATE);
-        let formNumber = 0;
+        const record = expandSubmission(SEPARATE);
+        assert.deepEqual(record, { employees: VALID_SUBMISSION.employees, datesOfOB: SORTED_DATES });
         const failingInsert = async (client, body, record, now) => {
-          formNumber += 1;
-          if (formNumber === FAIL_ON_FORM_NUMBER) throw new Error('forced failure');
-          return insertForm(client, body, record, now);
+          await insertForm(client, body, record, now);
+          throw new Error('forced failure');
         };
-        await assert.rejects(insertForms(SEPARATE, records, new Date().toISOString(), { insertOne: failingInsert }), /forced failure/);
+        await assert.rejects(insertSubmission(SEPARATE, record, new Date().toISOString(), { insertOne: failingInsert }), /forced failure/);
         await assertNothingStored(db);
       });
     },

@@ -74,7 +74,7 @@
           <div class="form-row">
             <div class="form-control">
               <label for="departureTime">Departure Time</label>
-              <input type="text" id="departureTime" placeholder="8:30 AM" autocomplete="off" required>
+              <input type="text" id="departureTime" placeholder="08:00 AM" autocomplete="off" required>
             </div>
             <div class="form-control">
               <label for="returnTime">Return Time</label>
@@ -241,7 +241,7 @@
       // Store employees and settings
       let employees = [];
       let currentId = '';
-      // The first created form's Reference code, kept only in memory for the Edit button.
+      // The created form's Reference code, kept only in memory for the Edit button.
       let currentCode = '';
       let settings = {};
       
@@ -665,7 +665,8 @@
               showCreatedForms(data.forms);
               openModal(successModal);
               datePickr.clear();
-              locationFromField.value = '';
+              // "From" goes back to its starting answer, as Clear Data does, not to empty.
+              locationFromField.value = locationFromField.defaultValue;
               locationToField.value = '';
               departureTimeField.value = '';
               returnTimeField.value = '';
@@ -692,7 +693,7 @@
         if (currentId) window.open(`/print/${currentId}${codeFragment}`, '_blank');
       });
       
-      // Edit opens the code-checked edit of the first created form; staff never edit by form id.
+      // Edit opens the code-checked edit of the created form; staff never edit by form id.
       editFormBtn.addEventListener('click', () => {
         if (!currentCode) {
           showToast('This form has no Reference code to edit it with', 'danger');

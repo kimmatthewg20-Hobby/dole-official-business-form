@@ -4,8 +4,7 @@
 // files ending in .check.js.
 
 const assert = require('node:assert/strict');
-const { VALID_SUBMISSION, withFormsRestored } = require('./form-helpers');
-const { submitSharedForm } = require('./shared-form-helpers');
+const { VALID_SUBMISSION, withFormsRestored, submit } = require('./form-helpers');
 const { onVercel } = require('./lockout-helpers');
 
 const EDIT = {
@@ -46,7 +45,7 @@ async function expectUnchanged(db, id, referenceCode) {
 // Every check starts from one submitted form and edits it from its own address.
 function withSubmittedForm(baseUrl, db, callback) {
   return withFormsRestored(db, async () => {
-    const { forms } = await submitSharedForm(baseUrl, db);
+    const { forms } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
     await onVercel(() => callback(forms[0]));
   });
 }

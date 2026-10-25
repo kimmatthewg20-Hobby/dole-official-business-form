@@ -3,7 +3,7 @@ const db = require('../db');
 const { validateSubmission, validateDateMode } = require('./form-validation');
 const { validateListedChoices } = require('./form-lists-validation');
 
-const { expandSubmission, insertForms } = require('./form-creation');
+const { expandSubmission, insertSubmission } = require('./form-creation');
 const { isCodeUnavailable } = require('./reference-code');
 const { publicFormWithEmployees } = require('./public-form');
 const { adminApiOnly } = require('./admin-auth');
@@ -12,7 +12,7 @@ const SERVICE_UNAVAILABLE = 503;
 
 const router = express.Router();
 
-// Submit: every form the Date mode creates is stored together or not at all.
+// Submit: one submission stores one form, whichever Date mode is chosen.
 router.post('/api/submit', async (req, res) => {
   const body = req.body || {};
   const validationError = validateSubmission(body) || validateDateMode(body);
@@ -25,10 +25,9 @@ router.post('/api/submit', async (req, res) => {
     return res.status(500).json({ error: 'Database error: ' + error.message });
   }
 
-  const records = expandSubmission(body);
   try {
-    const forms = await insertForms(body, records, new Date().toISOString());
-    res.json({ success: true, id: forms[0].id, forms });
+    const form = await insertSubmission(body, expandSubmission(body), new Date().toISOString());
+    res.json({ success: true, id: form.id, forms: [form] });
   } catch (error) {
     if (isCodeUnavailable(error)) return res.status(SERVICE_UNAVAILABLE).json({ error: error.message });
     console.error('Database error during form submission:', error);

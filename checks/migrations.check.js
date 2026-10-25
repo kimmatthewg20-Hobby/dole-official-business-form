@@ -106,6 +106,17 @@ module.exports = [
     },
   },
   {
+    name: 'forms have an optional Date mode, empty for forms from before',
+    async run({ db }) {
+      const columns = await db.all('PRAGMA table_info(official_business)', []);
+      const dateMode = columns.find((column) => column.name === 'date_mode');
+      assert.ok(dateMode, 'forms have a date_mode column');
+      assert.equal(dateMode.type, 'TEXT');
+      assert.equal(dateMode.notnull, 0, 'forms from before keep no mode');
+      assert.equal(dateMode.dflt_value, null);
+    },
+  },
+  {
     name: 'failed attempts carry a kind, admin login by default, indexed with address and time',
     async run({ db }) {
       const columns = await db.all('PRAGMA table_info(failed_logins)', []);

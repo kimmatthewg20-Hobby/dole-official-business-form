@@ -1,19 +1,19 @@
 // The Date mode choice beside the date field, shown only once two dates are chosen; it warns
-// when the submission would pass the cap.
+// when the submission would print more forms than the cap.
 (function (root) {
   // Short names on screen; the longer explanation shows when the pointer rests on one.
   const MODE_LABELS = {
     [DateMode.MORE_THAN_ONE_DAY]: {
       text: 'All Dates',
-      tip: 'One form per employee, covering all the selected dates',
+      tip: 'One form per employee, listing all the dates',
     },
     [DateMode.MULTIPLE_SEPARATE_DAYS]: {
       text: 'Separated Dates',
-      tip: 'One form per date per employee',
+      tip: 'One form per employee for each date',
     },
   };
   const RADIO_NAME = 'dateMode';
-  // With one date both choices give the same forms, so the choice only appears from two dates.
+  // With one date both choices print the same forms, so the choice only appears from two dates.
   const MIN_DATES_FOR_CHOICE = 2;
 
   let options = null;

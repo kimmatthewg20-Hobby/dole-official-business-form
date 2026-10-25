@@ -6,7 +6,6 @@ const assert = require('node:assert/strict');
 const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 const { loginCookie } = require('./admin-http');
 const { VALID_SUBMISSION, withFormsRestored, insertForm, submit } = require('./form-helpers');
-const { submitSharedForm } = require('./shared-form-helpers');
 const { ADMIN_FORMS_ROUTE, ADMIN_FORMS_PAGE_SIZE } = require('../routes/admin-forms');
 
 const OK = 200;
@@ -24,7 +23,7 @@ module.exports = [
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
         const oldId = await insertForm(db, { daysAgo: 1, employees: ['Old Form Person'] });
-        const { forms } = await submitSharedForm(baseUrl, db);
+        const { forms } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
         const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
         const listed = await adminForms(baseUrl, cookie);
         assert.deepEqual(

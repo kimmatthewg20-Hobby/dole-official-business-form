@@ -13,7 +13,6 @@ const {
   insertForm,
   submit,
 } = require('./form-helpers');
-const { submitSharedForm } = require('./shared-form-helpers');
 const { loginCookie } = require('./admin-http');
 const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 
@@ -30,10 +29,12 @@ const INVALID_SUBMISSIONS = {
 
 module.exports = [
   {
-    name: 'a stored form with several employees is read back by id with all its fields',
+    name: 'submitting a form with several employees stores them together and returns the id',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const { success, id } = await submitSharedForm(baseUrl, db);
+        const response = await submit(baseUrl, VALID_SUBMISSION);
+        assert.equal(response.status, 200);
+        const { success, id } = await response.json();
         assert.equal(success, true);
         assert.equal(typeof id, 'number');
 
@@ -79,7 +80,7 @@ module.exports = [
           purpose: '<script>alert(1)</script>',
           employees: [{ name: 'Ana <b>Reyes</b>', position: 'Clerk' }, { name: 'Ben Cruz', position: 'Driver' }],
         };
-        const { id } = await submitSharedForm(baseUrl, db, body);
+        const { id } = await (await submit(baseUrl, body)).json();
         const response = await fetch(`${baseUrl}/print/${id}`);
         assert.equal(response.status, 200);
         const html = await response.text();
@@ -121,7 +122,7 @@ module.exports = [
     name: 'the tracker lists employee names and formatted dates and times for a submitted form',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const { id } = await submitSharedForm(baseUrl, db);
+        const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
         const { entries } = await getJson(baseUrl, '/api/tracker');
         assert.equal(entries.length, 1);
         assert.equal(entries[0].id, id);

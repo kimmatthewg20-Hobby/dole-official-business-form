@@ -20,4 +20,5 @@ Staff edit a submitted form by presenting its reference code (DOLE + division co
 - The tracker list must never return codes; only an exact code lookup finds a form.
 - Forms made before this ships have no code and are editable by the admin only.
 - MMYY uses Philippine time, not server time.
+- One submission stores one form and gets one code, whatever the Date mode; the mode only changes how that form prints (one printed form per employee, or per employee per date), and every printed form comes from the one coded form.
 - A new migration for codes, divisions, approvers and employee last-used dates is applied by Kim.

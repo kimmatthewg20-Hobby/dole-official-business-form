@@ -13,7 +13,7 @@ The one list of employees (name, position, assigned unit) that staff pick from w
 _Avoid_: Employee list, staff table, remembered employees
 
 **Date mode**:
-The choice staff make under Date of Official Business ("File as" on the form). Every employee always gets their own form; two employees never share one. "More Than One Day" (shown as "All Dates", the default and the first button) makes one form per employee covering all the chosen dates. "Multiple Separate Days" (shown as "Separated Dates") makes one form per date per employee. Only the resulting forms are kept, not the mode. The two buttons appear only once two or more dates are chosen; with one date both give the same forms. The hover tips are "One form per employee, covering all the selected dates" and "One form per date per employee".
+The choice staff make under Date of Official Business ("File as" on the form). It changes only how the form prints: one submission always stores one Official Business form with all the chosen employees and dates, and the mode is kept with it. "More Than One Day" (shown as "All Dates", the default and the first button) prints one form per employee, listing all the dates. "Multiple Separate Days" (shown as "Separated Dates") prints one form per employee for each date, one employee's dates together. Forms stored before the mode was kept print as All Dates. One submission may print at most 60 forms. The two buttons appear only once two or more dates are chosen; with one date both print the same forms. The hover tips are "One form per employee, listing all the dates" and "One form per employee for each date".
 
 **Division**:
 A named unit of the office that a form is filed under, with a short code (2-4 letters) used in the reference code. The admin keeps the list; staff must pick from it.
@@ -24,7 +24,7 @@ A person (name and position) who may be named as "Approved by" on a form. The ad
 _Avoid_: Approving person, signatory
 
 **Reference code**:
-The code given to one Official Business form when it is submitted, such as DOLECN1026K7QX: "DOLE", the Division code, the month and year of submission (MMYY), and four random characters. Anyone holding the whole code may find and edit that form, so it is a secret and is not listed publicly.
+The code given to one submission's Official Business form when it is submitted, one code per submission whatever the Date mode, such as DOLECN1026K7QX: "DOLE", the Division code, the month and year of submission (MMYY), and four random characters. Anyone holding the whole code may find and edit that one form, with all its employees and dates, so it is a secret and is not listed publicly.
 _Avoid_: Control number, tracking number, ID
 
 **Admin**:

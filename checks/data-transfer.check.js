@@ -98,8 +98,10 @@ module.exports = [
           ...IMPORTED_SETTING,
           assistant_regional_director: 'ATTY. NEPOMUCENO A. LEAÑO II, CPA',
         });
-        // An older export has no Reference codes, so its forms come back without one.
-        assert.deepEqual(exported.official_business, [{ ...IMPORTED_FORM, timestamp: null, reference_code: null }]);
+        // An older export has no Reference codes or Date modes, so its forms come back without them.
+        assert.deepEqual(exported.official_business, [
+          { ...IMPORTED_FORM, timestamp: null, reference_code: null, date_mode: null },
+        ]);
         assert.deepEqual(exported.employees, [IMPORTED_EMPLOYEE]);
       });
     },
