@@ -1,4 +1,6 @@
 const { formatDateWording } = require('./js/date-wording');
+const { PRINT_STYLES, CUT_GUIDE_HTML } = require('./print-styles');
+const { DEFAULT_PAPER, toolbarHtml } = require('./print-papers');
 
 // Forms are printed and shown to others, so user text must never be read as markup.
 function escapeHtml(text) {
@@ -55,23 +57,25 @@ function formatTime(timeString) {
 }
 
 // Function to generate the printable HTML
+const FORMS_PER_SHEET = 2;
+
+// Groups the forms two to a sheet, so the screen shows the paper and the printer breaks per sheet.
+function sheetsHtml(formPages) {
+  const sheets = [];
+  for (let start = 0; start < formPages.length; start += FORMS_PER_SHEET) {
+    sheets.push(`<section class="sheet">${formPages.slice(start, start + FORMS_PER_SHEET).join(CUT_GUIDE_HTML)}</section>`);
+  }
+  return sheets.join('');
+}
+
 function generatePrintableHTML(data) {
   // Extract form data and employees
   const { formData, employees, settings } = data;
   
-  // Create one form template for each employee
-  let employeeForms = '';
+  // One form per employee; every FORMS_PER_SHEET forms share one sheet of paper.
+  const formPages = [];
   
   employees.forEach((employee, index) => {
-    // Determine if we need a page break (after every 2 forms)
-    const needsPageBreak = index > 0 && index % 2 === 0 ? 'page-break' : '';
-    
-    // Determine if this is an odd-numbered form (Form 1, 3, 5, etc.) - 0-indexed, so 0, 2, 4 are odd positions
-    const isOddForm = index % 2 === 0;
-    
-    // Determine if this is an even-numbered form (Form 2, 4, 6, etc.) - 0-indexed, so 1, 3, 5 are even positions
-    const isEvenForm = index % 2 === 1;
-    
     // Get date display - handle multiple dates or single date with improved checks
     let dateDisplay = '';
     
@@ -176,10 +180,8 @@ function generatePrintableHTML(data) {
     }
     
     // Create form for each employee
-    employeeForms += `
-      <div class="form-page ${needsPageBreak}">
-        ${isOddForm ? '<br>' : ''}
-        ${isEvenForm ? '<div class="cutout-line"></div>' : ''}
+    formPages.push(`
+      <div class="form-page">
         <!-- Header -->
         <table>
           <tr>
@@ -294,7 +296,7 @@ function generatePrintableHTML(data) {
         <!-- Certificate of Appearance -->
         <table>
           <tr>
-            <td class="center-text" colspan="2" style="background-color: #F4F6F7; border-bottom: 2px solid #1ABC9C;">
+            <td class="center-text" colspan="2" style="background-color: #F4F6F7; border-bottom: 2px solid #000000;">
               <strong>TO BE FILLED BY THE AGENCY OR COMPANY WHERE BUSINESS IS TRANSACTED</strong>
             </td>
           </tr>
@@ -329,201 +331,27 @@ function generatePrintableHTML(data) {
           </tr>
         </table>
       </div>
-    `;
+    `);
   });
+
+  const employeeForms = sheetsHtml(formPages);
   
   // Create the complete HTML document
   const html = `
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="en" data-paper="${DEFAULT_PAPER}">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Official Business Form - ${escapeHtml(formData.travel_id)}</title>
+      <title>Official Business Form - ${escapeHtml(formData.id)}</title>
       <link rel="icon" href="https://batangmalaya.ph/wp-content/uploads/2022/12/1_dole.png" type="image/png">
-      <style>
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-          margin: 0;
-          padding: 0;
-          font-size: 12px;
-          background-color: #ffffff;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: -1px;
-        }
-        table, th, td {
-          border: 1px solid #2C3E50;
-        }
-        th, td {
-          padding: 5px;
-          text-align: left;
-        }
-        .header-left {
-          width: 25%;
-          text-align: left;
-          vertical-align: middle;
-          font-weight: bold;
-        }
-        .header-center {
-          width: 50%;
-          text-align: center;
-          vertical-align: middle;
-          font-weight: bold;
-        }
-        .header-right {
-          width: 10%;
-          text-align: center;
-          vertical-align: middle;
-        }
-        .logo {
-          width: 40px;
-          height: auto;
-          margin-left: 10px;
-          margin-right: 10px;
-        }
-        .header-right-content {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          justify-content: center;
-        }
-        .header-text {
-          text-align: center;
-          white-space: nowrap;
-          line-height: 1.2;
-          font-size: 12px;
-        }
-        .center-text {
-          text-align: center;
-        }
-        .approval-section {
-          height: 80px;
-        }
-        .certificate-section {
-          height: 100px;
-        }
-        .instructions {
-          font-size: 10px;
-        }
-        .cutout-line {
-          width: 100%;
-          height: 0;
-          border-top: 1px dashed #000;
-          margin: 0;
-          padding: 3px 0;
-        }
-        .form-page {
-          width: 8.5in;
-          padding: 5px 0.4cm;
-          box-sizing: border-box;
-          overflow: hidden;
-          margin-left: auto;
-          margin-right: auto;
-        }
-        .page-break {
-          page-break-before: always;
-        }
-        .print-button {
-          position: fixed;
-          top: 25px;
-          left: 25px;
-          padding: 10px 20px;
-          background-color: #2C3E50;
-          color: #ffffff;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          z-index: 1000;
-          font-size: 14px;
-          font-weight: 500;
-        }
-        .print-button:hover {
-          background-color: #3498DB;
-        }
-        @media print {
-          .print-button {
-            display: none;
-          }
-          @page {
-            size: 8.5in 13in;
-            margin: 0;
-          }
-          body {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            height: 100%;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-          }
-          .form-page {
-            padding: 5px 0.3cm;
-            width: 8.5in;
-            max-height: calc((13in - 0.6cm) / 2);
-            box-sizing: border-box;
-            overflow: hidden;
-            page-break-after: avoid;
-            page-break-inside: avoid;
-            margin-left: auto;
-            margin-right: auto;
-            display: flex;
-            flex-direction: column;
-          }
-          .form-page table {
-            font-size: 11px;
-          }
-          .form-page th, .form-page td {
-            padding: 4px;
-          }
-          .approval-section {
-            height: 60px;
-            min-height: 60px;
-          }
-          .certificate-section {
-            height: 80px;
-            min-height: 80px;
-          }
-          .instructions {
-            font-size: 9px;
-            line-height: 1.2;
-          }
-          /* Ensure 2 forms per page - break after every 2nd form */
-          .form-page:nth-of-type(2n) {
-            page-break-after: always;
-          }
-          .form-page:nth-of-type(2n+1) {
-            page-break-after: avoid;
-          }
-          /* Prevent orphaned forms - if only 1 form left, keep with previous */
-          .form-page:last-child:nth-of-type(odd) {
-            page-break-before: auto;
-            page-break-after: avoid;
-          }
-          /* Prevent blank pages by ensuring proper page break handling */
-          .form-page.page-break {
-            page-break-before: always;
-          }
-          /* Cutout line styling for printing */
-          .cutout-line {
-            border-top: 1px dashed #000;
-            margin: 0.1in 0;
-            page-break-inside: avoid;
-          }
-        }
-      </style>
+      <style>${PRINT_STYLES}</style>
+      <style id="pageSize"></style>
     </head>
     <body>
-      <button class="print-button" onclick="window.print()">Print Form</button>
+      ${toolbarHtml({ title: 'Official Business Form', formNumber: `Form No. ${escapeHtml(formData.id)}` })}
       ${employeeForms}
+      <script src="/js/print-toolbar.js"></script>
     </body>
     </html>
   `;
