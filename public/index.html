@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/clock-picker.css">
   <style>
     /* Tri-color: Primary, Secondary, Accent */
     :root {
@@ -850,11 +851,11 @@
           <div class="form-row">
             <div class="form-control">
               <label for="departureTime">Departure Time</label>
-              <input type="time" id="departureTime" required>
+              <input type="text" id="departureTime" placeholder="8:30 AM" autocomplete="off" required>
             </div>
             <div class="form-control">
               <label for="returnTime">Return Time</label>
-              <input type="time" id="returnTime" required>
+              <input type="text" id="returnTime" placeholder="5:00 PM" autocomplete="off" required>
             </div>
           </div>
           
@@ -970,6 +971,11 @@
   <script src="js/date-mode-form.js"></script>
   <script src="js/combobox.js"></script>
   <script src="js/form-pickers.js"></script>
+  <script src="js/time-input.js"></script>
+  <script src="js/clock-math.js"></script>
+  <script src="js/clock-face.js"></script>
+  <script src="js/clock-picker.js"></script>
+  <script src="js/time-field.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // DOM Elements
