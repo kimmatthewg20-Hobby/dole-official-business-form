@@ -9,10 +9,14 @@ const SESSION_COOKIE_NAME = 'adminSession';
 const ADMIN_USERNAME = 'cnpoadmin';
 const CONSOLE_METHODS = ['log', 'info', 'warn', 'error', 'debug'];
 
-function postJson(baseUrl, route, body, cookie) {
+function sendJson(baseUrl, method, route, body, cookie) {
   const headers = { 'Content-Type': 'application/json' };
   if (cookie) headers.Cookie = cookie;
-  return fetch(`${baseUrl}${route}`, { method: 'POST', headers, body: JSON.stringify(body) });
+  return fetch(`${baseUrl}${route}`, { method, headers, body: JSON.stringify(body) });
+}
+
+function postJson(baseUrl, route, body, cookie) {
+  return sendJson(baseUrl, 'POST', route, body, cookie);
 }
 
 function login(baseUrl, password, username = ADMIN_USERNAME) {
@@ -110,6 +114,7 @@ async function captureConsole(callback) {
 }
 
 module.exports = {
+  sendJson,
   postJson,
   login,
   sessionSetCookie,

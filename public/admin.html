@@ -8,6 +8,8 @@
   <link rel="shortcut icon" type="image/png" href="logo.png">
   <link rel="apple-touch-icon" href="logo.png">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/components.css">
   <style>
     :root {
       --primary-color: #004d40;
@@ -274,6 +276,13 @@
     .admin-tab[aria-selected="true"] { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
     [data-tab-panel][hidden] { display: none; }
     @media (max-width: 600px) { #changePasswordForm .grid { grid-template-columns: 1fr !important; } }
+    .division-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .division-table th, .division-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border-color); }
+    .division-table td:last-child { text-align: right; }
+    .division-empty { color: #7f8c8d; margin-bottom: 15px; }
+    .division-modal-title { margin-bottom: 15px; color: var(--primary-color); }
+    .division-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    #removeDivisionBtn { margin-right: auto; }
   </style>
 </head>
 <body>
@@ -331,17 +340,36 @@
     <div role="tabpanel" id="panel-form-options" aria-labelledby="tab-form-options" data-tab-panel="form-options">
     <div class="card">
       <div class="settings-header">
-        <h2><i class="material-icons">settings</i> Default Settings</h2>
-        <p style="color: #7f8c8d; font-size: 14px;">Configure system-wide default values</p>
+        <h2><i class="material-icons">account_tree</i> Divisions</h2>
+        <p style="color: #7f8c8d; font-size: 14px;">Staff pick a Division on the form. Its code goes into each new Reference code; changing it does not change forms already made.</p>
       </div>
-      <form id="settingsForm" onsubmit="return false;">
+      <table class="division-table">
+        <thead><tr><th>Name</th><th>Code</th><th aria-label="Actions"></th></tr></thead>
+        <tbody id="divisionList"></tbody>
+      </table>
+      <p id="divisionEmpty" class="division-empty hidden">No Divisions yet.</p>
+      <button type="button" id="addDivisionBtn" class="ui-btn">Add Division</button>
+    </div>
+    </div>
+
+    <div id="divisionModal" class="ui-modal hidden" role="dialog" aria-modal="true" aria-labelledby="divisionModalTitle">
+      <form id="divisionForm" class="ui-modal__dialog" novalidate>
+        <h3 id="divisionModalTitle" class="division-modal-title">Add Division</h3>
         <div class="form-group">
-          <label for="divisionOptions">Division Options (comma-separated)</label>
-          <textarea id="divisionOptions" placeholder="e.g. EMPLOYMENT, LR/LS, ASSU"></textarea>
-          <small style="color: #999;">Enter names separated by commas to update dropdown menus.</small>
+          <label for="divisionName">Name</label>
+          <input type="text" id="divisionName" class="ui-input" maxlength="100" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="divisionCode">Code (2-4 letters)</label>
+          <input type="text" id="divisionCode" class="ui-input" maxlength="4" autocomplete="off">
+        </div>
+        <div id="divisionError" class="error hidden" role="alert"></div>
+        <div class="division-modal-actions">
+          <button type="button" id="removeDivisionBtn" class="ui-btn ui-btn--danger hidden">Remove</button>
+          <button type="button" id="cancelDivisionBtn" class="ui-btn ui-btn--secondary">Cancel</button>
+          <button type="submit" class="ui-btn">Save</button>
         </div>
       </form>
-    </div>
     </div>
 
     <div role="tabpanel" id="panel-security" aria-labelledby="tab-security" data-tab-panel="security" hidden>
@@ -409,6 +437,7 @@
   </div>
 
   <script src="/js/admin-tabs.js"></script>
+  <script src="/js/admin-divisions.js"></script>
   <script>
     (function() {
       // Mirrors the server's rule so the admin sees it before sending; the server enforces it.
@@ -418,7 +447,6 @@
       const loginForm = document.getElementById('loginForm');
       const loginError = document.getElementById('loginError');
       const LOGIN_FAILED_MESSAGE = loginError.textContent;
-      const divisionOptionsField = document.getElementById('divisionOptions');
       const oldPasswordField = document.getElementById('oldPassword');
       const newPasswordField = document.getElementById('newPassword');
       const confirmPasswordField = document.getElementById('confirmPassword');
@@ -443,7 +471,6 @@
       function showSettings() { 
         loginCard.style.display = 'none'; 
         settingsCard.style.display = 'block'; 
-        fetchSettings();
         resetSessionTimer();
       }
 
@@ -515,64 +542,35 @@
         e.preventDefault();
         passwordError.style.display = 'none';
         
-        const division_options = divisionOptionsField.value.trim();
         const oldPassword = oldPasswordField.value;
         const newPassword = newPasswordField.value;
         const confirmPassword = confirmPasswordField.value;
         
-        let hasPasswordChange = oldPassword || newPassword || confirmPassword;
-        
-        if (hasPasswordChange) {
-          if (!oldPassword || !newPassword || !confirmPassword) {
-            passwordError.textContent = 'All password fields are required';
-            passwordError.style.display = 'block';
-            return;
-          }
-          if (newPassword !== confirmPassword) {
-            passwordError.textContent = 'New passwords do not match';
-            passwordError.style.display = 'block';
-            return;
-          }
-          if (newPassword.length < MIN_PASSWORD_LENGTH) {
-            passwordError.textContent = `Minimum ${MIN_PASSWORD_LENGTH} characters required`;
-            passwordError.style.display = 'block';
-            return;
-          }
+        // Divisions save as each one is changed; the old division setting is left as it is.
+        if (!oldPassword && !newPassword && !confirmPassword) {
+          showToast('Nothing to update. Divisions are saved as you change them.', 'info');
+          return;
         }
-        
-        saveSettings(division_options, hasPasswordChange ? { oldPassword, newPassword } : null);
+        if (!oldPassword || !newPassword || !confirmPassword) {
+          passwordError.textContent = 'All password fields are required';
+          passwordError.style.display = 'block';
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          passwordError.textContent = 'New passwords do not match';
+          passwordError.style.display = 'block';
+          return;
+        }
+        if (newPassword.length < MIN_PASSWORD_LENGTH) {
+          passwordError.textContent = `Minimum ${MIN_PASSWORD_LENGTH} characters required`;
+          passwordError.style.display = 'block';
+          return;
+        }
+
+        changePassword(oldPassword, newPassword);
       });
 
-      function fetchSettings() {
-        fetch('/api/settings')
-          .then(response => response.json())
-          .then(data => {
-            divisionOptionsField.value = data.division_options || '';
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            showToast('Failed to load settings.', 'danger');
-          });
-      }
-
-      function saveSettings(division_options, passwordData) {
-        fetch('/api/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ division_options })
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (passwordData) {
-            changePassword(passwordData.oldPassword, passwordData.newPassword, true);
-          } else {
-            showToast('Settings updated successfully', 'success');
-          }
-        })
-        .catch(() => showToast('Failed to update settings', 'danger'));
-      }
-
-      function changePassword(oldPassword, newPassword, settingsSaved = false) {
+      function changePassword(oldPassword, newPassword) {
         fetch('/api/admin/change-password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -582,7 +580,7 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            showToast(settingsSaved ? 'Settings and password updated' : 'Password changed', 'success');
+            showToast('Password changed', 'success');
             oldPasswordField.value = '';
             newPasswordField.value = '';
             confirmPasswordField.value = '';

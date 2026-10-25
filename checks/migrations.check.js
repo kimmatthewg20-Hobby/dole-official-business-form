@@ -6,6 +6,17 @@ const path = require('node:path');
 const { applyMigrations } = require('../scripts/migrate');
 
 const ORDER_CHECK_DIR = 'order-check-migrations';
+const UNIQUE_INDEX = 1;
+
+async function uniqueIndexedColumns(db, table) {
+  const indexes = await db.all(`PRAGMA index_list(${table})`, []);
+  const columns = [];
+  for (const index of indexes.filter((row) => row.unique === UNIQUE_INDEX)) {
+    const parts = await db.all(`PRAGMA index_info(${index.name})`, []);
+    columns.push(...parts.map((part) => part.name));
+  }
+  return columns.sort();
+}
 
 module.exports = [
   {
@@ -49,6 +60,14 @@ module.exports = [
       const table = await db.get("SELECT name FROM sqlite_master WHERE name = 'half_broken'", []);
       assert.equal(table, null);
       await assert.rejects(applyMigrations({ migrationsDir: dir }));
+    },
+  },
+  {
+    name: 'the Division list has unique indexes on name and code and the old division setting stays',
+    async run({ db }) {
+      assert.deepEqual(await uniqueIndexedColumns(db, 'divisions'), ['code', 'name']);
+      const settingsColumns = await db.all('PRAGMA table_info(settings)', []);
+      assert.ok(settingsColumns.some((column) => column.name === 'division_options'));
     },
   },
 ];
