@@ -96,8 +96,8 @@ module.exports = [
   {
     name: 'editing or removing an Approver leaves stored forms unchanged',
     async run({ baseUrl, db }) {
-      await withNoApprovers(db, () =>
-        withFormsRestored(db, async () => {
+      await withFormsRestored(db, () =>
+        withNoApprovers(db, async () => {
           const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
           const approver = {
             name: VALID_SUBMISSION.approvedBy,

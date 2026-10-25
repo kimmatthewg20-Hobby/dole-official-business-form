@@ -105,8 +105,8 @@ module.exports = [
   {
     name: 'renaming, recoding or removing a Division leaves stored forms unchanged',
     async run({ baseUrl, db }) {
-      await withNoDivisions(db, () =>
-        withFormsRestored(db, async () => {
+      await withFormsRestored(db, () =>
+        withNoDivisions(db, async () => {
           const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
           const id = await addedId(
             baseUrl,

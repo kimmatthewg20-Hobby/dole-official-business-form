@@ -8,6 +8,8 @@
   <link rel="shortcut icon" type="image/png" href="logo.png">
   <link rel="apple-touch-icon" href="logo.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/components.css">
   <style>
     /* Tri-color: Primary, Secondary, Accent */
     :root {
@@ -862,15 +864,13 @@
           <div class="form-row">
             <div class="form-control">
               <label for="officeSelect">Division</label>
-              <select id="officeSelect" required>
-                <option value="">Select...</option>
-              </select>
+              <input type="text" id="officeSelect" class="ui-input" placeholder="Type to search Divisions" required>
             </div>
           </div>
           <div class="form-row">
             <div class="form-control">
               <label for="approvedBy">Approved by</label>
-              <input type="text" id="approvedBy" placeholder="" style="text-transform: uppercase;">
+              <input type="text" id="approvedBy" class="ui-input" placeholder="Type to search approvers">
             </div>
             <div class="form-control">
               <label for="approvedByPosition">Position</label>
@@ -965,6 +965,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="js/date-wording.js"></script>
+  <script src="js/combobox.js"></script>
+  <script src="js/form-pickers.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // DOM Elements
@@ -1004,6 +1006,7 @@
       
       // Fetch settings
       fetchSettings();
+      FormPickers.init({ divisionInput: officeSelect, approverInput: approvedByField, positionInput: approvedByPositionField });
       
       // Update employee table display
       function updateEmployeeDisplay() {
@@ -1130,12 +1133,6 @@
           .then(response => response.json())
           .then(data => {
             settings = data;
-            const sel = document.getElementById('officeSelect');
-            if (sel) {
-              sel.innerHTML = '<option value="">Select...</option>';
-              const opts = (data.division_options || '').split(',').map(s => s.trim()).filter(Boolean);
-              opts.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt); });
-            }
           })
           .catch(error => { console.error('Error fetching settings:', error); });
       }
@@ -1242,19 +1239,10 @@
           employees = [];
           updateEmployeeDisplay();
           datePickr.clear();
-          if (officeSelect) officeSelect.selectedIndex = 0;
-          if (approvedByField) approvedByField.value = '';
-          if (approvedByPositionField) approvedByPositionField.value = '';
+          FormPickers.reset();
           showToast('Form data cleared', 'info');
         }
       });
-      
-      // Auto-uppercase for approved by field
-      if (approvedByField) {
-        approvedByField.addEventListener('input', function() {
-          this.value = this.value.toUpperCase();
-        });
-      }
       
       // Auto-uppercase for employee name and position fields
       const employeeNameInput = document.getElementById('employeeNameInput');
@@ -1317,16 +1305,16 @@
           return;
         }
         
-        const division = officeSelect ? officeSelect.value : '';
+        const division = FormPickers.divisionName();
         if (!division) {
-          showToast('Please select a division', 'danger');
+          showToast('Please choose a division from the list', 'danger');
           if (officeSelect) officeSelect.focus();
           return;
         }
         
-        const approvedBy = approvedByField ? approvedByField.value.trim() : '';
+        const approvedBy = FormPickers.approverName();
         if (!approvedBy) {
-          showToast('Please enter the name of the person approving', 'danger');
+          showToast('Please choose who approves from the list', 'danger');
           if (approvedByField) approvedByField.focus();
           return;
         }
@@ -1368,7 +1356,7 @@
         const formData = {
           employees,
           office: 'Department of Labor and Employment',
-          division: (officeSelect && officeSelect.value) || '',
+          division: FormPickers.divisionName(),
           datesOfOB: getSelectedDates(),
           dateStr: datePickr.altInput.value,
           locationFrom: locationFromField.value.trim(),
@@ -1376,7 +1364,7 @@
           departureTime: departureTimeField.value,
           returnTime: returnTimeField.value,
           purpose: purposeValue,
-          approvedBy: (approvedByField && approvedByField.value) || '',
+          approvedBy: FormPickers.approverName(),
           approvedByPosition: (approvedByPositionField && approvedByPositionField.value) || ''
         };
         
@@ -1418,9 +1406,7 @@
               departureTimeField.value = '';
               returnTimeField.value = '';
               purposeField.value = '';
-              if (officeSelect) officeSelect.selectedIndex = 0;
-              if (approvedByField) approvedByField.value = '';
-              if (approvedByPositionField) approvedByPositionField.value = '';
+              FormPickers.reset();
               employees = [];
               updateEmployeeDisplay();
               showToast('Form submitted successfully', 'success');
@@ -1464,12 +1450,8 @@
             returnTimeField.value = formData.return_time || '';
             purposeField.value = formData.purpose || '';
             
-            if (formData.division && officeSelect) {
-              officeSelect.value = formData.division;
-            }
-            
-            approvedByField.value = formData.approved_by || '';
-            approvedByPositionField.value = formData.approved_by_position || '';
+            FormPickers.setDivision(formData.division || '');
+            FormPickers.setApprover(formData.approved_by || '', formData.approved_by_position || '');
             
             // Populate employees
             if (fetchedEmployees && fetchedEmployees.length > 0) {

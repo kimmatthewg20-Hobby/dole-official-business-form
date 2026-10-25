@@ -134,6 +134,34 @@
   box-shadow: var(--ui-shadow-raised);
 }
 
+/* A searchable pick-list: the list opens under its input, items are large enough to tap. */
+.ui-combobox {
+  position: relative;
+}
+
+.ui-combobox__list {
+  left: 0;
+  right: 0;
+}
+
+.ui-combobox__item,
+.ui-combobox__none {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.ui-combobox__none {
+  color: var(--ui-color-muted);
+  cursor: default;
+}
+
+.ui-combobox__message {
+  margin: var(--ui-space-1) 0 0;
+  color: var(--ui-color-danger);
+  font-size: var(--ui-font-size-small);
+}
+
 @media (max-width: 600px) {
   .ui-modal {
     align-items: flex-end;

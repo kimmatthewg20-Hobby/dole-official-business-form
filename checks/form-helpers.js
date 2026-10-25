@@ -31,12 +31,23 @@ const VALID_SUBMISSION = {
 };
 
 const FORM_TABLES = ['official_business', 'employees'];
+const LIST_TABLES = ['divisions', 'approvers'];
+const VALID_DIVISION_CODE = 'TSSD';
 
 // Forms are shared by every check, so each one starts with none and puts the
-// original rows back afterwards, whatever happened.
+// original rows back afterwards, whatever happened. A submission is only accepted
+// for a listed Division and Approver, so the lists hold just those of VALID_SUBMISSION.
 async function withFormsRestored(db, callback) {
   const saved = {};
-  for (const table of FORM_TABLES) saved[table] = await db.all(`SELECT * FROM ${table} ORDER BY id`, []);
+  for (const table of [...FORM_TABLES, ...LIST_TABLES]) {
+    saved[table] = await db.all(`SELECT * FROM ${table} ORDER BY id`, []);
+  }
+  for (const table of LIST_TABLES) await db.run(`DELETE FROM ${table}`, []);
+  await db.run('INSERT INTO divisions (name, code) VALUES (?, ?)', [VALID_SUBMISSION.division, VALID_DIVISION_CODE]);
+  await db.run('INSERT INTO approvers (name, position) VALUES (?, ?)', [
+    VALID_SUBMISSION.approvedBy,
+    VALID_SUBMISSION.approvedByPosition,
+  ]);
   await db.run('DELETE FROM employees', []);
   await db.run('DELETE FROM official_business', []);
   try {
@@ -45,7 +56,8 @@ async function withFormsRestored(db, callback) {
     await db.transaction(async (client) => {
       await client.query('DELETE FROM employees', []);
       await client.query('DELETE FROM official_business', []);
-      for (const table of FORM_TABLES) {
+      for (const table of LIST_TABLES) await client.query(`DELETE FROM ${table}`, []);
+      for (const table of [...FORM_TABLES, ...LIST_TABLES]) {
         for (const row of saved[table]) {
           const columns = Object.keys(row);
           await client.query(

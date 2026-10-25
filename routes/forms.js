@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { validateSubmission } = require('./form-validation');
+const { validateListedChoices } = require('./form-lists-validation');
 
 const router = express.Router();
 
@@ -9,6 +10,13 @@ router.post('/api/submit', async (req, res) => {
   const body = req.body || {};
   const validationError = validateSubmission(body);
   if (validationError) return res.status(400).json({ error: validationError });
+  try {
+    const listError = await validateListedChoices(body);
+    if (listError) return res.status(400).json({ error: listError });
+  } catch (error) {
+    console.error('Database error while checking the lists:', error);
+    return res.status(500).json({ error: 'Database error: ' + error.message });
+  }
 
   const now = new Date().toISOString();
   try {
