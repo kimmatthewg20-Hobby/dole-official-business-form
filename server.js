@@ -16,6 +16,7 @@ const { router: cronCleanupRouter } = require('./routes/cron-cleanup');
 const { router: directoryHistoryRouter } = require('./routes/directory-history');
 const { router: dataTransferRouter } = require('./routes/data-transfer');
 const { router: divisionsRouter } = require('./routes/divisions');
+const { router: approversRouter } = require('./routes/approvers');
 
 
 const app = express();
@@ -49,6 +50,7 @@ app.use(cleanupRouter);
 app.use(cronCleanupRouter);
 app.use(dataTransferRouter);
 app.use(divisionsRouter);
+app.use(approversRouter);
 
 // Serve static files (must be after API routes but before catch-all routes)
 app.use(express.static(path.join(__dirname, 'public')));

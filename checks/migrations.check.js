@@ -70,4 +70,21 @@ module.exports = [
       assert.ok(settingsColumns.some((column) => column.name === 'division_options'));
     },
   },
+  {
+    name: 'the Approver list has name and position, and its name column leads an index',
+    async run({ db }) {
+      const columns = await db.all('PRAGMA table_info(approvers)', []);
+      assert.deepEqual(
+        columns.map((column) => column.name),
+        ['id', 'name', 'position'],
+      );
+      const indexes = await db.all('PRAGMA index_list(approvers)', []);
+      const leadingColumns = [];
+      for (const index of indexes) {
+        const [first] = await db.all(`PRAGMA index_info(${index.name})`, []);
+        leadingColumns.push(first.name);
+      }
+      assert.ok(leadingColumns.includes('name'), 'an index starts with name');
+    },
+  },
 ];

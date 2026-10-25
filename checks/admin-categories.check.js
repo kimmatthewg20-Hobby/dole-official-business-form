@@ -21,7 +21,14 @@ module.exports = [
       assert.ok(html.includes('/js/admin-tabs.js'));
       assert.ok(html.includes('/js/admin-divisions.js'));
       assert.ok(html.includes('id="divisionModal"'));
+      assert.ok(html.includes('/js/admin-list-modal.js'), 'one modal helper for both lists');
+      assert.ok(html.includes('/js/admin-approvers.js'));
+      assert.ok(html.includes('id="approverModal"'));
       assert.ok(!html.includes('id="divisionOptions"'), 'the comma-separated text box is gone');
+      const formOptions = html.indexOf('data-tab-panel="form-options"');
+      const security = html.indexOf('data-tab-panel="security"');
+      const approverList = html.indexOf('id="approverList"');
+      assert.ok(approverList > formOptions && approverList < security, 'Approvers in Form options');
       for (const [tab, controlId] of Object.entries(CATEGORY_PANELS)) {
         const start = html.indexOf(`data-tab-panel="${tab}"`);
         const end = html.indexOf('data-tab-panel=', start + 1);

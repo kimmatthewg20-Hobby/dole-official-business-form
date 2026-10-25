@@ -276,13 +276,13 @@
     .admin-tab[aria-selected="true"] { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
     [data-tab-panel][hidden] { display: none; }
     @media (max-width: 600px) { #changePasswordForm .grid { grid-template-columns: 1fr !important; } }
-    .division-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-    .division-table th, .division-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border-color); }
-    .division-table td:last-child { text-align: right; }
-    .division-empty { color: #7f8c8d; margin-bottom: 15px; }
-    .division-modal-title { margin-bottom: 15px; color: var(--primary-color); }
-    .division-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
-    #removeDivisionBtn { margin-right: auto; }
+    .list-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .list-table th, .list-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border-color); }
+    .list-table td:last-child { text-align: right; }
+    .list-empty { color: #7f8c8d; margin-bottom: 15px; }
+    .list-modal-title { margin-bottom: 15px; color: var(--primary-color); }
+    .list-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .list-modal-remove { margin-right: auto; }
   </style>
 </head>
 <body>
@@ -343,18 +343,30 @@
         <h2><i class="material-icons">account_tree</i> Divisions</h2>
         <p style="color: #7f8c8d; font-size: 14px;">Staff pick a Division on the form. Its code goes into each new Reference code; changing it does not change forms already made.</p>
       </div>
-      <table class="division-table">
+      <table class="list-table">
         <thead><tr><th>Name</th><th>Code</th><th aria-label="Actions"></th></tr></thead>
         <tbody id="divisionList"></tbody>
       </table>
-      <p id="divisionEmpty" class="division-empty hidden">No Divisions yet.</p>
+      <p id="divisionEmpty" class="list-empty hidden">No Divisions yet.</p>
       <button type="button" id="addDivisionBtn" class="ui-btn">Add Division</button>
+    </div>
+    <div class="card">
+      <div class="settings-header">
+        <h2><i class="material-icons">how_to_reg</i> Approvers</h2>
+        <p style="color: #7f8c8d; font-size: 14px;">Staff pick who approves a form. Changing or removing an Approver does not change forms already made.</p>
+      </div>
+      <table class="list-table">
+        <thead><tr><th>Name</th><th>Position</th><th aria-label="Actions"></th></tr></thead>
+        <tbody id="approverList"></tbody>
+      </table>
+      <p id="approverEmpty" class="list-empty hidden">No Approvers yet.</p>
+      <button type="button" id="addApproverBtn" class="ui-btn">Add Approver</button>
     </div>
     </div>
 
     <div id="divisionModal" class="ui-modal hidden" role="dialog" aria-modal="true" aria-labelledby="divisionModalTitle">
       <form id="divisionForm" class="ui-modal__dialog" novalidate>
-        <h3 id="divisionModalTitle" class="division-modal-title">Add Division</h3>
+        <h3 id="divisionModalTitle" class="list-modal-title">Add Division</h3>
         <div class="form-group">
           <label for="divisionName">Name</label>
           <input type="text" id="divisionName" class="ui-input" maxlength="100" autocomplete="off">
@@ -364,9 +376,29 @@
           <input type="text" id="divisionCode" class="ui-input" maxlength="4" autocomplete="off">
         </div>
         <div id="divisionError" class="error hidden" role="alert"></div>
-        <div class="division-modal-actions">
-          <button type="button" id="removeDivisionBtn" class="ui-btn ui-btn--danger hidden">Remove</button>
+        <div class="list-modal-actions">
+          <button type="button" id="removeDivisionBtn" class="ui-btn ui-btn--danger list-modal-remove hidden">Remove</button>
           <button type="button" id="cancelDivisionBtn" class="ui-btn ui-btn--secondary">Cancel</button>
+          <button type="submit" class="ui-btn">Save</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="approverModal" class="ui-modal hidden" role="dialog" aria-modal="true" aria-labelledby="approverModalTitle">
+      <form id="approverForm" class="ui-modal__dialog" novalidate>
+        <h3 id="approverModalTitle" class="list-modal-title">Add Approver</h3>
+        <div class="form-group">
+          <label for="approverName">Name</label>
+          <input type="text" id="approverName" class="ui-input" maxlength="100" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="approverPosition">Position</label>
+          <input type="text" id="approverPosition" class="ui-input" maxlength="150" autocomplete="off">
+        </div>
+        <div id="approverError" class="error hidden" role="alert"></div>
+        <div class="list-modal-actions">
+          <button type="button" id="removeApproverBtn" class="ui-btn ui-btn--danger list-modal-remove hidden">Remove</button>
+          <button type="button" id="cancelApproverBtn" class="ui-btn ui-btn--secondary">Cancel</button>
           <button type="submit" class="ui-btn">Save</button>
         </div>
       </form>
@@ -437,7 +469,9 @@
   </div>
 
   <script src="/js/admin-tabs.js"></script>
+  <script src="/js/admin-list-modal.js"></script>
   <script src="/js/admin-divisions.js"></script>
+  <script src="/js/admin-approvers.js"></script>
   <script>
     (function() {
       // Mirrors the server's rule so the admin sees it before sending; the server enforces it.
@@ -546,9 +580,9 @@
         const newPassword = newPasswordField.value;
         const confirmPassword = confirmPasswordField.value;
         
-        // Divisions save as each one is changed; the old division setting is left as it is.
+        // Divisions and Approvers save as each one is changed; the old division setting is left as it is.
         if (!oldPassword && !newPassword && !confirmPassword) {
-          showToast('Nothing to update. Divisions are saved as you change them.', 'info');
+          showToast('Nothing to update. Divisions and Approvers are saved as you change them.', 'info');
           return;
         }
         if (!oldPassword || !newPassword || !confirmPassword) {

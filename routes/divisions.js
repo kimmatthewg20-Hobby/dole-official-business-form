@@ -8,29 +8,21 @@ const express = require('express');
 const db = require('../db');
 const { adminApiOnly } = require('./admin-auth');
 const { validateDivision } = require('./division-validation');
+const {
+  BAD_REQUEST,
+  NOT_FOUND,
+  CONFLICT,
+  NO_ID,
+  serverError,
+  parseId,
+  failedSave,
+} = require('./list-route-helpers');
 
 // A bound on the public list; adding is refused at the bound so the list never cuts one off.
 const MAX_DIVISIONS = 200;
-const BAD_REQUEST = 400;
-const NOT_FOUND = 404;
-const CONFLICT = 409;
-const SERVER_ERROR = 500;
 const TOO_MANY = `There can be at most ${MAX_DIVISIONS} Divisions`;
-// Two saves at once can both pass the clash check; the unique indexes then refuse the second.
 const CLASH_RACE = 'A Division with this name or code already exists';
-const UNIQUE_CONSTRAINT = /UNIQUE constraint failed/;
-const NO_DIVISION_ID = 0;
 const NOT_FOUND_MESSAGE = 'Division not found';
-const DIGITS_ONLY = /^\d+$/;
-
-function serverError(res, label, err) {
-  console.error(`${label}:`, err.message);
-  res.status(SERVER_ERROR).json({ error: 'Something went wrong. Please try again.' });
-}
-
-function parseId(raw) {
-  return DIGITS_ONLY.test(String(raw)) ? Number(raw) : null;
-}
 
 // Names are compared without regard to capitals, as the unique index on name does.
 async function findClash({ name, code }, exceptId) {
@@ -43,11 +35,6 @@ async function findClash({ name, code }, exceptId) {
     return `A Division named ${clash.name} already exists`;
   }
   return `The code ${code} is already used by ${clash.name}`;
-}
-
-function failedSave(res, label, err) {
-  if (UNIQUE_CONSTRAINT.test(err.message)) return res.status(CONFLICT).json({ error: CLASH_RACE });
-  serverError(res, label, err);
 }
 
 async function listDivisions(req, res) {
@@ -68,7 +55,7 @@ async function addDivision(req, res) {
     if (error) return res.status(BAD_REQUEST).json({ error });
     const { total } = await db.get('SELECT COUNT(*) AS total FROM divisions', []);
     if (total >= MAX_DIVISIONS) return res.status(BAD_REQUEST).json({ error: TOO_MANY });
-    const clash = await findClash(value, NO_DIVISION_ID);
+    const clash = await findClash(value, NO_ID);
     if (clash) return res.status(CONFLICT).json({ error: clash });
     const result = await db.run('INSERT INTO divisions (name, code) VALUES (?, ?) RETURNING id', [
       value.name,
@@ -76,7 +63,7 @@ async function addDivision(req, res) {
     ]);
     res.json({ success: true, id: result.lastID });
   } catch (err) {
-    failedSave(res, 'Error adding a Division', err);
+    failedSave(res, 'Error adding a Division', err, CLASH_RACE);
   }
 }
 
@@ -96,7 +83,7 @@ async function editDivision(req, res) {
     if (result.changes === 0) return res.status(NOT_FOUND).json({ error: NOT_FOUND_MESSAGE });
     res.json({ success: true });
   } catch (err) {
-    failedSave(res, 'Error editing a Division', err);
+    failedSave(res, 'Error editing a Division', err, CLASH_RACE);
   }
 }
 
