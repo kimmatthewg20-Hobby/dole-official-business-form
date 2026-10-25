@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 const express = require('express');
 const { cleanupOldRecords } = require('./cleanup');
+const { cleanupUnusedEmployees } = require('./directory-cleanup');
 
 const CRON_CLEANUP_ROUTE = '/api/cron/cleanup';
 const BEARER_PREFIX = 'Bearer ';
@@ -28,7 +29,8 @@ router.get(CRON_CLEANUP_ROUTE, async (req, res) => {
   }
   try {
     const { deleted } = await cleanupOldRecords();
-    res.json({ success: true, deleted });
+    const employees = await cleanupUnusedEmployees();
+    res.json({ success: true, deleted, employeesDeleted: employees.deleted });
   } catch (error) {
     console.error('Scheduled cleanup failed:', error);
     res.status(500).json({ success: false, error: 'Cleanup failed' });

@@ -3,6 +3,7 @@
 const assert = require('node:assert/strict');
 const { withFormsRestored, insertForm, countRows } = require('./form-helpers');
 const { DEFAULT_RETENTION_DAYS } = require('../routes/cleanup');
+const { sixMonthCutoff } = require('../routes/directory-cleanup');
 
 const CRON_ROUTE = '/api/cron/cleanup';
 const TEST_CRON_SECRET = 'check-cron-secret-not-real';
@@ -11,6 +12,7 @@ const DAYS_PAST_CUTOFF = DEFAULT_RETENTION_DAYS + 2;
 const DAYS_BEFORE_CUTOFF = DEFAULT_RETENTION_DAYS - 2;
 const UNAUTHORIZED = 401;
 const SEEDED_FORM_COUNT = 2;
+const LONG_UNUSED_DAY = '2020-01-01';
 
 // The route reads CRON_SECRET per request, so each check sets (or removes) it in this process.
 async function withCronSecret(secret, callback) {
@@ -72,6 +74,24 @@ module.exports = [
           id: recentId,
         });
         assert.equal(await countRows(db, 'employees'), 1);
+      });
+    },
+  },
+  {
+    name: 'the cron call also removes the employee unused for six months and keeps the recent one',
+    async run({ baseUrl, db }) {
+      await withFormsRestored(db, async () => {
+        await db.run('DELETE FROM employees_directory', []);
+        const sql = 'INSERT INTO employees_directory (full_name, last_used_at) VALUES (?, ?)';
+        await db.run(sql, ['Long Unused', LONG_UNUSED_DAY]);
+        await db.run(sql, ['Recently Used', sixMonthCutoff(new Date())]);
+        await withCronSecret(TEST_CRON_SECRET, async () => {
+          const response = await callCron(baseUrl, `Bearer ${TEST_CRON_SECRET}`);
+          assert.equal(response.status, 200);
+          assert.equal((await response.json()).employeesDeleted, 1);
+        });
+        const names = await db.all('SELECT full_name FROM employees_directory', []);
+        assert.deepEqual(names, [{ full_name: 'Recently Used' }]);
       });
     },
   },

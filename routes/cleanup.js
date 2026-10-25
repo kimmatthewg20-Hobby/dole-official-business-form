@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db');
 const { adminApiOnly } = require('./admin-auth');
+const { cleanupUnusedEmployees } = require('./directory-cleanup');
 
 const DEFAULT_RETENTION_DAYS = 25;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -61,6 +62,7 @@ router.get('/api/cleanup/test', adminApiOnly, async (req, res) => {
     const daysOld = parseInt(req.query.days, 10) || DEFAULT_RETENTION_DAYS;
     const dryRun = req.query.dryRun === 'true';
     const result = await cleanupOldRecords(daysOld, dryRun);
+    result.employees = await cleanupUnusedEmployees(dryRun);
     res.json({ success: true, message: dryRun ? 'Dry run completed' : 'Cleanup completed', result });
   } catch (error) {
     console.error('Cleanup test error:', error);

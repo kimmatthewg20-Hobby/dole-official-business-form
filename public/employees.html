@@ -483,6 +483,7 @@
           <th>Full Name</th>
           <th>Position</th>
           <th>Assigned Unit</th>
+          <th>Last Used</th>
           <th class="action-col">Actions</th>
         </tr>
       </thead>
@@ -758,7 +759,7 @@
         
         if (paginatedData.length === 0) {
           const row = document.createElement('tr');
-          row.innerHTML = '<td colspan="4" style="text-align: center;">No employees found</td>';
+          row.innerHTML = '<td colspan="5" style="text-align: center;">No employees found</td>';
           employeeTableBody.appendChild(row);
           return;
         }
@@ -766,6 +767,7 @@
         paginatedData.forEach(employee => {
           const row = document.createElement('tr');
           row.innerHTML = `
+            <td></td>
             <td></td>
             <td></td>
             <td></td>
@@ -785,6 +787,7 @@
           row.cells[0].textContent = employee.full_name || '';
           row.cells[1].textContent = employee.position || '';
           row.cells[2].textContent = employee.assigned_unit || '';
+          row.cells[3].textContent = formatLastUsed(employee.last_used_at);
           employeeTableBody.appendChild(row);
         });
         
@@ -1315,6 +1318,13 @@
           });
       }
       
+      // last_used_at is a UTC calendar day; reading it in UTC keeps it from shifting a day.
+      function formatLastUsed(day) {
+        const parsed = typeof day === 'string' ? new Date(`${day}T00:00:00Z`) : null;
+        if (!parsed || isNaN(parsed.getTime())) return day || 'N/A';
+        return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+      }
+
       function formatDate(dateString) {
         if (!dateString) return 'N/A';
         
