@@ -1,3 +1,5 @@
+const { formatDateWording } = require('../public/js/date-wording');
+
 // Shared by both tracker routes; formats one form for the tracker table.
 async function formatTrackerEntry(entry, employees) {
   // Format date: mmm dd, yyyy (e.g., "Jan 15, 2024")
@@ -95,10 +97,7 @@ async function formatTrackerEntry(entry, employees) {
     obDates = [entry.date_of_ob];
   }
   
-  // Format all dates and join with commas
-  const dateOfOBDisplay = obDates.length > 0 
-    ? obDates.map(date => formatDate(date)).join(', ')
-    : '-';
+  const dateOfOBDisplay = formatDateWording(obDates) || '-';
   
   return {
     id: entry.id,

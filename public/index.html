@@ -948,6 +948,7 @@
       </div>
       <div>
         <p>Your form has been submitted.</p>
+        <p id="successDates"></p>
       </div>
       <div class="modal-footer">
         <button type="button" id="editFormBtn" class="btn">Edit</button>
@@ -963,6 +964,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="js/date-wording.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // DOM Elements
@@ -1407,6 +1409,8 @@
           .then(data => {
             if (data.success) {
               currentId = data.id;
+              document.getElementById('successDates').textContent =
+                'Date of Official Business: ' + DateWording.formatDateWording(formData.datesOfOB);
               openModal(successModal);
               datePickr.clear();
               locationFromField.value = '';

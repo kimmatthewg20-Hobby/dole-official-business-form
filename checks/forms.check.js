@@ -123,7 +123,7 @@ module.exports = [
         assert.equal(entries.length, 1);
         assert.equal(entries[0].id, id);
         assert.equal(entries[0].employees, 'Ana Reyes, Ben Cruz, Cora Diaz');
-        assert.equal(entries[0].dateOfOB, 'Mar 2, 2026, Mar 3, 2026');
+        assert.equal(entries[0].dateOfOB, 'March 2-3, 2026');
         assert.equal(entries[0].timeOfOB, '08:00 AM to 05:30 PM');
         assert.equal(entries[0].destination, 'Regional Office - Municipal Hall');
       });

@@ -1,3 +1,5 @@
+const { formatDateWording } = require('./js/date-wording');
+
 // Forms are printed and shown to others, so user text must never be read as markup.
 function escapeHtml(text) {
   return String(text ?? '')
@@ -36,13 +38,7 @@ function formatMultipleDates(dates) {
   if (!dates || !Array.isArray(dates) || dates.length === 0) {
     return '';
   }
-  
-  // If it's only one date, use the single date formatter
-  if (dates.length === 1) return formatDate(dates[0]);
-  
-  // Format multiple dates and join them with commas
-  const formattedDates = dates.map(date => formatDate(date)).join(', ');
-  return formattedDates;
+  return formatDateWording(dates);
 }
 
 // Function to format time in HH:MM AM/PM format
