@@ -269,6 +269,11 @@
       .login-right { display: none; }
       .login-left { flex: 1; }
     }
+    .admin-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+    .admin-tab { flex: 1 1 100px; padding: 10px 14px; border: 1px solid #ccd; background: #fff; border-radius: 6px; cursor: pointer; font-size: 15px; }
+    .admin-tab[aria-selected="true"] { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+    [data-tab-panel][hidden] { display: none; }
+    @media (max-width: 600px) { #changePasswordForm .grid { grid-template-columns: 1fr !important; } }
   </style>
 </head>
 <body>
@@ -317,6 +322,13 @@
       <button type="button" id="logoutBtn" class="btn" style="background-color: var(--secondary-color);">Logout</button>
     </div>
 
+    <div class="admin-tabs" role="tablist" aria-label="Settings categories">
+      <button type="button" role="tab" class="admin-tab" data-tab="form-options" id="tab-form-options" aria-controls="panel-form-options">Form options</button>
+      <button type="button" role="tab" class="admin-tab" data-tab="security" id="tab-security" aria-controls="panel-security">Security</button>
+      <button type="button" role="tab" class="admin-tab" data-tab="data" id="tab-data" aria-controls="panel-data">Data</button>
+    </div>
+
+    <div role="tabpanel" id="panel-form-options" aria-labelledby="tab-form-options" data-tab-panel="form-options">
     <div class="card">
       <div class="settings-header">
         <h2><i class="material-icons">settings</i> Default Settings</h2>
@@ -330,7 +342,9 @@
         </div>
       </form>
     </div>
-    
+    </div>
+
+    <div role="tabpanel" id="panel-security" aria-labelledby="tab-security" data-tab-panel="security" hidden>
     <div class="card">
       <div class="settings-header">
         <h2><i class="material-icons">security</i> Security</h2>
@@ -352,13 +366,11 @@
           </div>
         </div>
         <div id="passwordError" class="error" style="display: none;"></div>
-        
-        <div style="text-align: right; margin-top: 30px;">
-          <button type="button" id="saveAllBtn" class="btn">Update All Settings</button>
-        </div>
       </form>
     </div>
+    </div>
 
+    <div role="tabpanel" id="panel-data" aria-labelledby="tab-data" data-tab-panel="data" hidden>
     <div class="card">
       <div class="settings-header">
         <h2><i class="material-icons">delete_sweep</i> Data Cleanup</h2>
@@ -389,8 +401,14 @@
         <div id="cleanupResult" style="margin-top: 20px; display: none;"></div>
       </div>
     </div>
+    </div>
+
+    <div style="text-align: right; margin-top: 20px;">
+      <button type="button" id="saveAllBtn" class="btn">Update All Settings</button>
+    </div>
   </div>
 
+  <script src="/js/admin-tabs.js"></script>
   <script>
     (function() {
       // Mirrors the server's rule so the admin sees it before sending; the server enforces it.
