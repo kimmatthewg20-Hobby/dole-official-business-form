@@ -832,6 +832,7 @@
             <div class="form-control">
               <label for="dateOfOB">Date of Official Business</label>
               <input type="text" id="dateOfOB" required placeholder="Select date(s)">
+              <div id="dateModeChoice" role="radiogroup" aria-label="Date mode"></div>
             </div>
           </div>
           
@@ -948,7 +949,7 @@
       </div>
       <div>
         <p>Your form has been submitted.</p>
-        <p id="successDates"></p>
+        <div id="successDates"></div>
       </div>
       <div class="modal-footer">
         <button type="button" id="editFormBtn" class="btn">Edit</button>
@@ -965,6 +966,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="js/date-wording.js"></script>
+  <script src="js/date-mode.js"></script>
+  <script src="js/date-mode-form.js"></script>
   <script src="js/combobox.js"></script>
   <script src="js/form-pickers.js"></script>
   <script>
@@ -1010,6 +1013,7 @@
       
       // Update employee table display
       function updateEmployeeDisplay() {
+        DateModeForm.refresh();
         employeeTableBody.innerHTML = '';
         
         if (employees.length === 0) {
@@ -1147,6 +1151,15 @@
         modal.classList.remove('active');
       }
       
+      function showCreatedForms(forms) {
+        const list = document.getElementById('successDates');
+        list.replaceChildren(...forms.map((form, index) => {
+          const line = document.createElement('div');
+          line.textContent = `Form ${index + 1} (No. ${form.id}): ` + DateWording.formatDateWording(form.datesOfOB);
+          return line;
+        }));
+      }
+
       // Format date to a more readable format
       function formatDate(dateString) {
         if (!dateString) return '';
@@ -1160,9 +1173,17 @@
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "F j, Y",
-        conjunction: ", "
+        conjunction: ", ",
+        onChange: () => DateModeForm.refresh()
       });
       
+      DateModeForm.init({
+        container: document.getElementById('dateModeChoice'),
+        getDateCount: () => datePickr.selectedDates.length,
+        getEmployeeCount: () => employees.length,
+        submitButton: obForm.querySelector('button[type="submit"]')
+      });
+
       // Function to get selected dates as array
       function getSelectedDates() {
         return datePickr.selectedDates.map(date => {
@@ -1236,6 +1257,7 @@
       clearBtn.addEventListener('click', () => {
         if (confirm('Are you sure you want to clear all data?')) {
           obForm.reset();
+          DateModeForm.reset();
           employees = [];
           updateEmployeeDisplay();
           datePickr.clear();
@@ -1357,6 +1379,7 @@
           employees,
           office: 'Department of Labor and Employment',
           division: FormPickers.divisionName(),
+          dateMode: DateModeForm.selectedMode(),
           datesOfOB: getSelectedDates(),
           dateStr: datePickr.altInput.value,
           locationFrom: locationFromField.value.trim(),
@@ -1397,8 +1420,7 @@
           .then(data => {
             if (data.success) {
               currentId = data.id;
-              document.getElementById('successDates').textContent =
-                'Date of Official Business: ' + DateWording.formatDateWording(formData.datesOfOB);
+              showCreatedForms(data.forms);
               openModal(successModal);
               datePickr.clear();
               locationFromField.value = '';
@@ -1407,6 +1429,7 @@
               returnTimeField.value = '';
               purposeField.value = '';
               FormPickers.reset();
+              DateModeForm.reset();
               employees = [];
               updateEmployeeDisplay();
               showToast('Form submitted successfully', 'success');

@@ -6,6 +6,7 @@ const MAX_POSITION_LENGTH = 200;
 const MAX_SHORT_TEXT_LENGTH = 300;
 const MAX_PURPOSE_LENGTH = 500;
 const MAX_DATES = 62;
+const DateMode = require('../public/js/date-mode');
 
 function isRealIsoDate(value) {
   if (typeof value !== 'string' || !ISO_DATE_PATTERN.test(value)) return false;
@@ -56,4 +57,12 @@ function validateSubmission(body) {
   return null;
 }
 
-module.exports = { validateSubmission };
+// Only new submissions have a Date mode; editing one stored form does not. Run after
+// validateSubmission, which guarantees the employee and date lists are real lists.
+function validateDateMode(body) {
+  if (!DateMode.isDateMode(body.dateMode)) return 'Please choose a valid date mode';
+  const formCount = DateMode.countForms(body.dateMode, body.datesOfOB.length, body.employees.length);
+  return formCount > DateMode.MAX_FORMS_PER_SUBMISSION ? DateMode.formLimitMessage(formCount) : null;
+}
+
+module.exports = { validateSubmission, validateDateMode };

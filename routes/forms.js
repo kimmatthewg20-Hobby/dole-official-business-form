@@ -1,14 +1,16 @@
 const express = require('express');
 const db = require('../db');
-const { validateSubmission } = require('./form-validation');
+const { validateSubmission, validateDateMode } = require('./form-validation');
 const { validateListedChoices } = require('./form-lists-validation');
+
+const { expandSubmission, insertForms } = require('./form-creation');
 
 const router = express.Router();
 
-// Submit form: the form and all its employees are stored together or not at all.
+// Submit: every form the Date mode creates is stored together or not at all.
 router.post('/api/submit', async (req, res) => {
   const body = req.body || {};
-  const validationError = validateSubmission(body);
+  const validationError = validateSubmission(body) || validateDateMode(body);
   if (validationError) return res.status(400).json({ error: validationError });
   try {
     const listError = await validateListedChoices(body);
@@ -18,30 +20,10 @@ router.post('/api/submit', async (req, res) => {
     return res.status(500).json({ error: 'Database error: ' + error.message });
   }
 
-  const now = new Date().toISOString();
+  const records = expandSubmission(body);
   try {
-    const obId = await db.transaction(async (client) => {
-      const obResult = await client.query(
-        `INSERT INTO official_business (
-          date_created, office, division, date_of_ob, dates_of_ob,
-          location_from, location_to, departure_time, return_time, purpose,
-          approved_by, approved_by_position, timestamp
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
-        [
-          now, body.office || '', body.division || '', body.datesOfOB[0], JSON.stringify(body.datesOfOB),
-          body.locationFrom || '', body.locationTo, body.departureTime, body.returnTime, body.purpose,
-          body.approvedBy || '', body.approvedByPosition || '', now
-        ]
-      );
-      const newId = obResult.rows[0].id;
-      for (const emp of body.employees) {
-        await client.query('INSERT INTO employees (ob_id, name, position) VALUES (?, ?, ?)', [
-          newId, emp.name, emp.position || ''
-        ]);
-      }
-      return newId;
-    });
-    res.json({ success: true, id: obId });
+    const forms = await insertForms(body, records, new Date().toISOString());
+    res.json({ success: true, id: forms[0].id, forms });
   } catch (error) {
     console.error('Database error during form submission:', error);
     res.status(500).json({ error: 'Database error: ' + error.message });

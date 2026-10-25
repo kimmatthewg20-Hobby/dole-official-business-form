@@ -20,6 +20,7 @@ const VALID_SUBMISSION = {
   ],
   office: 'Department of Labor and Employment',
   division: 'TSSD',
+  dateMode: 'more-than-one-day',
   datesOfOB: ['2026-03-02', '2026-03-03'],
   locationFrom: 'Regional Office',
   locationTo: 'Municipal Hall',
