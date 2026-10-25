@@ -1,0 +1,111 @@
+/* The tracker list and its pagination. On phones each row becomes a labelled
+   block so nothing scrolls sideways. */
+
+.table-wrapper {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border-bottom: 1px solid var(--ui-color-border);
+  background: var(--ui-color-page);
+  color: var(--ui-color-muted);
+  font-size: var(--ui-font-size-small);
+  font-weight: var(--ui-font-weight-semibold);
+  text-align: left;
+}
+
+td {
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border-bottom: 1px solid var(--ui-color-border);
+  font-size: var(--ui-font-size-small);
+  overflow-wrap: anywhere;
+}
+
+tbody tr:hover {
+  background: var(--ui-color-page);
+}
+
+.btn-view {
+  min-height: 2rem;
+  padding: var(--ui-space-1) var(--ui-space-3);
+  font-size: var(--ui-font-size-small);
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-4);
+  border-top: 1px solid var(--ui-color-border);
+}
+
+.pagination-info {
+  color: var(--ui-color-muted);
+  font-size: var(--ui-font-size-small);
+}
+
+.pagination-controls {
+  display: flex;
+  gap: var(--ui-space-2);
+}
+
+@media (max-width: 768px) {
+  .table-wrapper {
+    max-height: none;
+  }
+
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  table,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  tr {
+    padding: var(--ui-space-2) var(--ui-space-4);
+    border-bottom: 1px solid var(--ui-color-border);
+  }
+
+  td {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: var(--ui-space-2);
+    padding: var(--ui-space-1) 0;
+    border-bottom: none;
+  }
+
+  td::before {
+    content: attr(data-label);
+    color: var(--ui-color-muted);
+    font-weight: var(--ui-font-weight-semibold);
+  }
+
+  .pagination-controls {
+    width: 100%;
+  }
+
+  .pagination-controls .ui-btn {
+    flex: 1;
+  }
+}

@@ -1,0 +1,117 @@
+/* Tracker page chrome: header, search and the list container. Built on tokens.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--ui-font-family);
+  font-size: var(--ui-font-size-body);
+  line-height: 1.5;
+  background-color: var(--ui-color-page);
+  color: var(--ui-color-text);
+}
+
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+  border-radius: var(--ui-radius-small);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--ui-space-6);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-4);
+  margin-bottom: var(--ui-space-4);
+}
+
+.header h1 {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-3);
+  font-size: var(--ui-font-size-heading);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.header img {
+  width: 40px;
+  height: auto;
+}
+
+.back-link {
+  color: var(--ui-color-accent);
+  font-size: var(--ui-font-size-small);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.tracker-container {
+  overflow: hidden;
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-medium);
+  background: var(--ui-color-surface);
+}
+
+.search-filter-container {
+  padding: var(--ui-space-4);
+  border-bottom: 1px solid var(--ui-color-border);
+}
+
+.search-box input {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.search-box {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.loading,
+.error,
+.empty {
+  padding: var(--ui-space-8) var(--ui-space-4);
+  text-align: center;
+  color: var(--ui-color-muted);
+}
+
+.error {
+  color: var(--ui-color-danger);
+}
+
+.empty-icon {
+  margin-bottom: var(--ui-space-2);
+  font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: var(--ui-space-3);
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-box input {
+    max-width: none;
+  }
+}

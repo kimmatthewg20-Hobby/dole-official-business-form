@@ -1,5 +1,4 @@
-/* The edit-with-code view on the tracker and the success screen. Plain on purpose: the pages
-   are restyled later (tickets 15 and 16). */
+/* The edit-with-code view on the tracker and the success screen, built on the shared tokens. */
 .code-edit-form {
   display: grid;
   gap: var(--ui-space-3);
