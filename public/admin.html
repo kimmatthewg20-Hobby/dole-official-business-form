@@ -279,6 +279,8 @@
     .list-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
     .list-table th, .list-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border-color); }
     .list-table td:last-child { text-align: right; }
+    .admin-form-table td:last-child { text-align: left; }
+    .admin-form-code { font-family: ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
     .list-empty { color: #7f8c8d; margin-bottom: 15px; }
     .list-modal-title { margin-bottom: 15px; color: var(--primary-color); }
     .list-modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
@@ -433,6 +435,24 @@
     <div role="tabpanel" id="panel-data" aria-labelledby="tab-data" data-tab-panel="data" hidden>
     <div class="card">
       <div class="settings-header">
+        <h2><i class="material-icons">description</i> Forms</h2>
+        <p style="color: #7f8c8d; font-size: 14px;">Each form's Reference code, newest first. Only the admin sees codes here; give a code only to the staff member who made the form. Forms made before codes existed show a dash.</p>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="list-table admin-form-table">
+          <thead><tr><th>No.</th><th>Submitted</th><th>Division</th><th>Dates</th><th>Employees</th><th>Reference code</th></tr></thead>
+          <tbody id="adminFormList"></tbody>
+        </table>
+      </div>
+      <p id="adminFormEmpty" class="list-empty hidden">No forms yet.</p>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button type="button" id="adminFormPrev" class="ui-btn ui-btn--secondary" disabled>Previous</button>
+        <span id="adminFormStatus" aria-live="polite"></span>
+        <button type="button" id="adminFormNext" class="ui-btn ui-btn--secondary" disabled>Next</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="settings-header">
         <h2><i class="material-icons">delete_sweep</i> Data Cleanup</h2>
         <p style="color: #7f8c8d; font-size: 14px;">Automatically delete records older than 25 days based on date_created</p>
       </div>
@@ -472,6 +492,8 @@
   <script src="/js/admin-list-modal.js"></script>
   <script src="/js/admin-divisions.js"></script>
   <script src="/js/admin-approvers.js"></script>
+  <script src="/js/date-wording.js"></script>
+  <script src="/js/admin-forms.js"></script>
   <script>
     (function() {
       // Mirrors the server's rule so the admin sees it before sending; the server enforces it.

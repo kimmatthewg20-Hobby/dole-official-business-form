@@ -4,6 +4,9 @@ const { validateSubmission, validateDateMode } = require('./form-validation');
 const { validateListedChoices } = require('./form-lists-validation');
 
 const { expandSubmission, insertForms } = require('./form-creation');
+const { isCodeUnavailable, withoutReferenceCode } = require('./reference-code');
+
+const SERVICE_UNAVAILABLE = 503;
 
 const router = express.Router();
 
@@ -25,6 +28,7 @@ router.post('/api/submit', async (req, res) => {
     const forms = await insertForms(body, records, new Date().toISOString());
     res.json({ success: true, id: forms[0].id, forms });
   } catch (error) {
+    if (isCodeUnavailable(error)) return res.status(SERVICE_UNAVAILABLE).json({ error: error.message });
     console.error('Database error during form submission:', error);
     res.status(500).json({ error: 'Database error: ' + error.message });
   }
@@ -35,10 +39,11 @@ router.get('/api/retrieve/:id', async (req, res) => {
   try {
     const id = req.params.id;
     
-    const formData = await db.get(
+    // Anyone may call this by id, so the Reference code (the edit secret) is left out.
+    const formData = withoutReferenceCode(await db.get(
       `SELECT * FROM official_business WHERE id = ?`,
       [id]
-    );
+    ));
     
     if (!formData) {
       return res.status(404).json({ error: 'Form not found' });

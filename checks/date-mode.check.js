@@ -114,7 +114,7 @@ module.exports = [
           if (formNumber === FAIL_ON_FORM_NUMBER) throw new Error('forced failure');
           return insertForm(client, body, record, now);
         };
-        await assert.rejects(insertForms(SEPARATE, records, new Date().toISOString(), failingInsert), /forced failure/);
+        await assert.rejects(insertForms(SEPARATE, records, new Date().toISOString(), { insertOne: failingInsert }), /forced failure/);
         await assertNothingStored(db);
       });
     },

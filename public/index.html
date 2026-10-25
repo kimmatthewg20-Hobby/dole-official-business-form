@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/clock-picker.css">
+  <link rel="stylesheet" href="css/created-forms.css">
   <style>
     /* Tri-color: Primary, Secondary, Accent */
     :root {
@@ -967,6 +968,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="js/date-wording.js"></script>
+  <script src="js/created-forms.js"></script>
   <script src="js/date-mode.js"></script>
   <script src="js/date-mode-form.js"></script>
   <script src="js/combobox.js"></script>
@@ -1167,12 +1169,7 @@
       }
       
       function showCreatedForms(forms) {
-        const list = document.getElementById('successDates');
-        list.replaceChildren(...forms.map((form, index) => {
-          const line = document.createElement('div');
-          line.textContent = `Form ${index + 1} (No. ${form.id}): ` + DateWording.formatDateWording(form.datesOfOB);
-          return line;
-        }));
+        CreatedForms.render(document.getElementById('successDates'), forms);
       }
 
       // Format date to a more readable format

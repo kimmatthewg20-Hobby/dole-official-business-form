@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db');
 
 const { generatePrintableHTML } = require('../public/print');
+const { withoutReferenceCode } = require('./reference-code');
 const router = express.Router();
 
 // Print route - generates and serves the printable HTML
@@ -11,7 +12,8 @@ router.get('/print/:id', async (req, res) => {
     
     console.log(`Generating print form for id: ${id}`);
     
-    const formData = await db.get(`SELECT * FROM official_business WHERE id = ?`, [id]);
+    // Printouts are posted and passed around, so the Reference code never reaches the page.
+    const formData = withoutReferenceCode(await db.get(`SELECT * FROM official_business WHERE id = ?`, [id]));
     
     if (!formData) {
       console.error('Form not found for id:', id);

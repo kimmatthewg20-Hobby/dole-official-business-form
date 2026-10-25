@@ -18,6 +18,7 @@ const { router: directoryHistoryRouter } = require('./routes/directory-history')
 const { router: dataTransferRouter } = require('./routes/data-transfer');
 const { router: divisionsRouter } = require('./routes/divisions');
 const { router: approversRouter } = require('./routes/approvers');
+const { router: adminFormsRouter } = require('./routes/admin-forms');
 
 
 const app = express();
@@ -53,6 +54,7 @@ app.use(cronCleanupRouter);
 app.use(dataTransferRouter);
 app.use(divisionsRouter);
 app.use(approversRouter);
+app.use(adminFormsRouter);
 
 // Serve static files (must be after API routes but before catch-all routes)
 app.use(express.static(path.join(__dirname, 'public')));

@@ -96,6 +96,16 @@ module.exports = [
     },
   },
   {
+    name: 'forms have an optional Reference code with a unique index',
+    async run({ db }) {
+      const columns = await db.all('PRAGMA table_info(official_business)', []);
+      const referenceCode = columns.find((column) => column.name === 'reference_code');
+      assert.ok(referenceCode, 'forms have a reference_code column');
+      assert.equal(referenceCode.notnull, 0, 'forms from before keep no code');
+      assert.deepEqual(await uniqueIndexedColumns(db, 'official_business'), ['reference_code']);
+    },
+  },
+  {
     name: 'the Approver list has name and position, and its name column leads an index',
     async run({ db }) {
       const columns = await db.all('PRAGMA table_info(approvers)', []);

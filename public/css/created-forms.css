@@ -1,0 +1,29 @@
+/* The success screen's created forms and their Reference codes. */
+.created-forms-notice {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-left: 4px solid #e67e22;
+  background: #fff8ec;
+  font-weight: 600;
+}
+
+.created-form {
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.created-form-code-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.created-form-code {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 18px;
+  letter-spacing: 1px;
+  user-select: all;
+  word-break: break-all;
+}
