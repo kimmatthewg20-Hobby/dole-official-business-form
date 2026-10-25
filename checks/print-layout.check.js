@@ -70,6 +70,7 @@ module.exports = [
       assert.match(html, /<select id="paperSize"/);
       assert.match(html, /print-toolbar__title">Official Business Form<span class="print-toolbar__number">Form No. 42</);
       assert.match(html, /<button class="print-button"/);
+      assert.match(html, /<a class="print-back" href="\/">/);
       assert.ok(!/DOLECN1026ABCD/.test(html), 'the Reference code is the edit secret and never reaches the page');
     },
   },

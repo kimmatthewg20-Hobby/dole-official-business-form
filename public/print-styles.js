@@ -128,7 +128,19 @@ const PRINT_STYLES = `
     letter-spacing: 0.04em;
     user-select: all;
   }
-  .paper-label { font-size: 14px; font-weight: 500; color: #2C3E50; }
+  .print-back {
+    padding: 8px 12px;
+    border: 1px solid #98a2b3;
+    border-radius: 4px;
+    color: #1d2939;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .print-back:hover { background-color: #f2f4f7; }
+  .print-back:focus-visible { outline: 3px solid #3498DB; outline-offset: 2px; }
+  .paper-label { margin-left: 8px; font-size: 14px; font-weight: 500; color: #2C3E50; }
   #paperSize {
     min-width: 9.5rem;
     /* Own arrow, kept clear of the border; the native one sits hard against the edge. */

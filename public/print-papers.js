@@ -61,12 +61,13 @@ const PAPER_OPTIONS_HTML = Object.entries(PAPER_SIZES)
   .map(([key, paper]) => `<option value="${key}" data-page-size="${paper.pageSize}">${paper.label}</option>`)
   .join('');
 
-// A header bar fixed to the top of the page: the paper choice on the left, what is being printed
-// in the middle, the print button on the right. The caller escapes the text it passes in.
+// A header bar fixed to the top of the page: the way back to the main page and the paper choice
+// on the left, what is being printed in the middle, the print button on the right. The caller escapes the text it passes in.
 function toolbarHtml({ title, formNumber }) {
   return `
   <header class="print-toolbar">
     <div class="print-toolbar__start">
+      <a class="print-back" href="/">&larr; Main page</a>
       <label class="paper-label" for="paperSize">Paper</label>
       <select id="paperSize" data-margin="${PAGE_MARGIN}" data-default="${DEFAULT_PAPER}">${PAPER_OPTIONS_HTML}</select>
     </div>
