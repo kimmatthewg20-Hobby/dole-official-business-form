@@ -51,15 +51,16 @@ module.exports = [
     },
   },
   {
-    name: 'More Than One Day gives its one form one code, next to forms from before that have none',
+    name: 'All Dates mode gives each employee own form its own code, next to forms from before that have none',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
         await insertForm(db, {});
         await insertForm(db, {});
         const body = { ...SEPARATE, dateMode: DateMode.MORE_THAN_ONE_DAY };
         const { forms } = await (await submit(baseUrl, body)).json();
-        assert.equal(forms.length, 1);
-        assert.match(forms[0].referenceCode, /^DOLETSSD\d{4}[A-HJKMNP-Z2-9]{4}$/);
+        assert.equal(forms.length, SEPARATE.employees.length);
+        for (const form of forms) assert.match(form.referenceCode, /^DOLETSSD\d{4}[A-HJKMNP-Z2-9]{4}$/);
+        assert.equal(new Set(forms.map((form) => form.referenceCode)).size, forms.length);
         const withoutCode = await db.get('SELECT COUNT(*) AS total FROM official_business WHERE reference_code IS NULL', []);
         assert.equal(withoutCode.total, 2);
       });

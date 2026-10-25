@@ -6,8 +6,9 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   const MULTIPLE_SEPARATE_DAYS = 'multiple-separate-days';
   const MORE_THAN_ONE_DAY = 'more-than-one-day';
-  const DATE_MODES = [MULTIPLE_SEPARATE_DAYS, MORE_THAN_ONE_DAY];
-  const DEFAULT_DATE_MODE = MULTIPLE_SEPARATE_DAYS;
+  // Listed in the order the form shows them; no mode puts employees together on one form.
+  const DATE_MODES = [MORE_THAN_ONE_DAY, MULTIPLE_SEPARATE_DAYS];
+  const DEFAULT_DATE_MODE = MORE_THAN_ONE_DAY;
   const MAX_FORMS_PER_SUBMISSION = 60;
 
   function isDateMode(value) {
@@ -16,7 +17,7 @@
 
   function countForms(dateMode, dateCount, employeeCount) {
     if (dateCount === 0 || employeeCount === 0) return 0;
-    return dateMode === MORE_THAN_ONE_DAY ? 1 : dateCount * employeeCount;
+    return dateMode === MORE_THAN_ONE_DAY ? employeeCount : dateCount * employeeCount;
   }
 
   function exceedsFormLimit(dateMode, dateCount, employeeCount) {

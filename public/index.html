@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="css/created-forms.css">
   <link rel="stylesheet" href="css/code-edit-form.css">
   <link rel="stylesheet" href="css/form-page.css">
+  <link rel="stylesheet" href="css/form-page-date-mode.css">
   <link rel="stylesheet" href="css/form-page-actions.css">
   <link rel="stylesheet" href="css/form-page-panels.css">
   <link rel="stylesheet" href="css/form-page-database.css">
@@ -52,7 +53,10 @@
             <div class="form-control">
               <label for="dateOfOB">Date of Official Business</label>
               <input type="text" id="dateOfOB" required placeholder="Select date(s)">
-              <div id="dateModeChoice" role="radiogroup" aria-label="Date mode"></div>
+            </div>
+            <div class="form-control">
+              <span class="field-label" id="dateModeLabel">File as</span>
+              <div id="dateModeChoice" role="radiogroup" aria-labelledby="dateModeLabel"></div>
             </div>
           </div>
           
@@ -682,7 +686,10 @@
       });
       
       viewFormBtn.addEventListener('click', () => {
-        if (currentId) window.open(`/print/${currentId}`, '_blank');
+        // The code travels in the address fragment, which the server never receives, so the print
+        // page shows it to the person who just made the form and to nobody else.
+        const codeFragment = currentCode ? `#code=${encodeURIComponent(currentCode)}` : '';
+        if (currentId) window.open(`/print/${currentId}${codeFragment}`, '_blank');
       });
       
       // Edit opens the code-checked edit of the first created form; staff never edit by form id.

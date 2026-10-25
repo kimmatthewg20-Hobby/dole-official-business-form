@@ -7,7 +7,6 @@
   var NO_APPROVERS = 'No approvers have been set up yet. Ask the admin.';
   var LOAD_FAILED = 'The list could not be loaded. Please reload the page.';
   var NO_MATCH = 'Nothing matches what you typed';
-  var APPROVER_SEPARATOR = ', ';
 
   var divisionPicker = null;
   var approverPicker = null;
@@ -38,11 +37,7 @@
   }
 
   function approverItem(row) {
-    return { label: row.name + APPROVER_SEPARATOR + row.position, name: row.name, position: row.position };
-  }
-
-  function approverLabel(name, position) {
-    return name + APPROVER_SEPARATOR + position;
+    return { label: row.name, detail: row.position, name: row.name, position: row.position };
   }
 
   // An Approved by pick-list that fills its position field; the edit with a Reference code
@@ -61,9 +56,9 @@
       picker: picker,
       loaded: load(picker, APPROVERS_URL, 'approvers', approverItem),
       setApprover: function (name, position) {
-        picker.selectByLabel(approverLabel(name, position));
+        picker.selectByLabel(name, position);
       },
-      // The approver input shows "name, position" but the form sends the name alone.
+      // The position is shown in its own field, so the input holds the name alone.
       approverName: function () {
         var item = picker.getSelected();
         return item ? item.name : '';

@@ -34,7 +34,7 @@ label {
 }
 
 .main-container {
-  max-width: 880px;
+  max-width: 1440px;
   margin: var(--ui-space-6) auto;
   padding: var(--ui-space-6);
   background-color: var(--ui-color-surface);

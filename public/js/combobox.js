@@ -179,9 +179,10 @@
         message.hidden = false;
         input.readOnly = true;
       },
-      selectByLabel: function (label) {
+      // The detail tells apart two items with the same label (one person, two positions).
+      selectByLabel: function (label, detail) {
         var match = items.filter(function (item) {
-          return item.label === label;
+          return item.label === label && (detail === undefined || item.detail === detail);
         })[0];
         if (match) choose(match);
       },
@@ -194,6 +195,5 @@
       },
     };
   }
-
   root.Combobox = { create: create };
 })(window);

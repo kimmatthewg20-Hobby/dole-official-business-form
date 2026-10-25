@@ -47,15 +47,25 @@ module.exports = [
     },
   },
   {
-    name: 'date-mode: More Than One Day makes one form with all dates and employees',
+    name: 'date-mode: the default and first mode is More Than One Day',
+    async run() {
+      assert.equal(DateMode.DEFAULT_DATE_MODE, DateMode.MORE_THAN_ONE_DAY);
+      assert.equal(DateMode.DATE_MODES[0], DateMode.DEFAULT_DATE_MODE);
+    },
+  },
+  {
+    name: 'date-mode: More Than One Day makes one form per employee, each with all dates and its own code',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
         const body = { ...SEPARATE, dateMode: DateMode.MORE_THAN_ONE_DAY };
         const { forms } = await (await submit(baseUrl, body)).json();
-        assert.equal(forms.length, 1);
-        assert.deepEqual(forms[0].datesOfOB, THREE_DATES);
-        assert.equal(await countRows(db, 'official_business'), 1);
-        assert.equal(await countRows(db, 'employees'), 2);
+        assert.equal(forms.length, TWO_EMPLOYEES.length);
+        assert.ok(forms.every((form) => JSON.stringify(form.datesOfOB) === JSON.stringify(THREE_DATES)));
+        assert.equal(new Set(forms.map((form) => form.referenceCode)).size, TWO_EMPLOYEES.length);
+        assert.equal(await countRows(db, 'official_business'), TWO_EMPLOYEES.length);
+        const stored = await db.all('SELECT ob_id, name FROM employees ORDER BY id', []);
+        assert.deepEqual(stored.map((row) => row.name), TWO_EMPLOYEES.map((employee) => employee.name));
+        assert.equal(new Set(stored.map((row) => row.ob_id)).size, TWO_EMPLOYEES.length);
       });
     },
   },
@@ -98,8 +108,27 @@ module.exports = [
         const atCap = manyDates(DateMode.MAX_FORMS_PER_SUBMISSION / 2);
         const accepted = await (await submit(baseUrl, { ...SEPARATE, datesOfOB: atCap })).json();
         assert.equal(accepted.forms.length, DateMode.MAX_FORMS_PER_SUBMISSION);
-        const tooManyInOneForm = await submit(baseUrl, { ...SEPARATE, dateMode: DateMode.MORE_THAN_ONE_DAY, datesOfOB: dates });
-        assert.equal(tooManyInOneForm.status, OK);
+        await db.run('DELETE FROM employees', []);
+        await db.run('DELETE FROM official_business', []);
+        const manyDatesInOneForm = await submit(baseUrl, { ...SEPARATE, dateMode: DateMode.MORE_THAN_ONE_DAY, datesOfOB: dates });
+        assert.equal(manyDatesInOneForm.status, OK, 'in All Dates mode dates do not multiply the forms');
+      });
+    },
+  },
+  {
+    name: 'date-mode: All Dates mode counts one form per employee against the cap',
+    async run({ baseUrl, db }) {
+      await withFormsRestored(db, async () => {
+        const employees = (count) => Array.from({ length: count }, (_, index) => ({ name: `Person ${index}`, position: 'Clerk' }));
+        const oneForm = (count) => ({ ...SEPARATE, dateMode: DateMode.MORE_THAN_ONE_DAY, employees: employees(count) });
+        const tooMany = DateMode.MAX_FORMS_PER_SUBMISSION + 1;
+        const refused = await submit(baseUrl, oneForm(tooMany));
+        assert.equal(refused.status, BAD_REQUEST);
+        assert.equal((await refused.json()).error, DateMode.formLimitMessage(tooMany));
+        await assertNothingStored(db);
+
+        const accepted = await (await submit(baseUrl, oneForm(DateMode.MAX_FORMS_PER_SUBMISSION))).json();
+        assert.equal(accepted.forms.length, DateMode.MAX_FORMS_PER_SUBMISSION);
       });
     },
   },

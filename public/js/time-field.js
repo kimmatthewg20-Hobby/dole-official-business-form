@@ -60,7 +60,8 @@
     function openClock() {
       root.ClockPicker.open({
         anchor: wrapper,
-        pick: math.fromStoredTime(stored),
+        // An empty field opens on the time it hints at (its placeholder), so OK fills in what it shows.
+        pick: math.fromStoredTime(stored || parseTimeInput(input.placeholder) || ''),
         onChange: function (pick) {
           stored = math.toStoredTime(pick.hour12, pick.minute, pick.isPm);
           show(stored);

@@ -1,0 +1,68 @@
+/* The Date mode choice sits in a second column beside the date field, as two buttons that
+   share its width. */
+
+.field-label {
+  display: block;
+  margin-bottom: var(--ui-space-2);
+  font-size: var(--ui-font-size-small);
+  font-weight: var(--ui-font-weight-semibold);
+  color: var(--ui-color-text);
+}
+
+#dateModeChoice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+.date-mode-option {
+  flex: 1 1 0;
+  display: flex;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Hidden but still focusable, so the keyboard moves between the two with the arrow keys. */
+.date-mode-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+
+.date-mode-text {
+  flex: 1;
+  box-sizing: border-box;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--ui-space-3);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-small);
+  background-color: var(--ui-color-surface);
+  color: var(--ui-color-text);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.date-mode-option:hover .date-mode-text {
+  border-color: var(--ui-color-focus);
+}
+
+.date-mode-option input:checked + .date-mode-text {
+  background-color: var(--ui-color-focus);
+  border-color: var(--ui-color-focus);
+  color: var(--ui-color-surface);
+}
+
+.date-mode-option input:focus-visible + .date-mode-text {
+  box-shadow: var(--ui-focus-ring);
+}
+
+.date-mode-limit {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--ui-color-danger);
+}

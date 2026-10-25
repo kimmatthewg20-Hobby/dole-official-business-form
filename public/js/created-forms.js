@@ -2,12 +2,13 @@
 // The code is shown only here (ADR 0003), so staff are told to keep it.
 (function (root) {
   const CODES_NOT_SHOWN_AGAIN =
-    'Keep each Reference code. You need it to find or edit that form, and it is not shown again ' +
-    'on the tracker or on the printed form.';
+    'Keep each Reference code. You need it to find or edit that form. The tracker never lists it ' +
+    'and the printed form never carries it; the print page shows it once, for a form made just now.';
   const NO_CODE_TEXT = 'No Reference code';
   const COPY_LABEL = 'Copy';
   const COPIED_LABEL = 'Copied';
   const COPY_FAILED_LABEL = 'Select and copy';
+  const PRINT_LABEL = 'Print';
   const LABEL_RESET_MS = 2000;
 
   // Older browsers and pages served without HTTPS have no async clipboard, so a hidden
@@ -66,6 +67,19 @@
     return button;
   }
 
+  // The code rides in the address fragment, so it reaches the print page's header without
+  // the server ever seeing it.
+  function printLink(form) {
+    const link = document.createElement('a');
+    link.className = 'ui-btn ui-btn--secondary created-form-copy';
+    link.href = `/print/${form.id}#code=${encodeURIComponent(form.referenceCode)}`;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = PRINT_LABEL;
+    link.setAttribute('aria-label', `Print form ${form.id}`);
+    return link;
+  }
+
   function formLine(form, index) {
     const line = document.createElement('div');
     line.className = 'created-form';
@@ -83,7 +97,7 @@
     const code = document.createElement('code');
     code.className = 'created-form-code';
     code.textContent = form.referenceCode;
-    codeRow.append(code, copyButton(form.referenceCode, code));
+    codeRow.append(code, copyButton(form.referenceCode, code), printLink(form));
     line.appendChild(codeRow);
     return line;
   }

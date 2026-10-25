@@ -107,7 +107,7 @@
 
   function onKeyDown(event) {
     if (event.key === 'Escape') { event.preventDefault(); close(); return; }
-    if (event.key === 'Enter' && event.target.tagName !== 'BUTTON') { event.preventDefault(); close(); return; }
+    if (event.key === 'Enter' && event.target.tagName !== 'BUTTON') { event.preventDefault(); confirmTime(); return; }
     if (event.target.tagName === 'BUTTON' && event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
     if (!(event.key in KEY_STEPS)) return;
     event.preventDefault();
@@ -150,7 +150,7 @@
     var done = el('button', 'ui-btn clock-picker__done', popover);
     done.type = 'button';
     done.textContent = 'OK';
-    done.addEventListener('click', close);
+    done.addEventListener('click', confirmTime);
     popover.addEventListener('keydown', onKeyDown);
     document.addEventListener('pointerdown', function (event) {
       if (state && !popover.contains(event.target) && !state.anchor.contains(event.target)) close();
@@ -164,6 +164,14 @@
     popover.style.setProperty('--clock-left', Math.max(0, Math.min(box.left, window.innerWidth - popover.offsetWidth)) + 'px');
   }
 
+  // OK keeps the time the clock shows, even when it was never touched: an empty field opens on
+  // its suggested time, and pressing OK on it must fill the field.
+  function confirmTime() {
+    if (!state) return;
+    state.onChange(state.pick);
+    close();
+  }
+
   function close() {
     if (!state) return;
     var finished = state;
@@ -172,8 +180,8 @@
     finished.onClose();
   }
 
-  // options: anchor (element the popover sits under), pick ({hour12, minute, isPm} or null),
-  // onChange(pick), onClose().
+  // options: anchor (element the popover sits under), pick ({hour12, minute, isPm}; the clock
+  // opens on it, or on 8:00 AM without one), onChange(pick), onClose().
   function open(options) {
     if (!popover) build();
     close();

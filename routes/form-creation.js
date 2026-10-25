@@ -8,7 +8,7 @@ const { assignReferenceCode } = require('./reference-code');
 function expandSubmission(body) {
   const dates = [...body.datesOfOB].sort();
   if (body.dateMode === DateMode.MORE_THAN_ONE_DAY) {
-    return [{ employees: body.employees, datesOfOB: dates }];
+    return body.employees.map((employee) => ({ employees: [employee], datesOfOB: dates }));
   }
   const records = [];
   for (const date of dates) {

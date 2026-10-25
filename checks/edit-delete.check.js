@@ -3,7 +3,8 @@
 const assert = require('node:assert/strict');
 const { loginCookie } = require('./admin-http');
 const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
-const { withFormsRestored, insertForm, submit, VALID_SUBMISSION } = require('./form-helpers');
+const { withFormsRestored, insertForm } = require('./form-helpers');
+const { submitSharedForm } = require('./shared-form-helpers');
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -53,7 +54,7 @@ module.exports = [
     name: 'the admin editing a form updates its fields and replaces its employees with a different set',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
+        const { id } = await submitSharedForm(baseUrl, db);
         const cookie = await adminCookie(baseUrl);
         const response = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, EDIT_BODY, cookie);
         assert.equal(response.status, 200);
@@ -71,7 +72,7 @@ module.exports = [
     name: 'the admin edit keeps the Reference code of the form',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const { forms } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
+        const { forms } = await submitSharedForm(baseUrl, db);
         const cookie = await adminCookie(baseUrl);
         const response = await sendJson(baseUrl, 'PUT', `/api/update/${forms[0].id}`, EDIT_BODY, cookie);
         assert.equal(response.status, 200);
@@ -84,7 +85,7 @@ module.exports = [
     name: 'a failed admin edit leaves the previous form and employees unchanged',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
+        const { id } = await submitSharedForm(baseUrl, db);
         await db.run(
           `CREATE TRIGGER fail_edit BEFORE INSERT ON employees WHEN NEW.name = '${FAILING_NAME}'
            BEGIN SELECT RAISE(ABORT, 'forced failure'); END`,
@@ -108,7 +109,7 @@ module.exports = [
     name: 'the admin edit rejects invalid input and a form that does not exist, changing nothing',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
+        const { id } = await submitSharedForm(baseUrl, db);
         const cookie = await adminCookie(baseUrl);
         const noEmployees = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, { ...EDIT_BODY, employees: [] }, cookie);
         assert.equal(noEmployees.status, 400);
@@ -123,7 +124,7 @@ module.exports = [
     name: 'without an admin session the update route by form id is refused and changes nothing',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
+        const { id } = await submitSharedForm(baseUrl, db);
         const response = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, EDIT_BODY);
         assert.equal(response.status, 401);
         const form = await db.get('SELECT purpose FROM official_business WHERE id = ?', [id]);

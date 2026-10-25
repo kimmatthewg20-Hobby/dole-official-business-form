@@ -4,15 +4,16 @@
 // own documentation address (198.51.100.0/24), so the wrong codes typed here lock out nobody else.
 
 const assert = require('node:assert/strict');
-const { VALID_SUBMISSION, withFormsRestored, insertForm, submit } = require('./form-helpers');
+const { VALID_SUBMISSION, withFormsRestored, insertForm } = require('./form-helpers');
+const { submitSharedForm } = require('./shared-form-helpers');
 const { captureConsole } = require('./admin-http');
 const { OK, NOT_FOUND, lookUpCodeFrom, onVercel } = require('./lockout-helpers');
 
 const BAD_REQUEST = 400;
 const CODE_FIELD_NAMES = ['reference_code', 'referenceCode'];
 
-async function submittedForm(baseUrl) {
-  const { forms } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
+async function submittedForm(baseUrl, db) {
+  const { forms } = await submitSharedForm(baseUrl, db);
   assert.equal(forms.length, 1);
   return forms[0];
 }
@@ -36,8 +37,8 @@ module.exports = [
     name: 'a valid code in any capitalisation with stray spaces shows that form, without its code',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        await submittedForm(baseUrl);
-        const form = await submittedForm(baseUrl);
+        await submittedForm(baseUrl, db);
+        const form = await submittedForm(baseUrl, db);
         await onVercel(async () => {
           const response = await lookUpCodeFrom(baseUrl, '198.51.100.1', pastedCarelessly(form.referenceCode));
           assert.equal(response.status, OK);
@@ -61,7 +62,7 @@ module.exports = [
     name: 'a wrong code and an unknown code give identical answers',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const form = await submittedForm(baseUrl);
+        const form = await submittedForm(baseUrl, db);
         await insertForm(db, {});
         await onVercel(async () => {
           const address = '198.51.100.2';

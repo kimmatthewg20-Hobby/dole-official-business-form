@@ -13,8 +13,7 @@ The one list of employees (name, position, assigned unit) that staff pick from w
 _Avoid_: Employee list, staff table, remembered employees
 
 **Date mode**:
-The choice staff make under Date of Official Business. "More Than One Day" makes one form covering all the chosen dates. "Multiple Separate Days" (the default) makes one form per date per employee. Only the resulting forms are kept, not the mode.
-_Avoid_: Single/multi mode
+The choice staff make under Date of Official Business ("File as" on the form). Every employee always gets their own form; two employees never share one. "More Than One Day" (shown as "All Dates", the default and the first button) makes one form per employee covering all the chosen dates. "Multiple Separate Days" (shown as "Separated Dates") makes one form per date per employee. Only the resulting forms are kept, not the mode. The two buttons appear only once two or more dates are chosen; with one date both give the same forms. The hover tips are "One form per employee, covering all the selected dates" and "One form per date per employee".
 
 **Division**:
 A named unit of the office that a form is filed under, with a short code (2-4 letters) used in the reference code. The admin keeps the list; staff must pick from it.

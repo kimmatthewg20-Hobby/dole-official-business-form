@@ -1,10 +1,20 @@
-// The Date mode choice under the date field, with a live count of forms the submission would create.
+// The Date mode choice beside the date field, shown only once two dates are chosen; it warns
+// when the submission would pass the cap.
 (function (root) {
+  // Short names on screen; the longer explanation shows when the pointer rests on one.
   const MODE_LABELS = {
-    [DateMode.MULTIPLE_SEPARATE_DAYS]: 'Multiple Separate Days (one form per date per employee)',
-    [DateMode.MORE_THAN_ONE_DAY]: 'More Than One Day (one form for all dates and employees)',
+    [DateMode.MORE_THAN_ONE_DAY]: {
+      text: 'All Dates',
+      tip: 'One form per employee, covering all the selected dates',
+    },
+    [DateMode.MULTIPLE_SEPARATE_DAYS]: {
+      text: 'Separated Dates',
+      tip: 'One form per date per employee',
+    },
   };
   const RADIO_NAME = 'dateMode';
+  // With one date both choices give the same forms, so the choice only appears from two dates.
+  const MIN_DATES_FOR_CHOICE = 2;
 
   let options = null;
   let countNote = null;
@@ -23,25 +33,30 @@
   }
 
   function refresh() {
-    const count = formCount();
+    const showChoice = options.getDateCount() >= MIN_DATES_FOR_CHOICE;
+    options.container.closest('.form-control').hidden = !showChoice;
+    if (!showChoice) options.container.querySelector(`input[value="${DateMode.DEFAULT_DATE_MODE}"]`).checked = true;
     const over = isOverLimit();
-    countNote.textContent = over
-      ? DateMode.formLimitMessage(count)
-      : `This will create ${count} ${count === 1 ? 'form' : 'forms'}.`;
-    countNote.style.color = over ? 'var(--danger, #c0392b)' : '';
+    countNote.textContent = over ? DateMode.formLimitMessage(formCount()) : '';
+    countNote.hidden = !over;
     options.submitButton.disabled = over;
   }
 
   function buildRadio(mode) {
     const label = document.createElement('label');
-    label.style.display = 'block';
+    label.className = 'date-mode-option';
+    label.title = MODE_LABELS[mode].tip;
     const radio = document.createElement('input');
     radio.type = 'radio';
     radio.name = RADIO_NAME;
     radio.value = mode;
     radio.checked = mode === DateMode.DEFAULT_DATE_MODE;
     radio.addEventListener('change', refresh);
-    label.append(radio, ' ' + MODE_LABELS[mode]);
+    // The radio is hidden and the text is drawn as a button, so the choice reads as two buttons.
+    const text = document.createElement('span');
+    text.className = 'date-mode-text';
+    text.textContent = MODE_LABELS[mode].text;
+    label.append(radio, text);
     return label;
   }
 
@@ -53,6 +68,7 @@
   function init(config) {
     options = config;
     countNote = document.createElement('p');
+    countNote.className = 'date-mode-limit';
     countNote.setAttribute('role', 'status');
     options.container.append(...DateMode.DATE_MODES.map(buildRadio), countNote);
     refresh();
