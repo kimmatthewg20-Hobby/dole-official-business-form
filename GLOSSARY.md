@@ -9,8 +9,24 @@ A request recorded by staff for one or more employees to be away on official bus
 _Avoid_: OB, travel order
 
 **Employee directory**:
-The admin-maintained list of employees (name, position, assigned unit) that staff pick from when filling in a form.
-_Avoid_: Employee list, staff table
+The one list of employees (name, position, assigned unit) that staff pick from when filling in a form. The admin maintains it, and an employee named on a submitted form who is not yet in it is added automatically. An employee unused on any form for six months is removed.
+_Avoid_: Employee list, staff table, remembered employees
+
+**Date mode**:
+The choice staff make under Date of Official Business. "More Than One Day" makes one form covering all the chosen dates. "Multiple Separate Days" (the default) makes one form per date per employee. Only the resulting forms are kept, not the mode.
+_Avoid_: Single/multi mode
+
+**Division**:
+A named unit of the office that a form is filed under, with a short code (2-4 letters) used in the reference code. The admin keeps the list; staff must pick from it.
+_Avoid_: Office, unit (an employee's "assigned unit" is a different thing)
+
+**Approver**:
+A person (name and position) who may be named as "Approved by" on a form. The admin keeps the list; staff must pick from it.
+_Avoid_: Approving person, signatory
+
+**Reference code**:
+The code given to one Official Business form when it is submitted, such as DOLECN1026K7QX: "DOLE", the Division code, the month and year of submission (MMYY), and four random characters. Anyone holding the whole code may find and edit that form, so it is a secret and is not listed publicly.
+_Avoid_: Control number, tracking number, ID
 
 **Admin**:
 The one person who may change settings, the employee directory and stored forms. Identified by a fixed username and the admin password.
@@ -25,5 +41,5 @@ The time-limited permission an admin receives after a correct login. It ends on 
 _Avoid_: Admin cookie, admin token
 
 **Lockout**:
-The period after five wrong admin logins within fifteen minutes during which every login attempt from the same source is refused.
+The period after repeated wrong attempts during which every further attempt from the same source is refused. It applies to admin logins (five wrong within fifteen minutes) and to Reference code lookups (ten wrong within fifteen minutes).
 _Avoid_: Ban, throttle
