@@ -1,0 +1,152 @@
+/* Building blocks for pages that opt in. Every selector starts with a ui- class,
+   so existing page styles are not touched and no element is restyled by default. */
+
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  min-height: 2.5rem;
+  padding: var(--ui-space-2) var(--ui-space-4);
+  border: 1px solid var(--ui-color-accent);
+  border-radius: var(--ui-radius-small);
+  background: var(--ui-color-accent);
+  color: var(--ui-color-accent-text);
+  font: inherit;
+  font-weight: var(--ui-font-weight-semibold);
+  cursor: pointer;
+}
+
+.ui-btn--secondary {
+  background: var(--ui-color-surface);
+  color: var(--ui-color-accent);
+}
+
+.ui-btn--danger {
+  border-color: var(--ui-color-danger);
+  background: var(--ui-color-danger);
+}
+
+.ui-btn:focus-visible,
+.ui-input:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ui-input {
+  display: block;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-small);
+  background: var(--ui-color-surface);
+  color: var(--ui-color-text);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.ui-card {
+  padding: var(--ui-space-4);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-medium);
+  background: var(--ui-color-surface);
+  color: var(--ui-color-text);
+}
+
+.ui-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ui-space-4);
+  background: var(--ui-color-overlay);
+  font-family: var(--ui-font-family);
+}
+
+.ui-modal__dialog {
+  width: 100%;
+  max-width: 32rem;
+  max-height: calc(100vh - 2 * var(--ui-space-4));
+  overflow-y: auto;
+  padding: var(--ui-space-6);
+  border-radius: var(--ui-radius-medium);
+  background: var(--ui-color-surface);
+  box-shadow: var(--ui-shadow-raised);
+  color: var(--ui-color-text);
+}
+
+.ui-modal :focus-visible,
+.ui-modal__dialog:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-dropdown {
+  position: absolute;
+  z-index: 10;
+  margin: 0;
+  padding: var(--ui-space-1) 0;
+  list-style: none;
+  max-height: 16rem;
+  overflow-y: auto;
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-small);
+  background: var(--ui-color-surface);
+  box-shadow: var(--ui-shadow-raised);
+  font-family: var(--ui-font-family);
+}
+
+.ui-dropdown__item {
+  padding: var(--ui-space-2) var(--ui-space-3);
+  color: var(--ui-color-text);
+  cursor: pointer;
+}
+
+.ui-dropdown__item[aria-selected="true"],
+.ui-dropdown__item:hover {
+  background: var(--ui-color-page);
+}
+
+.ui-dropdown__item:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ui-color-focus);
+}
+
+.ui-toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--ui-space-6);
+  transform: translateX(-50%);
+  max-width: calc(100vw - 2 * var(--ui-space-4));
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border-radius: var(--ui-radius-medium);
+  background: var(--ui-color-text);
+  color: var(--ui-color-accent-text);
+  font-family: var(--ui-font-family);
+  font-size: var(--ui-font-size-small);
+  box-shadow: var(--ui-shadow-raised);
+}
+
+@media (max-width: 600px) {
+  .ui-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .ui-modal__dialog {
+    max-width: none;
+    max-height: 90vh;
+    border-radius: var(--ui-radius-medium) var(--ui-radius-medium) 0 0;
+  }
+
+  .ui-btn {
+    min-height: 2.75rem;
+  }
+}
