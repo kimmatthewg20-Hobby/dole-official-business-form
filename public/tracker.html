@@ -7,6 +7,9 @@
   <link rel="icon" type="image/png" href="logo.png">
   <link rel="shortcut icon" type="image/png" href="logo.png">
   <link rel="apple-touch-icon" href="logo.png">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/tracker-code-lookup.css">
   <style>
     :root {
       --primary: #2C3E50;
@@ -252,6 +255,15 @@
       <a href="/" style="color: var(--secondary); text-decoration: none; font-size: 14px;">← Back to Form</a>
     </div>
     
+    <section class="ui-card code-lookup" aria-labelledby="codeLookupTitle">
+      <h2 id="codeLookupTitle">Find your form by Reference code</h2>
+      <form id="codeLookupForm" class="code-lookup-row" autocomplete="off">
+        <input type="text" id="codeLookupInput" class="ui-input" aria-labelledby="codeLookupTitle" placeholder="Paste your Reference code, such as DOLECN1026K7QX" spellcheck="false" autocapitalize="characters">
+        <button type="submit" id="codeLookupButton" class="ui-btn">Find form</button>
+      </form>
+      <div id="codeLookupResult" class="code-lookup-result" aria-live="polite"></div>
+    </section>
+
     <div class="tracker-container">
       <div class="search-filter-container">
         <div class="search-box">
@@ -287,6 +299,17 @@
     </div>
   </div>
 
+  <script src="js/date-wording.js"></script>
+  <script src="js/clock-math.js"></script>
+  <script src="js/tracker-code-lookup.js"></script>
+  <script>
+    TrackerCodeLookup.attach({
+      form: document.getElementById('codeLookupForm'),
+      input: document.getElementById('codeLookupInput'),
+      result: document.getElementById('codeLookupResult'),
+      button: document.getElementById('codeLookupButton'),
+    });
+  </script>
   <script>
     let currentPage = 1;
     let totalPages = 1;

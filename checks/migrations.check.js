@@ -106,6 +106,24 @@ module.exports = [
     },
   },
   {
+    name: 'failed attempts carry a kind, admin login by default, indexed with address and time',
+    async run({ db }) {
+      const columns = await db.all('PRAGMA table_info(failed_logins)', []);
+      const kind = columns.find((column) => column.name === 'kind');
+      assert.ok(kind, 'failed_logins has a kind column');
+      assert.equal(kind.notnull, 1);
+      assert.equal(kind.dflt_value, "'admin-login'");
+      const indexes = await db.all('PRAGMA index_list(failed_logins)', []);
+      const indexColumns = [];
+      for (const index of indexes) {
+        const parts = await db.all(`PRAGMA index_info(${index.name})`, []);
+        indexColumns.push(parts.map((part) => part.name).join(','));
+      }
+      assert.ok(indexColumns.includes('kind,source_address,failed_at'), indexColumns.join(' | '));
+      assert.ok(indexColumns.includes('failed_at'), 'cleanup by age keeps its index');
+    },
+  },
+  {
     name: 'the Approver list has name and position, and its name column leads an index',
     async run({ db }) {
       const columns = await db.all('PRAGMA table_info(approvers)', []);

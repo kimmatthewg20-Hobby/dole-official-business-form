@@ -4,7 +4,8 @@ const { validateSubmission, validateDateMode } = require('./form-validation');
 const { validateListedChoices } = require('./form-lists-validation');
 
 const { expandSubmission, insertForms } = require('./form-creation');
-const { isCodeUnavailable, withoutReferenceCode } = require('./reference-code');
+const { isCodeUnavailable } = require('./reference-code');
+const { publicFormWithEmployees } = require('./public-form');
 
 const SERVICE_UNAVAILABLE = 503;
 
@@ -37,35 +38,10 @@ router.post('/api/submit', async (req, res) => {
 // Retrieve form data by ID
 router.get('/api/retrieve/:id', async (req, res) => {
   try {
-    const id = req.params.id;
-    
-    // Anyone may call this by id, so the Reference code (the edit secret) is left out.
-    const formData = withoutReferenceCode(await db.get(
-      `SELECT * FROM official_business WHERE id = ?`,
-      [id]
-    ));
-    
-    if (!formData) {
-      return res.status(404).json({ error: 'Form not found' });
-    }
-    
-    // Parse the dates_of_ob JSON field if it exists
-    if (formData.dates_of_ob) {
-      try {
-        formData.datesOfOB = JSON.parse(formData.dates_of_ob);
-      } catch (e) {
-        // If parsing fails, create a single-item array with the date_of_ob value
-        formData.datesOfOB = [formData.date_of_ob];
-      }
-    }
-    
-    // Get associated employees
-    const employees = await db.all(
-      'SELECT name, position FROM employees WHERE ob_id = ?',
-      [formData.id]
-    );
-    
-    res.json({ formData, employees });
+    const row = await db.get(`SELECT * FROM official_business WHERE id = ?`, [req.params.id]);
+    const form = await publicFormWithEmployees(row);
+    if (!form) return res.status(404).json({ error: 'Form not found' });
+    res.json(form);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

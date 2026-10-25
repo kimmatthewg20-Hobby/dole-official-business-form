@@ -63,6 +63,11 @@ async function assignReferenceCode(client, { divisionCode, now, randomIndex = cr
   throw codeUnavailableError();
 }
 
+// Staff paste codes from chats and notes, so case and stray spaces anywhere are ignored.
+function normaliseReferenceCode(typed) {
+  return typed.replace(/\s+/g, '').toUpperCase();
+}
+
 // Public responses and the print start from whole stored rows; this keeps the secret out.
 function withoutReferenceCode(row) {
   if (!row) return row;
@@ -77,5 +82,6 @@ module.exports = {
   makeReferenceCode,
   assignReferenceCode,
   isCodeUnavailable,
+  normaliseReferenceCode,
   withoutReferenceCode,
 };
