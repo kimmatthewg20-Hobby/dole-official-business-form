@@ -21,11 +21,16 @@ const UNAUTHORIZED = 401;
 const OK = 200;
 const NOT_FOUND = 404;
 const CODE_LOOKUP_ROUTE = '/api/lookup/code';
+const EDIT_WITH_CODE_ROUTE = '/api/edit-with-code';
 
-function postFrom(baseUrl, route, address, body) {
+function sendFrom(baseUrl, method, route, address, body) {
   const headers = { 'Content-Type': 'application/json' };
   if (address !== undefined) headers[REAL_IP_HEADER] = address;
-  return fetch(`${baseUrl}${route}`, { method: 'POST', headers, body: JSON.stringify(body) });
+  return fetch(`${baseUrl}${route}`, { method, headers, body: JSON.stringify(body) });
+}
+
+function postFrom(baseUrl, route, address, body) {
+  return sendFrom(baseUrl, 'POST', route, address, body);
 }
 
 function loginFrom(baseUrl, address, password, username = ADMIN_USERNAME) {
@@ -34,6 +39,10 @@ function loginFrom(baseUrl, address, password, username = ADMIN_USERNAME) {
 
 function lookUpCodeFrom(baseUrl, address, code) {
   return postFrom(baseUrl, CODE_LOOKUP_ROUTE, address, { code });
+}
+
+function editWithCodeFrom(baseUrl, address, body) {
+  return sendFrom(baseUrl, 'PUT', EDIT_WITH_CODE_ROUTE, address, body);
 }
 
 async function failLogins(baseUrl, address, count) {
@@ -98,6 +107,7 @@ module.exports = {
   NOT_FOUND,
   loginFrom,
   lookUpCodeFrom,
+  editWithCodeFrom,
   failLogins,
   failCodeLookups,
   expectLockedOut,

@@ -11,7 +11,6 @@
 
   var divisionPicker = null;
   var approverPicker = null;
-  var positionField = null;
 
   function fetchList(url, key) {
     return fetch(url)
@@ -42,43 +41,49 @@
     return { label: row.name + APPROVER_SEPARATOR + row.position, name: row.name, position: row.position };
   }
 
-  function fillApprover(item) {
-    positionField.value = item ? item.position : '';
+  function approverLabel(name, position) {
+    return name + APPROVER_SEPARATOR + position;
+  }
+
+  // An Approved by pick-list that fills its position field; the edit with a Reference code
+  // builds its own, apart from the form page's.
+  function createApproverPicker(approverInput, positionInput) {
+    positionInput.readOnly = true;
+    var picker = root.Combobox.create({
+      input: approverInput,
+      emptyMessage: NO_APPROVERS,
+      noMatchMessage: NO_MATCH,
+      onSelect: function (item) {
+        positionInput.value = item ? item.position : '';
+      },
+    });
+    return {
+      picker: picker,
+      loaded: load(picker, APPROVERS_URL, 'approvers', approverItem),
+      setApprover: function (name, position) {
+        picker.selectByLabel(approverLabel(name, position));
+      },
+      // The approver input shows "name, position" but the form sends the name alone.
+      approverName: function () {
+        var item = picker.getSelected();
+        return item ? item.name : '';
+      },
+    };
   }
 
   function init(fields) {
-    positionField = fields.positionInput;
-    positionField.readOnly = true;
     divisionPicker = root.Combobox.create({
       input: fields.divisionInput,
       emptyMessage: NO_DIVISIONS,
       noMatchMessage: NO_MATCH,
     });
-    approverPicker = root.Combobox.create({
-      input: fields.approverInput,
-      emptyMessage: NO_APPROVERS,
-      noMatchMessage: NO_MATCH,
-      onSelect: fillApprover,
-    });
-    return Promise.all([
-      load(divisionPicker, DIVISIONS_URL, 'divisions', divisionItem),
-      load(approverPicker, APPROVERS_URL, 'approvers', approverItem),
-    ]);
+    approverPicker = createApproverPicker(fields.approverInput, fields.positionInput);
+    return Promise.all([load(divisionPicker, DIVISIONS_URL, 'divisions', divisionItem), approverPicker.loaded]);
   }
 
   function reset() {
     divisionPicker.clear();
-    approverPicker.clear();
-  }
-
-  function setApprover(name, position) {
-    approverPicker.selectByLabel(name + APPROVER_SEPARATOR + position);
-  }
-
-  // The approver input shows "name, position" but the form sends the name alone.
-  function approverName() {
-    var item = approverPicker.getSelected();
-    return item ? item.name : '';
+    approverPicker.picker.clear();
   }
 
   function divisionName() {
@@ -92,8 +97,13 @@
     setDivision: function (name) {
       divisionPicker.selectByLabel(name);
     },
-    setApprover: setApprover,
+    setApprover: function (name, position) {
+      approverPicker.setApprover(name, position);
+    },
     divisionName: divisionName,
-    approverName: approverName,
+    approverName: function () {
+      return approverPicker.approverName();
+    },
+    createApproverPicker: createApproverPicker,
   };
 })(window);

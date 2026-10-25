@@ -9,6 +9,7 @@
   const SEARCHING_MESSAGE = 'Looking up the form...';
   const UNREACHABLE_MESSAGE = 'Could not reach the server. Check your connection and try again.';
   const PRINT_LABEL = 'View printout';
+  const EDIT_LABEL = 'Edit this form';
 
   function formDates(formData) {
     const dates = Array.isArray(formData.datesOfOB) ? formData.datesOfOB : [formData.date_of_ob];
@@ -47,7 +48,27 @@
     ];
   }
 
-  function renderForm(result, form) {
+  // The code stays in this closure for the edit, which sends it again with every save.
+  function editButton(result, form, code) {
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.className = 'ui-btn';
+    edit.textContent = EDIT_LABEL;
+    edit.addEventListener('click', () => {
+      root.CodeEditForm.render(result, {
+        code,
+        form,
+        onSaved: (saved) => {
+          renderForm(result, saved, code);
+          result.prepend(messageElement(root.CodeEditForm.SAVED_MESSAGE));
+        },
+        onCancel: () => renderForm(result, form, code),
+      });
+    });
+    return edit;
+  }
+
+  function renderForm(result, form, code) {
     const list = document.createElement('dl');
     list.className = 'code-lookup-details';
     for (const [label, value] of detailRows(form)) {
@@ -63,14 +84,21 @@
     print.target = '_blank';
     print.rel = 'noopener';
     print.textContent = PRINT_LABEL;
-    result.replaceChildren(list, print);
+    const actions = document.createElement('div');
+    actions.className = 'code-lookup-actions';
+    actions.append(editButton(result, form, code), print);
+    result.replaceChildren(list, actions);
   }
 
-  function renderMessage(result, message) {
+  function messageElement(message) {
     const text = document.createElement('p');
     text.className = 'code-lookup-message';
     text.textContent = message;
-    result.replaceChildren(text);
+    return text;
+  }
+
+  function renderMessage(result, message) {
+    result.replaceChildren(messageElement(message));
   }
 
   async function lookUp(code, result, button) {
@@ -83,7 +111,7 @@
         body: JSON.stringify({ code }),
       });
       const body = await response.json();
-      if (response.ok) renderForm(result, body);
+      if (response.ok) renderForm(result, body, code);
       else renderMessage(result, body.error || UNREACHABLE_MESSAGE);
     } catch (err) {
       renderMessage(result, UNREACHABLE_MESSAGE);

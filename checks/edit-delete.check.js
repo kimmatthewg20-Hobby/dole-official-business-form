@@ -5,7 +5,14 @@ const { loginCookie } = require('./admin-http');
 const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 const { withFormsRestored, insertForm, submit, VALID_SUBMISSION } = require('./form-helpers');
 
+const fs = require('node:fs');
+const path = require('node:path');
+
 const FAILING_NAME = 'Boom Trigger';
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+const STAFF_PAGES = ['index.html', 'tracker.html', 'employees.html'];
+// Routes that need an admin session; a staff page calling one would only ever be refused.
+const ADMIN_ONLY_ROUTE_PREFIXES = ['/api/delete', '/api/update', '/api/retrieve'];
 const MISSING_ID = 999999;
 
 const EDIT_BODY = {
@@ -43,11 +50,12 @@ async function employeeNames(db, id) {
 
 module.exports = [
   {
-    name: 'editing a form updates its fields and replaces its employees with a different set',
+    name: 'the admin editing a form updates its fields and replaces its employees with a different set',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
         const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
-        const response = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, EDIT_BODY);
+        const cookie = await adminCookie(baseUrl);
+        const response = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, EDIT_BODY, cookie);
         assert.equal(response.status, 200);
         assert.deepEqual(await response.json(), { success: true, id: String(id) });
         const form = await db.get('SELECT * FROM official_business WHERE id = ?', [id]);
@@ -60,7 +68,20 @@ module.exports = [
     },
   },
   {
-    name: 'a failed edit leaves the previous form and employees unchanged',
+    name: 'the admin edit keeps the Reference code of the form',
+    async run({ baseUrl, db }) {
+      await withFormsRestored(db, async () => {
+        const { forms } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
+        const cookie = await adminCookie(baseUrl);
+        const response = await sendJson(baseUrl, 'PUT', `/api/update/${forms[0].id}`, EDIT_BODY, cookie);
+        assert.equal(response.status, 200);
+        const form = await db.get('SELECT reference_code FROM official_business WHERE id = ?', [forms[0].id]);
+        assert.equal(form.reference_code, forms[0].referenceCode);
+      });
+    },
+  },
+  {
+    name: 'a failed admin edit leaves the previous form and employees unchanged',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
         const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
@@ -71,7 +92,8 @@ module.exports = [
         );
         try {
           const failing = { ...EDIT_BODY, employees: [{ name: 'Dan Lim' }, { name: FAILING_NAME }] };
-          const response = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, failing);
+          const cookie = await adminCookie(baseUrl);
+          const response = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, failing, cookie);
           assert.equal(response.status, 500);
         } finally {
           await db.run('DROP TRIGGER fail_edit', []);
@@ -83,15 +105,29 @@ module.exports = [
     },
   },
   {
-    name: 'editing rejects invalid input and a form that does not exist, changing nothing',
+    name: 'the admin edit rejects invalid input and a form that does not exist, changing nothing',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
         const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
-        const noEmployees = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, { ...EDIT_BODY, employees: [] });
+        const cookie = await adminCookie(baseUrl);
+        const noEmployees = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, { ...EDIT_BODY, employees: [] }, cookie);
         assert.equal(noEmployees.status, 400);
-        const missing = await sendJson(baseUrl, 'PUT', `/api/update/${MISSING_ID}`, EDIT_BODY);
+        const missing = await sendJson(baseUrl, 'PUT', `/api/update/${MISSING_ID}`, EDIT_BODY, cookie);
         assert.equal(missing.status, 404);
         assert.equal(typeof (await missing.json()).error, 'string');
+        assert.deepEqual(await employeeNames(db, id), ['Ana Reyes', 'Ben Cruz', 'Cora Diaz']);
+      });
+    },
+  },
+  {
+    name: 'without an admin session the update route by form id is refused and changes nothing',
+    async run({ baseUrl, db }) {
+      await withFormsRestored(db, async () => {
+        const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
+        const response = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, EDIT_BODY);
+        assert.equal(response.status, 401);
+        const form = await db.get('SELECT purpose FROM official_business WHERE id = ?', [id]);
+        assert.equal(form.purpose, 'Site visit');
         assert.deepEqual(await employeeNames(db, id), ['Ana Reyes', 'Ben Cruz', 'Cora Diaz']);
       });
     },
@@ -138,6 +174,17 @@ module.exports = [
         assert.equal(await count(db, 'official_business'), 1);
         assert.equal(await count(db, 'employees'), 1);
       });
+    },
+  },
+  {
+    name: 'no staff page or script calls a delete, update-by-id or read-by-id route',
+    async run() {
+      const scripts = fs.readdirSync(path.join(PUBLIC_DIR, 'js')).filter((name) => !name.startsWith('admin-'));
+      const files = [...STAFF_PAGES, 'print.js', 'release-form.js', ...scripts.map((name) => path.join('js', name))];
+      for (const file of files) {
+        const text = fs.readFileSync(path.join(PUBLIC_DIR, file), 'utf8');
+        for (const route of ADMIN_ONLY_ROUTE_PREFIXES) assert.ok(!text.includes(route), `${file} calls ${route}`);
+      }
     },
   },
 ];

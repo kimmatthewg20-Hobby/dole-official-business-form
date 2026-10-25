@@ -45,7 +45,6 @@ function publicUrls(formIds, employeeId) {
     '/api/entries': ['/api/entries', '/api/entries?search=Ana'],
     '/api/entries/paginated': ['/api/entries/paginated'],
     '/api/entries/:id': formIds.map((id) => `/api/entries/${id}`),
-    '/api/retrieve/:id': formIds.map((id) => `/api/retrieve/${id}`),
     '/api/tracker': ['/api/tracker'],
     '/api/tracker/all': ['/api/tracker/all'],
     '/print/:id': formIds.map((id) => `/print/${id}`),
@@ -59,7 +58,14 @@ function publicUrls(formIds, employeeId) {
 }
 
 // Admin-only routes that read forms, asked without a session: the refusal must carry no code.
-const ADMIN_ONLY_URLS = ['/api/admin/forms', '/api/export-data', '/api/cleanup/test?dryRun=true&days=1'];
+function adminOnlyUrls(formIds) {
+  return [
+    '/api/admin/forms',
+    '/api/export-data',
+    '/api/cleanup/test?dryRun=true&days=1',
+    ...formIds.map((id) => `/api/retrieve/${id}`),
+  ];
+}
 
 async function assertNoCode(baseUrl, url, codes, expectedStatus) {
   const response = await fetch(`${baseUrl}${url}`);
@@ -93,9 +99,10 @@ module.exports = [
         assert.ok(codes.every(Boolean));
         const employee = await db.get('SELECT id FROM employees_directory WHERE full_name = ?', [SEPARATE.employees[0].name]);
         assert.ok(employee, 'the submitted employee joined the directory');
-        const routes = publicUrls(forms.map((form) => form.id), employee.id);
+        const formIds = forms.map((form) => form.id);
+        const routes = publicUrls(formIds, employee.id);
         for (const url of Object.values(routes).flat()) await assertNoCode(baseUrl, url, codes, OK);
-        for (const url of ADMIN_ONLY_URLS) await assertNoCode(baseUrl, url, codes, UNAUTHORIZED);
+        for (const url of adminOnlyUrls(formIds)) await assertNoCode(baseUrl, url, codes, UNAUTHORIZED);
       });
     },
   },

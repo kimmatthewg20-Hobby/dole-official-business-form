@@ -37,4 +37,4 @@ async function lookUpByCode(req, res) {
 const router = express.Router();
 router.post(CODE_LOOKUP_ROUTE, refuseLockedOutCodeAttempt, lookUpByCode);
 
-module.exports = { router };
+module.exports = { router, NOT_FOUND, NOT_FOUND_MESSAGE };

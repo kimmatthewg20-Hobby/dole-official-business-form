@@ -73,8 +73,8 @@ async function withFormsRestored(db, callback) {
   }
 }
 
-async function getJson(baseUrl, route) {
-  const response = await fetch(`${baseUrl}${route}`);
+async function getJson(baseUrl, route, cookie) {
+  const response = await fetch(`${baseUrl}${route}`, { headers: cookie ? { Cookie: cookie } : {} });
   assert.equal(response.status, 200, route);
   return response.json();
 }

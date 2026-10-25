@@ -72,8 +72,12 @@
     button.addEventListener('click', openClock);
   }
 
-  // Scripts sit at the end of the page, so the fields already exist.
+  root.TimeField = { enhance: enhance };
+
+  // Scripts sit at the end of the page, so the form page's fields already exist. Other pages
+  // have none and enhance the fields they build themselves.
   ['departureTime', 'returnTime'].forEach(function (id) {
-    enhance(document.getElementById(id));
+    var input = document.getElementById(id);
+    if (input) enhance(input);
   });
 })(window);

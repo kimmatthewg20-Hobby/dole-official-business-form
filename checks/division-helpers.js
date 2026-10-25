@@ -4,7 +4,8 @@
 // loads files ending in .check.js.
 
 const assert = require('node:assert/strict');
-const { sendJson } = require('./admin-http');
+const { sendJson, loginCookie } = require('./admin-http');
+const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 const { getJson } = require('./form-helpers');
 
 const DIVISIONS_ROUTE = '/api/divisions';
@@ -57,8 +58,10 @@ function removeDivision(baseUrl, id, cookie) {
   return sendJson(baseUrl, 'DELETE', `${DIVISIONS_ROUTE}/${id}`, undefined, cookie);
 }
 
+// Reading a form by its id needs an admin session.
 async function storedForm(baseUrl, id) {
-  const { formData, employees } = await getJson(baseUrl, `/api/retrieve/${id}`);
+  const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
+  const { formData, employees } = await getJson(baseUrl, `/api/retrieve/${id}`, cookie);
   return { formData, employees };
 }
 

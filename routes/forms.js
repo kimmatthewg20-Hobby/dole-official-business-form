@@ -6,6 +6,7 @@ const { validateListedChoices } = require('./form-lists-validation');
 const { expandSubmission, insertForms } = require('./form-creation');
 const { isCodeUnavailable } = require('./reference-code');
 const { publicFormWithEmployees } = require('./public-form');
+const { adminApiOnly } = require('./admin-auth');
 
 const SERVICE_UNAVAILABLE = 503;
 
@@ -35,8 +36,9 @@ router.post('/api/submit', async (req, res) => {
   }
 });
 
-// Retrieve form data by ID
-router.get('/api/retrieve/:id', async (req, res) => {
+// Form ids are sequential, so reading a whole form by id is for the admin; staff open their
+// form with its Reference code (routes/reference-code-lookup.js).
+router.get('/api/retrieve/:id', adminApiOnly, async (req, res) => {
   try {
     const row = await db.get(`SELECT * FROM official_business WHERE id = ?`, [req.params.id]);
     const form = await publicFormWithEmployees(row);

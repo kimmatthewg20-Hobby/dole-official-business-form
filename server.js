@@ -20,6 +20,7 @@ const { router: divisionsRouter } = require('./routes/divisions');
 const { router: approversRouter } = require('./routes/approvers');
 const { router: adminFormsRouter } = require('./routes/admin-forms');
 const { router: referenceCodeLookupRouter } = require('./routes/reference-code-lookup');
+const { router: editWithCodeRouter } = require('./routes/edit-with-code');
 
 
 const app = express();
@@ -57,6 +58,7 @@ app.use(divisionsRouter);
 app.use(approversRouter);
 app.use(adminFormsRouter);
 app.use(referenceCodeLookupRouter);
+app.use(editWithCodeRouter);
 
 // Serve static files (must be after API routes but before catch-all routes)
 app.use(express.static(path.join(__dirname, 'public')));

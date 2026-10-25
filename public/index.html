@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/clock-picker.css">
   <link rel="stylesheet" href="css/created-forms.css">
+  <link rel="stylesheet" href="css/code-edit-form.css">
   <style>
     /* Tri-color: Primary, Secondary, Accent */
     :root {
@@ -952,6 +953,7 @@
       <div>
         <p>Your form has been submitted.</p>
         <div id="successDates"></div>
+        <div id="successEdit" aria-live="polite"></div>
       </div>
       <div class="modal-footer">
         <button type="button" id="editFormBtn" class="btn">Edit</button>
@@ -980,6 +982,8 @@
   <script src="js/clock-face.js"></script>
   <script src="js/clock-picker.js"></script>
   <script src="js/time-field.js"></script>
+  <script src="js/code-edit-fields.js"></script>
+  <script src="js/code-edit-form.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // DOM Elements
@@ -1005,6 +1009,7 @@
       const successModal = document.getElementById('successModal');
       const viewFormBtn = document.getElementById('viewFormBtn');
       const editFormBtn = document.getElementById('editFormBtn');
+      const successEdit = document.getElementById('successEdit');
       const officeSelect = document.getElementById('officeSelect');
       const approvedByField = document.getElementById('approvedBy');
       const approvedByPositionField = document.getElementById('approvedByPosition');
@@ -1015,6 +1020,8 @@
       // Store employees and settings
       let employees = [];
       let currentId = '';
+      // The first created form's Reference code, kept only in memory for the Edit button.
+      let currentCode = '';
       let settings = {};
       
       // Fetch settings
@@ -1432,6 +1439,8 @@
           .then(data => {
             if (data.success) {
               currentId = data.id;
+              currentCode = data.forms[0].referenceCode || '';
+              successEdit.replaceChildren();
               showCreatedForms(data.forms);
               openModal(successModal);
               datePickr.clear();
@@ -1459,54 +1468,13 @@
         if (currentId) window.open(`/print/${currentId}`, '_blank');
       });
       
-      // Edit form functionality
+      // Edit opens the code-checked edit of the first created form; staff never edit by form id.
       editFormBtn.addEventListener('click', () => {
-        if (!currentId) {
-          showToast('No form ID available', 'danger');
+        if (!currentCode) {
+          showToast('This form has no Reference code to edit it with', 'danger');
           return;
         }
-        
-        // Fetch the form data
-        fetch(`/api/retrieve/${currentId}`)
-          .then(response => response.json())
-          .then(data => {
-            const { formData, employees: fetchedEmployees } = data;
-            
-            // Populate form fields
-            if (formData.datesOfOB && Array.isArray(formData.datesOfOB) && formData.datesOfOB.length > 0) {
-              datePickr.setDate(formData.datesOfOB, true);
-            } else if (formData.date_of_ob) {
-              datePickr.setDate(formData.date_of_ob, true);
-            }
-            
-            locationFromField.value = formData.location_from || 'Official Station';
-            locationToField.value = formData.location_to || '';
-            departureTimeField.value = formData.departure_time || '';
-            returnTimeField.value = formData.return_time || '';
-            purposeField.value = formData.purpose || '';
-            
-            FormPickers.setDivision(formData.division || '');
-            FormPickers.setApprover(formData.approved_by || '', formData.approved_by_position || '');
-            
-            // Populate employees
-            if (fetchedEmployees && fetchedEmployees.length > 0) {
-              employees = fetchedEmployees.map(emp => ({
-                name: emp.name,
-                full_name: emp.name,
-                position: emp.position || ''
-              }));
-              updateEmployeeDisplay();
-            }
-            
-            // Close modal and scroll to top
-            closeModal(successModal);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            showToast('Form data loaded for editing', 'success');
-          })
-          .catch(error => {
-            console.error('Error fetching form data:', error);
-            showToast('Error loading form data: ' + error.message, 'danger');
-          });
+        CodeEditForm.open(successEdit, currentCode);
       });
       
       // Initialize employee display

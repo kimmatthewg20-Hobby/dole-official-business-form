@@ -1,0 +1,50 @@
+/* The edit-with-code view on the tracker and the success screen. Plain on purpose: the pages
+   are restyled later (tickets 15 and 16). */
+.code-edit-form {
+  display: grid;
+  gap: var(--ui-space-3);
+}
+
+.code-edit-field label,
+.code-edit-list legend {
+  display: block;
+  margin-bottom: var(--ui-space-1);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.code-edit-list {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.code-edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+  margin-bottom: var(--ui-space-2);
+}
+
+.code-edit-row .ui-input,
+.code-edit-name {
+  flex: 1 1 10rem;
+  width: auto;
+}
+
+.code-edit-message {
+  margin: 0;
+  color: var(--ui-color-muted);
+}
+
+.code-edit-actions,
+.code-lookup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+/* The success screen is a small modal; with the edit view inside it must scroll. */
+.success-modal .modal {
+  max-height: calc(100vh - 2 * var(--ui-space-4));
+  overflow-y: auto;
+}

@@ -5,7 +5,8 @@
 const assert = require('node:assert/strict');
 const { VALID_SUBMISSION, withFormsRestored, countRows, submit } = require('./form-helpers');
 
-const { sendJson } = require('./admin-http');
+const { sendJson, loginCookie } = require('./admin-http');
+const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 
 const BAD_REQUEST = 400;
 const OK = 200;
@@ -61,7 +62,7 @@ module.exports = [
     },
   },
   {
-    name: 'editing a stored form still accepts a Division and Approver that are no longer listed',
+    name: 'the admin editing a stored form still may name a Division and Approver that are no longer listed',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
         const { id } = await (await submit(baseUrl, VALID_SUBMISSION)).json();
@@ -69,7 +70,8 @@ module.exports = [
           formData: { ...EDIT_FORM_DATA, division: 'Old Division', approved_by: 'Old Head', approved_by_position: 'Old' },
           employees: [{ name: 'Dan Lim', position: 'Aide' }],
         };
-        const response = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, edit);
+        const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
+        const response = await sendJson(baseUrl, 'PUT', `/api/update/${id}`, edit, cookie);
         assert.equal(response.status, OK);
       });
     },

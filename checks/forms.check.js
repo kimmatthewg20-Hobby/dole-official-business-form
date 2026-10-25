@@ -13,6 +13,8 @@ const {
   insertForm,
   submit,
 } = require('./form-helpers');
+const { loginCookie } = require('./admin-http');
+const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 
 const INVALID_SUBMISSIONS = {
   'no employees': { ...VALID_SUBMISSION, employees: [] },
@@ -36,7 +38,8 @@ module.exports = [
         assert.equal(success, true);
         assert.equal(typeof id, 'number');
 
-        const { formData, employees } = await getJson(baseUrl, `/api/retrieve/${id}`);
+        const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
+        const { formData, employees } = await getJson(baseUrl, `/api/retrieve/${id}`, cookie);
         assert.equal(formData.location_to, 'Municipal Hall');
         assert.equal(formData.approved_by, 'Head Person');
         assert.deepEqual(formData.datesOfOB, ['2026-03-02', '2026-03-03']);
@@ -48,8 +51,9 @@ module.exports = [
         assert.equal(entry.employees.length, 3);
         assert.equal(entry.formData.purpose, 'Site visit');
 
-        const missing = await fetch(`${baseUrl}/api/retrieve/${id + 1000}`);
+        const missing = await fetch(`${baseUrl}/api/retrieve/${id + 1000}`, { headers: { Cookie: cookie } });
         assert.equal(missing.status, 404);
+        assert.equal((await fetch(`${baseUrl}/api/retrieve/${id}`)).status, 401, 'reading by id needs an admin session');
       });
     },
   },

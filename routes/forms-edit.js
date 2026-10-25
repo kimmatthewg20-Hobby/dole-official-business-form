@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { adminApiOnly } = require('./admin-auth');
 const { validateSubmission } = require('./form-validation');
+const { writeFormContent } = require('./form-replace');
 
 const router = express.Router();
 
@@ -25,28 +26,13 @@ function toSubmission(body, stored) {
   };
 }
 
-async function replaceForm(id, form) {
-  await db.transaction(async (client) => {
-    await client.query(
-      `UPDATE official_business SET office = ?, division = ?, date_of_ob = ?, dates_of_ob = ?,
-        location_from = ?, location_to = ?, departure_time = ?, return_time = ?, purpose = ?,
-        approved_by = ?, approved_by_position = ? WHERE id = ?`,
-      [
-        form.office, form.division, form.datesOfOB[0], JSON.stringify(form.datesOfOB),
-        form.locationFrom, form.locationTo, form.departureTime, form.returnTime, form.purpose,
-        form.approvedBy, form.approvedByPosition, id,
-      ]
-    );
-    await client.query('DELETE FROM employees WHERE ob_id = ?', [id]);
-    for (const emp of form.employees) {
-      await client.query('INSERT INTO employees (ob_id, name, position) VALUES (?, ?, ?)', [
-        id, emp.name, emp.position || '',
-      ]);
-    }
-  });
+function replaceForm(id, form) {
+  return db.transaction((client) => writeFormContent(client, id, form));
 }
 
-router.put('/api/update/:id', async (req, res) => {
+// Only the admin edits a form by its id, without a code; staff edit with the Reference code
+// (routes/edit-with-code.js), because form ids are sequential and easy to guess.
+router.put('/api/update/:id', adminApiOnly, async (req, res) => {
   try {
     const stored = await db.get('SELECT id, departure_time, return_time FROM official_business WHERE id = ?', [
       req.params.id,
