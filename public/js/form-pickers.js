@@ -10,6 +10,8 @@
 
   var divisionPicker = null;
   var approverPicker = null;
+  var divisionInput = null;
+  var lockedDivision = '';
 
   function fetchList(url, key) {
     return fetch(url)
@@ -40,8 +42,7 @@
     return { label: row.name, detail: row.position, name: row.name, position: row.position };
   }
 
-  // An Approved by pick-list that fills its position field; the edit with a Reference code
-  // builds its own, apart from the form page's.
+  // An Approved by pick-list that fills its position field.
   function createApproverPicker(approverInput, positionInput) {
     positionInput.readOnly = true;
     var picker = root.Combobox.create({
@@ -67,6 +68,7 @@
   }
 
   function init(fields) {
+    divisionInput = fields.divisionInput;
     divisionPicker = root.Combobox.create({
       input: fields.divisionInput,
       emptyMessage: NO_DIVISIONS,
@@ -76,22 +78,31 @@
     return Promise.all([load(divisionPicker, DIVISIONS_URL, 'divisions', divisionItem), approverPicker.loaded]);
   }
 
+  // A submitted form's Division cannot change (the server refuses it), so it is shown but not
+  // offered, even when the admin has since taken it off the list. Call once the lists are loaded.
+  function lockDivision(name) {
+    lockedDivision = name;
+    divisionPicker.selectByLabel(name);
+    divisionInput.value = name;
+    divisionInput.disabled = true;
+  }
+
   function reset() {
+    lockedDivision = '';
+    divisionInput.disabled = false;
     divisionPicker.clear();
     approverPicker.picker.clear();
   }
 
   function divisionName() {
     var item = divisionPicker.getSelected();
-    return item ? item.label : '';
+    return lockedDivision || (item ? item.label : '');
   }
 
   root.FormPickers = {
     init: init,
     reset: reset,
-    setDivision: function (name) {
-      divisionPicker.selectByLabel(name);
-    },
+    lockDivision: lockDivision,
     setApprover: function (name, position) {
       approverPicker.setApprover(name, position);
     },
@@ -99,6 +110,5 @@
     approverName: function () {
       return approverPicker.approverName();
     },
-    createApproverPicker: createApproverPicker,
   };
 })(window);

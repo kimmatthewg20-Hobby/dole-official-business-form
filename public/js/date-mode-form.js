@@ -18,6 +18,9 @@
 
   let options = null;
   let countNote = null;
+  // A saved form keeps its stored Date mode (the edit route does not change it), so it is shown
+  // but cannot be chosen again.
+  let lockedMode = null;
 
   function selectedMode() {
     const checked = options.container.querySelector(`input[name="${RADIO_NAME}"]:checked`);
@@ -35,7 +38,7 @@
   function refresh() {
     const showChoice = options.getDateCount() >= MIN_DATES_FOR_CHOICE;
     options.container.closest('.form-control').hidden = !showChoice;
-    if (!showChoice) options.container.querySelector(`input[value="${DateMode.DEFAULT_DATE_MODE}"]`).checked = true;
+    if (!showChoice) radioFor(lockedMode || DateMode.DEFAULT_DATE_MODE).checked = true;
     const over = isOverLimit();
     countNote.textContent = over ? DateMode.formLimitMessage(formCount()) : '';
     countNote.hidden = !over;
@@ -60,8 +63,25 @@
     return label;
   }
 
+  function radioFor(mode) {
+    return options.container.querySelector(`input[value="${mode}"]`);
+  }
+
+  function setLocked(mode) {
+    lockedMode = mode;
+    for (const radio of options.container.querySelectorAll(`input[name="${RADIO_NAME}"]`)) radio.disabled = Boolean(mode);
+  }
+
+  // Forms stored before the mode was kept print as All Dates.
+  function lock(storedMode) {
+    setLocked(DateMode.isDateMode(storedMode) ? storedMode : DateMode.DEFAULT_DATE_MODE);
+    radioFor(lockedMode).checked = true;
+    refresh();
+  }
+
   function reset() {
-    options.container.querySelector(`input[value="${DateMode.DEFAULT_DATE_MODE}"]`).checked = true;
+    setLocked(null);
+    radioFor(DateMode.DEFAULT_DATE_MODE).checked = true;
     refresh();
   }
 
@@ -74,5 +94,5 @@
     refresh();
   }
 
-  root.DateModeForm = { init, refresh, reset, selectedMode, formCount, isOverLimit };
+  root.DateModeForm = { init, refresh, reset, lock, selectedMode, formCount, isOverLimit };
 })(self);

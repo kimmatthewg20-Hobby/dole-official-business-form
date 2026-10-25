@@ -38,7 +38,6 @@ label {
   margin: var(--ui-space-6) auto;
   padding: var(--ui-space-6);
   background-color: var(--ui-color-surface);
-  min-height: 100vh;
   border: 1px solid var(--ui-color-border);
   border-radius: var(--ui-radius-medium);
 }

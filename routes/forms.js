@@ -48,8 +48,9 @@ router.get('/api/retrieve/:id', adminApiOnly, async (req, res) => {
   }
 });
 
-// Get specific entry by ID
-router.get('/api/entries/:id', async (req, res) => {
+// Form ids are sequential and the entry names its employees, so only the admin's Employees tab
+// reads it.
+router.get('/api/entries/:id', adminApiOnly, async (req, res) => {
   try {
     const id = req.params.id;
     

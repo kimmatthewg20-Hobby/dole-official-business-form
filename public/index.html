@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!--
+██╗  ██╗██╗███╗   ███╗███╗   ███╗       ██████╗ 
+██║ ██╔╝██║████╗ ████║████╗ ████║    ██╗╚════██╗
+█████╔╝ ██║██╔████╔██║██╔████╔██║    ╚═╝ █████╔╝
+██╔═██╗ ██║██║╚██╔╝██║██║╚██╔╝██║    ██╗ ╚═══██╗
+██║  ██╗██║██║ ╚═╝ ██║██║ ╚═╝ ██║    ╚═╝██████╔╝
+╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚═╝     ╚═╝       ╚═════╝
+-->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Official Business Form</title>
@@ -12,7 +20,7 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/clock-picker.css">
   <link rel="stylesheet" href="css/created-forms.css">
-  <link rel="stylesheet" href="css/code-edit-form.css">
+  <link rel="stylesheet" href="css/edit-mode.css">
   <link rel="stylesheet" href="css/form-page.css">
   <link rel="stylesheet" href="css/form-page-date-mode.css">
   <link rel="stylesheet" href="css/form-page-actions.css">
@@ -33,18 +41,14 @@
           <strong>DEPARTMENT OF LABOR AND EMPLOYMENT</strong>
           <br>Camarines Norte Provincial Office | RO. No. 5</small>
         </div>
-      
-      <!-- <div class="header-text">Republic of the Philippines</div>
-      <div class="header-text department">DEPARTMENT OF LABOR AND EMPLOYMENT</div>
-      <div class="header-text regional">Camarines Norte Provincial Office | RO. No. 5</div>-->
+
       <div class="header-text title">Official Business Processing System</div>
       
     </div>
   
     <div id="main" class="container">
     <div id="alertContainer" class="alert"></div>
-    
-    
+
       <form id="obForm">
         <div class="form-section">
           <h2>Data Input Section</h2>
@@ -118,7 +122,7 @@
               </tr>
             </thead>
             <tbody id="employeeTableBody">
-              <!-- Employee data will be inserted here dynamically -->
+              
             </tbody>
           </table>
           <div id="emptyTableMessage" class="empty-table-message" style="display: none; text-align: center; padding: 24px; font-size: 14px; color: var(--text-muted); border: 1px dashed var(--border); background-color: #FAFBFC;">No employees added yet.</div>
@@ -134,13 +138,12 @@
           </div>
         </div>
       </form>
-      <!-- Footer -->
+      
   <footer class="site-footer">
     <small>© 2024 DOLECNPO Kimmsg :3 | IT Unit</small>
   </footer>
   </div>
-  
-  <!-- Add Employee Modal (one at a time: name, position, Add, Remove) -->
+
   <div id="addEmployeeModal" class="modal-overlay">
     <div class="modal">
       <div class="modal-header">
@@ -163,16 +166,15 @@
       </div>
     </div>
   </div>
-  
-  <!-- Success Modal -->
+
   <div id="successModal" class="modal-overlay success-modal">
     <div class="modal">
       <div class="modal-header">
-        <h3 class="modal-title">Form Submitted Successfully</h3>
+        <h3 class="modal-title" id="successTitle">Form Submitted Successfully</h3>
         <button class="close-modal">&times;</button>
       </div>
       <div>
-        <p>Your form has been submitted.</p>
+        <p id="successMessage">Your form has been submitted.</p>
         <div id="successDates"></div>
         <div id="successEdit" aria-live="polite"></div>
       </div>
@@ -183,10 +185,8 @@
     </div>
   </div>
 
-
   </div>
 
-  <!-- Toast Container for Notifications -->
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -203,8 +203,8 @@
   <script src="js/clock-face.js"></script>
   <script src="js/clock-picker.js"></script>
   <script src="js/time-field.js"></script>
-  <script src="js/code-edit-fields.js"></script>
-  <script src="js/code-edit-form.js"></script>
+  <script src="js/edit-fragment.js"></script>
+  <script src="js/edit-mode.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // DOM Elements
@@ -241,13 +241,13 @@
       // Store employees and settings
       let employees = [];
       let currentId = '';
-      // The created form's Reference code, kept only in memory for the Edit button.
+      // The created or edited form's Reference code, kept only in memory for Edit and View Form.
       let currentCode = '';
       let settings = {};
       
       // Fetch settings
       fetchSettings();
-      FormPickers.init({ divisionInput: officeSelect, approverInput: approvedByField, positionInput: approvedByPositionField });
+      const pickersReady = FormPickers.init({ divisionInput: officeSelect, approverInput: approvedByField, positionInput: approvedByPositionField });
       EmployeeSuggestions.init({
         nameInput: document.getElementById('employeeNameInput'),
         positionInput: document.getElementById('employeePositionInput'),
@@ -344,10 +344,14 @@
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         
-        toast.innerHTML = `
-          <div class="toast-content">${message}</div>
-          <button class="toast-close">&times;</button>
-        `;
+        // Messages can carry server answers, so they are set as text, never as markup.
+        const content = document.createElement('div');
+        content.className = 'toast-content';
+        content.textContent = message;
+        const close = document.createElement('button');
+        close.className = 'toast-close';
+        close.textContent = '\u00d7';
+        toast.append(content, close);
         
         toastContainer.appendChild(toast);
         
@@ -631,6 +635,11 @@
           approvedByPosition: (approvedByPositionField && approvedByPositionField.value) || ''
         };
         
+        if (EditMode.isEditing()) {
+          EditMode.save(formData);
+          return;
+        }
+        
         console.log('Submitting form data:', formData);
         console.log('Selected dates:', getSelectedDates());
         
@@ -693,21 +702,48 @@
         if (currentId) window.open(`/print/${currentId}${codeFragment}`, '_blank');
       });
       
-      // Edit opens the code-checked edit of the created form; staff never edit by form id.
+      // Edit turns this page into the code-checked edit of the created form; staff never edit by form id.
       editFormBtn.addEventListener('click', () => {
         if (!currentCode) {
           showToast('This form has no Reference code to edit it with', 'danger');
           return;
         }
-        CodeEditForm.open(successEdit, currentCode);
+        closeModal(successModal);
+        EditMode.open(currentCode);
       });
       
       // Initialize employee display
       updateEmployeeDisplay();
+      
+      EditMode.start({
+        form: obForm,
+        submitButton: obForm.querySelector('button[type="submit"]'),
+        clearButton: clearBtn,
+        pickersReady,
+        fields: {
+          from: locationFromField,
+          to: locationToField,
+          departure: departureTimeField,
+          ret: returnTimeField,
+          purpose: purposeField,
+          approver: approvedByField,
+          position: approvedByPositionField
+        },
+        setDates: (dates) => datePickr.setDate(dates, false),
+        setEmployees: (list) => {
+          employees = list.map(employee => ({ name: employee.name, full_name: employee.name, position: employee.position }));
+          updateEmployeeDisplay();
+        },
+        showMessage: showAlert,
+        openSuccess: (id, code) => {
+          currentId = id;
+          currentCode = code;
+          openModal(successModal);
+        }
+      });
     });
   </script>
-  
-  <!-- Include sidebar.js -->
+
   <script src="js/sidebar.js"></script>
 </div>
 </body>

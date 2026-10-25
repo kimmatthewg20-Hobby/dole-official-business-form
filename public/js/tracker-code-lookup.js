@@ -1,93 +1,48 @@
 // The tracker's Reference code box: a pasted code finds that one form (ADR 0003). The code is
-// sent in a POST body and never put in the URL, the page or the console, because it is the
-// edit secret. Every value shown comes from staff, so it is set with textContent only.
+// sent in a POST body and never put in a query string, the page or the console, because it is
+// the edit secret. Every value shown comes from staff, so it is escaped or set as text only.
 (function (root) {
   const LOOKUP_ROUTE = '/api/lookup/code';
   const PRINT_ROUTE = '/print/';
-  const EMPTY_VALUE = '-';
   const CODE_REQUIRED_MESSAGE = 'Enter a Reference code.';
   const SEARCHING_MESSAGE = 'Looking up the form...';
   const UNREACHABLE_MESSAGE = 'Could not reach the server. Check your connection and try again.';
-  const PRINT_LABEL = 'View printout';
+  const PRINT_LABEL = 'Print';
   const EDIT_LABEL = 'Edit this form';
 
-  function formDates(formData) {
-    const dates = Array.isArray(formData.datesOfOB) ? formData.datesOfOB : [formData.date_of_ob];
-    return root.DateWording.formatDateWording(dates) || EMPTY_VALUE;
-  }
-
-  function timeText(stored) {
-    return stored ? root.ClockMath.formatTwelveHour(stored) || stored : '';
-  }
-
-  function formTime(formData) {
-    const parts = [timeText(formData.departure_time), timeText(formData.return_time)].filter(Boolean);
-    return parts.join(' to ') || EMPTY_VALUE;
-  }
-
-  function employeeLines(employees) {
-    const lines = employees.map((employee) => [employee.name, employee.position].filter(Boolean).join(', '));
-    return lines.join('\n') || EMPTY_VALUE;
-  }
-
-  function approvedBy(formData) {
-    return [formData.approved_by, formData.approved_by_position].filter(Boolean).join(', ') || EMPTY_VALUE;
-  }
-
-  function detailRows({ formData, employees }) {
-    return [
-      ['Form No.', String(formData.id)],
-      ['Date of OB', formDates(formData)],
-      ['Time of OB', formTime(formData)],
-      ['Employees', employeeLines(employees)],
-      ['Division', formData.division || EMPTY_VALUE],
-      ['From', formData.location_from || EMPTY_VALUE],
-      ['To', formData.location_to || EMPTY_VALUE],
-      ['Purpose', formData.purpose || EMPTY_VALUE],
-      ['Approved by', approvedBy(formData)],
-    ];
-  }
-
-  // The code stays in this closure for the edit, which sends it again with every save.
-  function editButton(result, form, code) {
+  // The code goes to the form page in the address fragment only, which is never sent to the
+  // server; the form page wipes it from the address as soon as it reads it.
+  function editButton(code) {
     const edit = document.createElement('button');
     edit.type = 'button';
     edit.className = 'ui-btn';
     edit.textContent = EDIT_LABEL;
     edit.addEventListener('click', () => {
-      root.CodeEditForm.render(result, {
-        code,
-        form,
-        onSaved: (saved) => {
-          renderForm(result, saved, code);
-          result.prepend(messageElement(root.CodeEditForm.SAVED_MESSAGE));
-        },
-        onCancel: () => renderForm(result, form, code),
-      });
+      window.location.assign(root.EditFragment.editLink(code));
     });
     return edit;
   }
 
-  function renderForm(result, form, code) {
-    const list = document.createElement('dl');
-    list.className = 'code-lookup-details';
-    for (const [label, value] of detailRows(form)) {
-      const term = document.createElement('dt');
-      term.textContent = label;
-      const detail = document.createElement('dd');
-      detail.textContent = value;
-      list.append(term, detail);
-    }
+  // Whoever typed the code holds it already, so the print page may show it in its header.
+  function printLink(form, code) {
     const print = document.createElement('a');
     print.className = 'ui-btn ui-btn--secondary';
-    print.href = PRINT_ROUTE + encodeURIComponent(form.formData.id);
+    print.href = `${PRINT_ROUTE}${encodeURIComponent(form.formData.id)}#code=${encodeURIComponent(code)}`;
     print.target = '_blank';
     print.rel = 'noopener';
     print.textContent = PRINT_LABEL;
+    return print;
+  }
+
+  // The card markup escapes every value staff typed (tracker-details.js).
+  function renderForm(result, form, code) {
+    const card = document.createElement('div');
+    card.innerHTML = root.TrackerDetails.cardHtml(form);
     const actions = document.createElement('div');
     actions.className = 'code-lookup-actions';
-    actions.append(editButton(result, form, code), print);
-    result.replaceChildren(list, actions);
+    actions.append(editButton(code), printLink(form, code));
+    card.firstElementChild.appendChild(actions);
+    result.replaceChildren(...card.childNodes);
   }
 
   function messageElement(message) {
@@ -124,7 +79,7 @@
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (!input.value.trim()) return renderMessage(result, CODE_REQUIRED_MESSAGE);
-      lookUp(input.value, result, button);
+      lookUp(root.EditFragment.normaliseCode(input.value), result, button);
     });
   }
 
