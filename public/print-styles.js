@@ -128,6 +128,22 @@ const PRINT_STYLES = `
     letter-spacing: 0.04em;
     user-select: all;
   }
+  .print-toolbar__pages {
+    min-width: 6.5rem;
+    margin-right: 8px;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 500;
+    color: #475467;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Like a PDF viewer's page labels: shown under each sheet on screen, never printed. */
+  .sheet-caption {
+    margin-top: -14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475467;
+  }
   .print-back {
     padding: 8px 12px;
     border: 1px solid #98a2b3;
@@ -184,7 +200,7 @@ const PRINT_STYLES = `
   }
 
   @media print {
-    .print-toolbar { display: none; }
+    .print-toolbar, .sheet-caption { display: none; }
     body {
       padding: 0;
       gap: 0;

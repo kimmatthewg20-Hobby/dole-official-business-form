@@ -1,5 +1,6 @@
 const { formatDateWording } = require('./js/date-wording');
 const { PRINT_STYLES, CUT_GUIDE_HTML } = require('./print-styles');
+const { SIGNATURE_COMMENT } = require('./signature');
 const { DEFAULT_PAPER, toolbarHtml } = require('./print-papers');
 const { printedForms } = require('./print-pages');
 
@@ -180,13 +181,13 @@ function generatePrintableHTML(data) {
       // For other employees, use their assigned unit as division
       divisionDisplay = employeeInfo.assigned_unit || formData.division || '';
       approvedBy = formData.approvedBy || formData.approved_by || settings.office_head || '';
+      // Printed as the admin entered it in the Approver list, capitals and all.
       approvedByPosition = formData.approvedByPosition || formData.approved_by_position || settings.office_head_position || 'Provincial Head';
     }
     
     // Create one printed form
     formPages.push(`
       <div class="form-page">
-        <!-- Header -->
         <table>
           <tr>
             <td class="header-left">
@@ -210,7 +211,6 @@ function generatePrintableHTML(data) {
           </tr>
         </table>
         
-        <!-- Employee Info -->
         <table>
           <tr>
             <td style="width: 50%;">
@@ -224,7 +224,6 @@ function generatePrintableHTML(data) {
           </tr>
         </table>
         
-        <!-- Office Info -->
         <table>
           <tr>
             <td style="width: 33%;">
@@ -242,7 +241,6 @@ function generatePrintableHTML(data) {
           </tr>
         </table>
         
-        <!-- Itinerary -->
         <table>
           <tr>
             <td colspan="2" class="center-text">
@@ -272,7 +270,6 @@ function generatePrintableHTML(data) {
           </tr>
         </table>
         
-        <!-- Purpose -->
         <table>
           <tr>
             <td>
@@ -282,7 +279,6 @@ function generatePrintableHTML(data) {
           </tr>
         </table>
         
-        <!-- Approval -->
         <table>
           <tr>
             <td style="width: 50%;" class="center-text approval-section">
@@ -292,12 +288,11 @@ function generatePrintableHTML(data) {
             <td style="width: 50%;" class="center-text approval-section">
               <div style="text-align: left;"><strong>Approved by:</strong></div><br><br><br>
               <strong>${capitalizeText(approvedBy)}</strong><br>
-              ${capitalizeText(approvedByPosition)}
+              ${escapeHtml(approvedByPosition)}
             </td>
           </tr>
         </table>
         
-        <!-- Certificate of Appearance -->
         <table>
           <tr>
             <td class="center-text" colspan="2" style="background-color: #F4F6F7; border-bottom: 2px solid #000000;">
@@ -319,7 +314,6 @@ function generatePrintableHTML(data) {
           </tr>
         </table>
         
-        <!-- Instructions -->
         <table>
           <tr>
             <td class="instructions">
@@ -345,6 +339,7 @@ function generatePrintableHTML(data) {
     <!DOCTYPE html>
     <html lang="en" data-paper="${DEFAULT_PAPER}">
     <head>
+      ${SIGNATURE_COMMENT}
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Official Business Form - ${escapeHtml(formData.id)}</title>

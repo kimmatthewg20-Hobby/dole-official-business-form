@@ -71,6 +71,7 @@ module.exports = [
       assert.match(html, /print-toolbar__title">Official Business Form<span class="print-toolbar__number">Form No. 42</);
       assert.match(html, /<button class="print-button"/);
       assert.match(html, /<a class="print-back" href="\/">/);
+      assert.match(html, /<span class="print-toolbar__pages" id="pageIndicator"/);
       assert.ok(!/DOLECN1026ABCD/.test(html), 'the Reference code is the edit secret and never reaches the page');
     },
   },
@@ -100,6 +101,29 @@ module.exports = [
       const html = generatePrintableHTML(FORM);
       assert.ok(html.includes('border-bottom: 2px solid #000000;'));
       assert.ok(!/1ABC9C/i.test(html), 'no teal line is left');
+    },
+  },
+  {
+    name: 'print: the approver\'s position is printed exactly as the admin entered it, while the name stays in capitals',
+    run() {
+      const entered = 'Chief, Admin Division (OIC)';
+      const html = generatePrintableHTML({
+        ...FORM,
+        formData: { ...FORM.formData, approved_by: 'Ana Reyes', approved_by_position: entered },
+      });
+      assert.ok(html.includes(`<strong>ANA REYES</strong><br>\n              ${entered}`), 'name in capitals, position as entered');
+      assert.ok(!html.includes(entered.toUpperCase()), 'the position is not turned into capitals');
+    },
+  },
+  {
+    name: 'print: an approver position with markup is escaped, not printed as markup',
+    run() {
+      const html = generatePrintableHTML({
+        ...FORM,
+        formData: { ...FORM.formData, approved_by: 'Ana Reyes', approved_by_position: '<b>Head</b> & Co' },
+      });
+      assert.ok(html.includes('&lt;b&gt;Head&lt;/b&gt; &amp; Co'));
+      assert.ok(!html.includes('<b>Head</b>'));
     },
   },
 ];

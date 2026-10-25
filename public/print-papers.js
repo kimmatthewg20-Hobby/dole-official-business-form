@@ -75,6 +75,7 @@ function toolbarHtml({ title, formNumber }) {
       <span class="print-toolbar__code" id="newFormCode" hidden>Reference code: <code></code></span>
     </div>
     <div class="print-toolbar__end">
+      <span class="print-toolbar__pages" id="pageIndicator" aria-live="polite"></span>
       <button class="print-button" onclick="window.print()">Print Form</button>
     </div>
   </header>`;

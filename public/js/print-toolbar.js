@@ -61,4 +61,47 @@
     apply(select.value);
     remember(select.value);
   });
+
+  // Page numbers as a PDF viewer shows them: a label under each sheet, and the header names the
+  // sheet that fills most of the window. The printer numbers nothing: these are for looking.
+  var sheets = Array.prototype.slice.call(document.querySelectorAll('.sheet'));
+  var indicator = document.getElementById('pageIndicator');
+  var toolbarHeight = document.querySelector('.print-toolbar').offsetHeight;
+  var frame = null;
+
+  function pageText(page) {
+    return 'Page ' + page + ' of ' + sheets.length;
+  }
+
+  sheets.forEach(function (sheet, index) {
+    var caption = document.createElement('div');
+    caption.className = 'sheet-caption';
+    caption.textContent = pageText(index + 1);
+    sheet.insertAdjacentElement('afterend', caption);
+  });
+
+  function visibleHeight(sheet) {
+    var box = sheet.getBoundingClientRect();
+    return Math.min(box.bottom, window.innerHeight) - Math.max(box.top, toolbarHeight);
+  }
+
+  function showCurrentPage() {
+    frame = null;
+    var best = 0;
+    sheets.forEach(function (sheet, index) {
+      if (visibleHeight(sheet) > visibleHeight(sheets[best])) best = index;
+    });
+    indicator.textContent = pageText(best + 1);
+  }
+
+  function scheduleCurrentPage() {
+    if (frame === null) frame = window.requestAnimationFrame(showCurrentPage);
+  }
+
+  if (sheets.length) {
+    showCurrentPage();
+    window.addEventListener('scroll', scheduleCurrentPage, { passive: true });
+    window.addEventListener('resize', scheduleCurrentPage);
+    select.addEventListener('change', scheduleCurrentPage);
+  }
 })();
