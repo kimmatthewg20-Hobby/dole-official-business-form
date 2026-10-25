@@ -5,6 +5,7 @@
 
 const db = require('../db');
 const { hashPassword } = require('../routes/password-hash');
+const { nameKey } = require('../routes/directory-name');
 
 const TEST_ADMIN_PASSWORD = 'local-test-admin';
 
@@ -40,12 +41,12 @@ async function seedDatabase() {
     await client.query('DELETE FROM employees_directory', []);
     await client.query('DELETE FROM settings', []);
     for (const [employeeId, firstname, middleName, lastName, position, unit] of FAKE_DIRECTORY) {
+      const name = fullName(firstname, middleName, lastName);
       await client.query(
         `INSERT INTO employees_directory
-           (employee_id, firstname, middle_name, last_name, full_name, position, assigned_unit)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [employeeId, firstname, middleName, lastName, fullName(firstname, middleName, lastName),
-          position, unit]
+           (employee_id, firstname, middle_name, last_name, full_name, position, assigned_unit, name_key)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [employeeId, firstname, middleName, lastName, name, position, unit, nameKey(name)]
       );
     }
     await client.query(

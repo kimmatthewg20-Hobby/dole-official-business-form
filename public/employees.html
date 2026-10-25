@@ -766,9 +766,9 @@
         paginatedData.forEach(employee => {
           const row = document.createElement('tr');
           row.innerHTML = `
-            <td>${employee.full_name}</td>
-            <td>${employee.position}</td>
-            <td>${employee.assigned_unit}</td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="action-col">
               <button class="action-btn history-btn" title="View History" data-id="${employee.id}">
                 <i class="material-icons">history</i>
@@ -781,6 +781,10 @@
               </button>
             </td>
           `;
+          // Entries added from a form carry text typed by staff and may lack fields.
+          row.cells[0].textContent = employee.full_name || '';
+          row.cells[1].textContent = employee.position || '';
+          row.cells[2].textContent = employee.assigned_unit || '';
           employeeTableBody.appendChild(row);
         });
         

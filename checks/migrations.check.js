@@ -18,7 +18,32 @@ async function uniqueIndexedColumns(db, table) {
   return columns.sort();
 }
 
+async function leadingIndexedColumns(db, table) {
+  const indexes = await db.all(`PRAGMA index_list(${table})`, []);
+  const columns = [];
+  for (const index of indexes) {
+    const [first] = await db.all(`PRAGMA index_info(${index.name})`, []);
+    columns.push(first.name);
+  }
+  return columns;
+}
+
 module.exports = [
+  {
+    name: 'the Employee directory has optional names, a last-used date and indexed lookups',
+    async run({ db }) {
+      const columns = await db.all('PRAGMA table_info(employees_directory)', []);
+      const byName = Object.fromEntries(columns.map((column) => [column.name, column]));
+      for (const optional of ['employee_id', 'firstname', 'last_name']) {
+        assert.equal(byName[optional].notnull, 0, `${optional} is optional`);
+      }
+      assert.ok(byName.last_used_at, 'the directory has a last-used date');
+      const indexed = await leadingIndexedColumns(db, 'employees_directory');
+      for (const column of ['name_key', 'last_used_at', 'full_name', 'assigned_unit']) {
+        assert.ok(indexed.includes(column), `an index starts with ${column}`);
+      }
+    },
+  },
   {
     name: 'applying the migrations again applies nothing and keeps the data',
     async run({ db }) {
@@ -78,13 +103,7 @@ module.exports = [
         columns.map((column) => column.name),
         ['id', 'name', 'position'],
       );
-      const indexes = await db.all('PRAGMA index_list(approvers)', []);
-      const leadingColumns = [];
-      for (const index of indexes) {
-        const [first] = await db.all(`PRAGMA index_info(${index.name})`, []);
-        leadingColumns.push(first.name);
-      }
-      assert.ok(leadingColumns.includes('name'), 'an index starts with name');
+      assert.ok((await leadingIndexedColumns(db, 'approvers')).includes('name'), 'an index starts with name');
     },
   },
 ];

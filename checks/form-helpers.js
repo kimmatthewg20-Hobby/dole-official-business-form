@@ -5,6 +5,7 @@
 
 const assert = require('node:assert/strict');
 const { postJson } = require('./admin-http');
+const { withDirectoryRestored } = require('./directory-helpers');
 
 const TRACKER_PAGE_SIZE = 15;
 const TRACKER_WINDOW_DAYS = 10;
@@ -38,6 +39,7 @@ const VALID_DIVISION_CODE = 'TSSD';
 // Forms are shared by every check, so each one starts with none and puts the
 // original rows back afterwards, whatever happened. A submission is only accepted
 // for a listed Division and Approver, so the lists hold just those of VALID_SUBMISSION.
+// Submitting adds employees to the Employee directory, so it is put back as well.
 async function withFormsRestored(db, callback) {
   const saved = {};
   for (const table of [...FORM_TABLES, ...LIST_TABLES]) {
@@ -52,7 +54,7 @@ async function withFormsRestored(db, callback) {
   await db.run('DELETE FROM employees', []);
   await db.run('DELETE FROM official_business', []);
   try {
-    await callback();
+    await withDirectoryRestored(db, callback);
   } finally {
     await db.transaction(async (client) => {
       await client.query('DELETE FROM employees', []);

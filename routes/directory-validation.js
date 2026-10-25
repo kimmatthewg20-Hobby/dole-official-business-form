@@ -1,9 +1,12 @@
 'use strict';
 
+const { cleanName } = require('./directory-name');
+
 const MAX_FIELD_LENGTH = 200;
 const MAX_BULK_ENTRIES = 1000;
-const REQUIRED_FIELDS = ['firstname', 'last_name', 'position', 'assigned_unit'];
-const OPTIONAL_FIELDS = ['employee_id', 'middle_name'];
+const REQUIRED_FIELDS = ['position', 'assigned_unit'];
+// An employee added from a form has only a full name; the admin can add the rest later.
+const OPTIONAL_FIELDS = ['employee_id', 'firstname', 'middle_name', 'last_name', 'full_name'];
 const EMPTY_TEXT = '';
 
 function toText(value) {
@@ -15,6 +18,14 @@ function toText(value) {
 function buildFullName(firstname, middleName, lastName) {
   const middleInitial = middleName ? `${middleName.charAt(0)}.` : EMPTY_TEXT;
   return `${firstname} ${middleInitial} ${lastName}`.replace(/\s+/g, ' ').trim();
+}
+
+// A first and last name, once both are known, decide the printed name; until then the full
+// name given (as for an employee added from a form) is kept.
+function chooseFullName(value) {
+  const built = buildFullName(value.firstname, value.middle_name, value.last_name);
+  if (value.firstname && value.last_name) return built;
+  return cleanName(value.full_name || built);
 }
 
 // Returns { value } with cleaned fields, or { error } naming the first problem.
@@ -36,7 +47,8 @@ function validateEntry(input) {
   }
   const tooLong = Object.keys(value).find((field) => value[field].length > MAX_FIELD_LENGTH);
   if (tooLong) return { error: `${tooLong} is too long` };
-  value.full_name = buildFullName(value.firstname, value.middle_name, value.last_name);
+  value.full_name = chooseFullName(value);
+  if (!value.full_name) return { error: 'A name is required' };
   return { value };
 }
 

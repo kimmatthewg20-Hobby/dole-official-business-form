@@ -3,6 +3,7 @@
 const assert = require('node:assert/strict');
 const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 const { postJson, loginCookie } = require('./admin-http');
+const { sendJson, listDirectory, withDirectoryRestored, addEntry } = require('./directory-helpers');
 
 const UNAUTHORIZED = 401;
 const BAD_REQUEST = 400;
@@ -15,42 +16,6 @@ const NEW_ENTRY = {
   position: 'Tester',
   assigned_unit: 'CHECKUNIT',
 };
-
-function sendJson(baseUrl, method, route, body, cookie) {
-  const headers = { 'Content-Type': 'application/json', Cookie: cookie };
-  return fetch(`${baseUrl}${route}`, { method, headers, body: body && JSON.stringify(body) });
-}
-
-async function listDirectory(baseUrl, search = '') {
-  const response = await fetch(`${baseUrl}/api/employees?search=${encodeURIComponent(search)}`);
-  assert.equal(response.status, 200);
-  return (await response.json()).employees;
-}
-
-// The directory is shared by every check, so the seeded rows are put back afterwards.
-async function withDirectoryRestored(db, callback) {
-  const savedRows = await db.all('SELECT * FROM employees_directory ORDER BY id', []);
-  try {
-    await callback();
-  } finally {
-    await db.transaction(async (client) => {
-      await client.query('DELETE FROM employees_directory', []);
-      for (const row of savedRows) {
-        const columns = Object.keys(row);
-        await client.query(
-          `INSERT INTO employees_directory (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
-          columns.map((column) => row[column])
-        );
-      }
-    });
-  }
-}
-
-async function addEntry(baseUrl, cookie, entry) {
-  const response = await postJson(baseUrl, '/api/employees', entry, cookie);
-  assert.equal(response.status, 200);
-  return (await response.json()).id;
-}
 
 module.exports = [
   {
@@ -106,7 +71,7 @@ module.exports = [
         assert.equal(put.status, 200);
         const updated = await db.get('SELECT * FROM employees_directory WHERE id = ?', [id]);
         assert.equal(updated.full_name, 'Edited Person');
-        const badPut = await sendJson(baseUrl, 'PUT', `/api/employees/${id}`, { ...edited, last_name: '' }, cookie);
+        const badPut = await sendJson(baseUrl, 'PUT', `/api/employees/${id}`, { ...edited, position: '' }, cookie);
         assert.equal(badPut.status, BAD_REQUEST);
         const missing = await sendJson(baseUrl, 'PUT', '/api/employees/999999', edited, cookie);
         assert.equal(missing.status, NOT_FOUND);
@@ -136,7 +101,7 @@ module.exports = [
       await withDirectoryRestored(db, async () => {
         const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
         const before = await listDirectory(baseUrl);
-        const badRow = { ...NEW_ENTRY, firstname: 'Bad', last_name: '' };
+        const badRow = { ...NEW_ENTRY, firstname: 'Bad', assigned_unit: '' };
         const response = await postJson(baseUrl, '/api/employees/bulk-replace', { employees: [NEW_ENTRY, badRow] }, cookie);
         assert.equal(response.status, BAD_REQUEST);
         assert.deepEqual(await listDirectory(baseUrl), before);

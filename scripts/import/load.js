@@ -6,16 +6,29 @@
 // highest id, so rows created later never collide with imported ones.
 
 const { TABLE_COLUMNS, TABLES_IN_INSERT_ORDER } = require('./tables');
+const { nameKey } = require('../../routes/directory-name');
+
+const DIRECTORY_TABLE = 'employees_directory';
+const NAME_KEY_COLUMN = 'name_key';
 
 class ImportRefusedError extends Error {}
 
-// Table and column names come only from TABLE_COLUMNS, never from the export file.
+// The export has no matching key, so it is made here; without it an imported employee would
+// never be recognised on a form and would be added a second time.
+function derivedColumns(table, row) {
+  if (table !== DIRECTORY_TABLE || typeof row.full_name !== 'string') return { columns: [], values: [] };
+  return { columns: [NAME_KEY_COLUMN], values: [nameKey(row.full_name)] };
+}
+
+// Table and column names come only from TABLE_COLUMNS and the constants above, never from the export file.
 function insertStatement(table, row) {
-  const columns = TABLE_COLUMNS[table].filter((column) => column in row);
+  const derived = derivedColumns(table, row);
+  const exported = TABLE_COLUMNS[table].filter((column) => column in row);
+  const columns = [...exported, ...derived.columns];
   const placeholders = columns.map(() => '?').join(', ');
   return {
     sql: `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`,
-    args: columns.map((column) => row[column]),
+    args: [...exported.map((column) => row[column]), ...derived.values],
   };
 }
 

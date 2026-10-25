@@ -1,13 +1,21 @@
 // A generic searchable pick-list: typing narrows the choices and only a listed choice can be
-// kept. Reused wherever staff must pick from a list (Division, Approved by, later employees).
-// Items are { label, ... }; onSelect receives the chosen item, or null when the choice is cleared.
+// kept (Division, Approved by). Items are { label, detail?, ... }; onSelect receives the chosen
+// item, or null when the choice is cleared. With freeText the typed text is kept and the list
+// only suggests (employee names, fed through showItems by combobox-source.js).
 (function (root) {
   var KEY = { DOWN: 'ArrowDown', UP: 'ArrowUp', ENTER: 'Enter', ESCAPE: 'Escape' };
+  var SPACE_RUNS = /\s+/g;
+  var DETAIL_SEPARATOR = ' · ';
   var nextId = 0;
+
+  function comparable(text) {
+    return text.trim().replace(SPACE_RUNS, ' ').toLowerCase();
+  }
 
   function create(options) {
     var input = options.input;
     var onSelect = options.onSelect || function () {};
+    var freeText = Boolean(options.freeText);
     var items = [];
     var shown = [];
     var selected = null;
@@ -49,10 +57,7 @@
       var options = list.children;
       if (activeIndex >= 0 && options[activeIndex]) options[activeIndex].setAttribute('aria-selected', 'false');
       activeIndex = index;
-      if (index < 0 || !options[index]) {
-        input.removeAttribute('aria-activedescendant');
-        return;
-      }
+      if (index < 0 || !options[index]) return input.removeAttribute('aria-activedescendant');
       options[index].setAttribute('aria-selected', 'true');
       input.setAttribute('aria-activedescendant', options[index].id);
       options[index].scrollIntoView({ block: 'nearest' });
@@ -66,9 +71,9 @@
     }
 
     function render(query) {
-      var needle = query.trim().toLowerCase();
+      var needle = comparable(query);
       shown = items.filter(function (item) {
-        return item.label.toLowerCase().indexOf(needle) !== -1;
+        return comparable(item.label).indexOf(needle) !== -1;
       });
       list.textContent = '';
       shown.forEach(function (item, index) {
@@ -77,7 +82,7 @@
         option.className = 'ui-dropdown__item ui-combobox__item';
         option.setAttribute('role', 'option');
         option.setAttribute('aria-selected', 'false');
-        option.textContent = item.label;
+        option.textContent = item.detail ? item.label + DETAIL_SEPARATOR + item.detail : item.label;
         option.addEventListener('click', function () {
           choose(item);
         });
@@ -92,12 +97,19 @@
       }
     }
 
+    // Free text never picks a suggestion by itself: a new name may start like a remembered one.
     function open(query) {
-      if (items.length === 0) return;
+      if (items.length === 0 || (freeText && !query.trim())) return close();
       render(query);
+      if (freeText && shown.length === 0) return close();
       list.hidden = false;
       input.setAttribute('aria-expanded', 'true');
-      setActive(shown.length === 1 ? 0 : -1);
+      setActive(shown.length === 1 && !freeText ? 0 : -1);
+    }
+
+    // A pick-list shows every choice at first; suggestions only follow what was typed.
+    function openFromInput() {
+      open(freeText ? input.value : '');
     }
 
     function showEmptyState() {
@@ -107,25 +119,23 @@
       input.readOnly = empty;
     }
 
-    // Whatever was typed but not chosen is dropped, so free text can never be submitted.
+    // Whatever was typed but not chosen is dropped, so free text can only be kept when allowed.
     function restoreSelection() {
-      input.value = selected ? selected.label : '';
+      if (!freeText) input.value = selected ? selected.label : '';
     }
 
     // A mousedown on the list would blur the input before the click is read.
     list.addEventListener('mousedown', function (event) {
       event.preventDefault();
     });
-    input.addEventListener('focus', function () {
-      open('');
-    });
+    input.addEventListener('focus', openFromInput);
     input.addEventListener('click', function () {
-      if (!isOpen()) open('');
+      if (!isOpen()) openFromInput();
     });
     input.addEventListener('input', function () {
       if (selected) {
         selected = null;
-        onSelect(null);
+        if (!freeText) onSelect(null);
       }
       open(input.value);
     });
@@ -136,8 +146,8 @@
     input.addEventListener('keydown', function (event) {
       if (event.key === KEY.DOWN || event.key === KEY.UP) {
         event.preventDefault();
-        if (!isOpen()) open('');
-        if (shown.length === 0) return;
+        if (!isOpen()) openFromInput();
+        if (!isOpen() || shown.length === 0) return;
         var step = event.key === KEY.DOWN ? 1 : -1;
         setActive((activeIndex + step + shown.length) % shown.length);
       } else if (event.key === KEY.ENTER && isOpen()) {
@@ -158,6 +168,10 @@
         input.value = '';
         showEmptyState();
         if (items.length === 1) choose(items[0]);
+      },
+      showItems: function (newItems) {
+        items = newItems;
+        if (document.activeElement === input) open(input.value);
       },
       showError: function (text) {
         items = [];

@@ -971,6 +971,8 @@
   <script src="js/date-mode-form.js"></script>
   <script src="js/combobox.js"></script>
   <script src="js/form-pickers.js"></script>
+  <script src="js/combobox-source.js"></script>
+  <script src="js/employee-suggestions.js"></script>
   <script src="js/time-input.js"></script>
   <script src="js/clock-math.js"></script>
   <script src="js/clock-face.js"></script>
@@ -1016,6 +1018,10 @@
       // Fetch settings
       fetchSettings();
       FormPickers.init({ divisionInput: officeSelect, approverInput: approvedByField, positionInput: approvedByPositionField });
+      EmployeeSuggestions.init({
+        nameInput: document.getElementById('employeeNameInput'),
+        positionInput: document.getElementById('employeePositionInput'),
+      });
       
       // Update employee table display
       function updateEmployeeDisplay() {
@@ -1032,8 +1038,8 @@
           employees.forEach((employee, index) => {
             const row = document.createElement('tr');
             row.innerHTML = `
-              <td style="padding: 12px 14px; border: 1px solid var(--border); text-align: center; background-color: ${index % 2 === 0 ? '#FAFBFC' : 'var(--white)'};">${employee.full_name || employee.name || ''}</td>
-              <td style="padding: 12px 14px; border: 1px solid var(--border); text-align: center; background-color: ${index % 2 === 0 ? '#FAFBFC' : 'var(--white)'};">${employee.position || ''}</td>
+              <td style="padding: 12px 14px; border: 1px solid var(--border); text-align: center; background-color: ${index % 2 === 0 ? '#FAFBFC' : 'var(--white)'};"></td>
+              <td style="padding: 12px 14px; border: 1px solid var(--border); text-align: center; background-color: ${index % 2 === 0 ? '#FAFBFC' : 'var(--white)'};"></td>
               <td style="padding: 12px 14px; border: 1px solid var(--border); text-align: center; background-color: ${index % 2 === 0 ? '#FAFBFC' : 'var(--white)'};">
                 <button type="button" class="btn-icon edit-btn" data-index="${index}" title="Edit" style="background: none; border: none; cursor: pointer; padding: 5px; margin: 2 5px;">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1051,6 +1057,9 @@
                 </button>
               </td>
             `;
+            // Names and positions can come from the Employee directory, which other people fill.
+            row.cells[0].textContent = employee.full_name || employee.name || '';
+            row.cells[1].textContent = employee.position || '';
             employeeTableBody.appendChild(row);
           });
           

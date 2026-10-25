@@ -5,15 +5,16 @@ const db = require('../db');
 const { adminApiOnly } = require('./admin-auth');
 const { validateEntry, validateEntries } = require('./directory-validation');
 const { INITIAL_EMPLOYEES } = require('./directory-initial-data');
+const { nameKey } = require('./directory-name');
 
 const INSERT_ENTRY_SQL =
-  'INSERT INTO employees_directory (employee_id, firstname, middle_name, last_name, full_name, position, assigned_unit) VALUES (?, ?, ?, ?, ?, ?, ?)';
+  'INSERT INTO employees_directory (employee_id, firstname, middle_name, last_name, full_name, position, assigned_unit, name_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
 const NOT_FOUND = 404;
 const BAD_REQUEST = 400;
 
 function entryArgs(entry) {
   return [entry.employee_id, entry.firstname, entry.middle_name, entry.last_name,
-    entry.full_name, entry.position, entry.assigned_unit];
+    entry.full_name, entry.position, entry.assigned_unit, nameKey(entry.full_name)];
 }
 
 function parseId(raw) {
@@ -80,7 +81,7 @@ async function updateEntry(req, res) {
     if (error) return res.status(BAD_REQUEST).json({ error });
     if (id === null) return res.status(NOT_FOUND).json({ error: 'Employee not found' });
     const result = await db.run(
-      'UPDATE employees_directory SET employee_id = ?, firstname = ?, middle_name = ?, last_name = ?, full_name = ?, position = ?, assigned_unit = ? WHERE id = ?',
+      'UPDATE employees_directory SET employee_id = ?, firstname = ?, middle_name = ?, last_name = ?, full_name = ?, position = ?, assigned_unit = ?, name_key = ? WHERE id = ?',
       [...entryArgs(value), id]
     );
     if (result.changes === 0) return res.status(NOT_FOUND).json({ error: 'Employee not found' });

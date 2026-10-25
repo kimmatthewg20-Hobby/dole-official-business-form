@@ -60,6 +60,7 @@ async function assertFixtureImported(databaseUrl, result) {
     assert.deepEqual(directory.map((entry) => entry.id), [4, 8]);
     assert.equal(directory[0].employee_id, 'SAMPLE-101');
     assert.equal(directory[1].middle_name, null);
+    assert.deepEqual(directory.map((entry) => entry.name_key), ['ana b. sample', 'josé peña']);
 
     const settings = await rowsOf(reader, 'SELECT * FROM settings');
     assert.deepEqual(settings.map((row) => row.id), [2]);

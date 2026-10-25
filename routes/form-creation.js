@@ -1,5 +1,6 @@
 const db = require('../db');
 const DateMode = require('../public/js/date-mode');
+const { rememberEmployees } = require('./directory-memory');
 
 // Turns one validated submission into the form records to store. Kept apart from
 // the insert so a reference code can later be added to each record before it is saved.
@@ -35,11 +36,13 @@ async function insertForm(client, body, record, now) {
   return { id, datesOfOB: record.datesOfOB };
 }
 
-// All records are stored in one transaction, so a failure part-way stores none.
+// All records and the directory writes for their employees are stored in one transaction,
+// so a failure part-way stores none of them.
 function insertForms(body, records, now, insertOne = insertForm) {
   return db.transaction(async (client) => {
     const created = [];
     for (const record of records) created.push(await insertOne(client, body, record, now));
+    await rememberEmployees(client, body.employees, body.division, now);
     return created;
   });
 }
