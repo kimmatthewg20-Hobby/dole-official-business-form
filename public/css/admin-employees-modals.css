@@ -1,0 +1,110 @@
+/* Employees tab dialogs: the delete name, the travel history table and the form summary.
+   The dialogs themselves are the shared .ui-modal from components.css. */
+
+.employee-modal--wide {
+  max-width: 62rem;
+}
+
+.delete-name {
+  margin: var(--ui-space-2) 0 var(--ui-space-4);
+  font-weight: var(--ui-font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.history-table {
+  width: 100%;
+  margin-bottom: var(--ui-space-4);
+  border: 1px solid var(--ui-color-border);
+  border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+  padding: var(--ui-space-3);
+  border-bottom: 1px solid var(--ui-color-border);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.history-table th {
+  background: var(--ui-color-page);
+  color: var(--ui-color-muted);
+  font-size: var(--ui-font-size-small);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.history-empty {
+  margin-bottom: var(--ui-space-4);
+  color: var(--ui-color-muted);
+  text-align: center;
+}
+
+.view-details-btn {
+  min-height: 2.25rem;
+}
+
+.view-details-btn .material-icons {
+  font-size: 1.125rem;
+}
+
+.summary-list {
+  margin-bottom: var(--ui-space-4);
+}
+
+.summary-list dt {
+  color: var(--ui-color-muted);
+  font-size: var(--ui-font-size-small);
+  font-weight: var(--ui-font-weight-semibold);
+}
+
+.summary-list dd {
+  margin-bottom: var(--ui-space-2);
+  padding-bottom: var(--ui-space-2);
+  border-bottom: 1px solid var(--ui-color-page);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .history-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .history-table,
+  .history-table tbody,
+  .history-table tr,
+  .history-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .history-table tr {
+    padding: var(--ui-space-2) var(--ui-space-3);
+    border-bottom: 1px solid var(--ui-color-border);
+  }
+
+  .history-table td {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: var(--ui-space-2);
+    padding: var(--ui-space-1) 0;
+    border-bottom: none;
+  }
+
+  .history-table td::before {
+    content: attr(data-label);
+    color: var(--ui-color-muted);
+    font-weight: var(--ui-font-weight-semibold);
+  }
+
+  .history-table td[colspan] {
+    display: block;
+  }
+
+  .history-table td[colspan]::before {
+    content: none;
+  }
+}

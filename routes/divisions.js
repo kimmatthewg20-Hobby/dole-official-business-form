@@ -17,12 +17,15 @@ const {
   parseId,
   failedSave,
 } = require('./list-route-helpers');
+const { insertAtEndSql, saveOrder } = require('./list-order');
 
 // A bound on the public list; adding is refused at the bound so the list never cuts one off.
 const MAX_DIVISIONS = 200;
 const TOO_MANY = `There can be at most ${MAX_DIVISIONS} Divisions`;
 const CLASH_RACE = 'A Division with this name or code already exists';
 const NOT_FOUND_MESSAGE = 'Division not found';
+const TABLE = 'divisions';
+const NOUN = 'Division';
 
 // Names are compared without regard to capitals, as the unique index on name does.
 async function findClash({ name, code }, exceptId) {
@@ -40,7 +43,7 @@ async function findClash({ name, code }, exceptId) {
 async function listDivisions(req, res) {
   try {
     const divisions = await db.all(
-      'SELECT id, name, code FROM divisions ORDER BY name COLLATE NOCASE LIMIT ?',
+      'SELECT id, name, code FROM divisions ORDER BY sort_order, name COLLATE NOCASE, id LIMIT ?',
       [MAX_DIVISIONS],
     );
     res.json({ divisions });
@@ -57,10 +60,7 @@ async function addDivision(req, res) {
     if (total >= MAX_DIVISIONS) return res.status(BAD_REQUEST).json({ error: TOO_MANY });
     const clash = await findClash(value, NO_ID);
     if (clash) return res.status(CONFLICT).json({ error: clash });
-    const result = await db.run('INSERT INTO divisions (name, code) VALUES (?, ?) RETURNING id', [
-      value.name,
-      value.code,
-    ]);
+    const result = await db.run(insertAtEndSql(TABLE, ['name', 'code']), [value.name, value.code]);
     res.json({ success: true, id: result.lastID });
   } catch (err) {
     failedSave(res, 'Error adding a Division', err, CLASH_RACE);
@@ -102,6 +102,8 @@ async function removeDivision(req, res) {
 const router = express.Router();
 router.get('/api/divisions', listDivisions);
 router.post('/api/divisions', adminApiOnly, addDivision);
+// Before /:id, which would otherwise read "order" as an id.
+router.put('/api/divisions/order', adminApiOnly, saveOrder(TABLE, NOUN));
 router.put('/api/divisions/:id', adminApiOnly, editDivision);
 router.delete('/api/divisions/:id', adminApiOnly, removeDivision);
 

@@ -43,7 +43,7 @@ function openNav() {
     header.style.width = "100%";
   }
 
-  // Fix header content alignment - specific for employees.html
+  // Fix header content alignment
   const headerContent = document.querySelector(".header-content");
   if (headerContent) {
     if (!headerContent.dataset.originalJustify) {
@@ -54,7 +54,7 @@ function openNav() {
     headerContent.style.position = "relative";
   }
 
-  // Special fix for employees.html - ensure logo container stays in place
+  // Ensure logo container stays in place
   const logoContainer = document.querySelector(".logo-container");
   if (logoContainer) {
     // Force stable positioning - prevent any shifting
@@ -110,7 +110,7 @@ function closeNav() {
     headerContent.style.position = "relative";
   }
 
-  // Special fix for employees.html - ensure logo container returns to original position
+  // Ensure logo container returns to original position
   const logoContainer = document.querySelector(".logo-container");
   if (logoContainer) {
     // Force stable positioning - prevent any shifting

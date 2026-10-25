@@ -23,8 +23,8 @@ const FORM_COLUMNS = [
   'date_mode',
 ];
 const LIST_COLUMNS = {
-  divisions: ['id', 'name', 'code'],
-  approvers: ['id', 'name', 'position'],
+  divisions: ['id', 'name', 'code', 'sort_order'],
+  approvers: ['id', 'name', 'position', 'sort_order'],
   employees_directory: [
     'id',
     'employee_id',
@@ -37,6 +37,12 @@ const LIST_COLUMNS = {
     'name_key',
     'last_used_at',
   ],
+};
+// Lists the admin puts in order are exported in it, so the file's own order is that order.
+const LIST_EXPORT_ORDER = {
+  divisions: 'sort_order, id',
+  approvers: 'sort_order, id',
+  employees_directory: 'id',
 };
 const FORMS_TABLE = 'official_business';
 const DIRECTORY_TABLE = 'employees_directory';
@@ -139,4 +145,4 @@ async function writeImport(client, file) {
   await restoreAdminPassword(client, adminPassword);
 }
 
-module.exports = { writeImport, LIST_COLUMNS };
+module.exports = { writeImport, LIST_COLUMNS, LIST_EXPORT_ORDER };

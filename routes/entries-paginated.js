@@ -1,10 +1,11 @@
 const express = require('express');
 const db = require('../db');
+const { adminApiOnly } = require('./admin-auth');
 
 const router = express.Router();
 
-// Get paginated entries for database view
-router.get('/api/entries/paginated', async (req, res) => {
+// Lists every form with its employees; no staff page uses it, so it is for the admin only.
+router.get('/api/entries/paginated', adminApiOnly, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;

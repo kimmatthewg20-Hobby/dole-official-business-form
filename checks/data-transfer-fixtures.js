@@ -17,10 +17,10 @@ const FIRST_CODE = 'DOLECN1026K7QX';
 const SECOND_CODE = 'DOLEIM1026P3RT';
 const OLD_LAST_USED = '2026-03-15';
 const DIVISIONS = [
-  { id: 71, name: 'Check Division', code: 'CN' },
-  { id: 72, name: 'Inspection Division', code: 'IMSD' },
+  { id: 71, name: 'Check Division', code: 'CN', sort_order: 1 },
+  { id: 72, name: 'Inspection Division', code: 'IMSD', sort_order: 2 },
 ];
-const APPROVERS = [{ id: 81, name: 'Check Approver', position: 'Check Director' }];
+const APPROVERS = [{ id: 81, name: 'Check Approver', position: 'Check Director', sort_order: 1 }];
 const DIRECTORY = [
   {
     id: 91,

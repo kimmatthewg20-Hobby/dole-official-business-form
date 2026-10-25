@@ -94,15 +94,15 @@ module.exports = [
     },
   },
   {
-    name: 'the public list is sorted by name',
+    name: 'the public list keeps the admin\'s order, so a new Division is listed last whatever its name',
     async run({ baseUrl, db }) {
       await withNoDivisions(db, async () => {
         const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
         await addedId(baseUrl, { name: 'zeta Unit', code: 'ZU' }, cookie);
         await addedId(baseUrl, { name: 'Alpha Unit', code: 'AU' }, cookie);
         assert.deepEqual(await listDivisions(baseUrl), [
-          { name: 'Alpha Unit', code: 'AU' },
           { name: 'zeta Unit', code: 'ZU' },
+          { name: 'Alpha Unit', code: 'AU' },
         ]);
       });
     },

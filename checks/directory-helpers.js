@@ -4,15 +4,18 @@
 // only loads files ending in .check.js.
 
 const assert = require('node:assert/strict');
-const { postJson } = require('./admin-http');
+const { postJson, loginCookie } = require('./admin-http');
+const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
 
 function sendJson(baseUrl, method, route, body, cookie) {
   const headers = { 'Content-Type': 'application/json', Cookie: cookie };
   return fetch(`${baseUrl}${route}`, { method, headers, body: body && JSON.stringify(body) });
 }
 
+// The directory list needs an admin session, so the checks read it as the admin would.
 async function listDirectory(baseUrl, search = '') {
-  const response = await fetch(`${baseUrl}/api/employees?search=${encodeURIComponent(search)}`);
+  const Cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
+  const response = await fetch(`${baseUrl}/api/employees?search=${encodeURIComponent(search)}`, { headers: { Cookie } });
   assert.equal(response.status, 200);
   return (await response.json()).employees;
 }

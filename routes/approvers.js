@@ -17,12 +17,15 @@ const {
   parseId,
   failedSave,
 } = require('./list-route-helpers');
+const { insertAtEndSql, saveOrder } = require('./list-order');
 
 // A bound on the public list; adding is refused at the bound so the list never cuts one off.
 const MAX_APPROVERS = 200;
 const TOO_MANY = `There can be at most ${MAX_APPROVERS} Approvers`;
 const CLASH_RACE = 'This Approver already exists';
 const NOT_FOUND_MESSAGE = 'Approver not found';
+const TABLE = 'approvers';
+const NOUN = 'Approver';
 
 // Compared without regard to capitals, as the unique index on name and position does.
 async function findClash({ name, position }, exceptId) {
@@ -37,7 +40,8 @@ async function findClash({ name, position }, exceptId) {
 async function listApprovers(req, res) {
   try {
     const approvers = await db.all(
-      'SELECT id, name, position FROM approvers ORDER BY name COLLATE NOCASE, position LIMIT ?',
+      `SELECT id, name, position FROM approvers
+       ORDER BY sort_order, name COLLATE NOCASE, position, id LIMIT ?`,
       [MAX_APPROVERS],
     );
     res.json({ approvers });
@@ -54,10 +58,10 @@ async function addApprover(req, res) {
     if (total >= MAX_APPROVERS) return res.status(BAD_REQUEST).json({ error: TOO_MANY });
     const clash = await findClash(value, NO_ID);
     if (clash) return res.status(CONFLICT).json({ error: clash });
-    const result = await db.run(
-      'INSERT INTO approvers (name, position) VALUES (?, ?) RETURNING id',
-      [value.name, value.position],
-    );
+    const result = await db.run(insertAtEndSql(TABLE, ['name', 'position']), [
+      value.name,
+      value.position,
+    ]);
     res.json({ success: true, id: result.lastID });
   } catch (err) {
     failedSave(res, 'Error adding an Approver', err, CLASH_RACE);
@@ -99,6 +103,8 @@ async function removeApprover(req, res) {
 const router = express.Router();
 router.get('/api/approvers', listApprovers);
 router.post('/api/approvers', adminApiOnly, addApprover);
+// Before /:id, which would otherwise read "order" as an id.
+router.put('/api/approvers/order', adminApiOnly, saveOrder(TABLE, NOUN));
 router.put('/api/approvers/:id', adminApiOnly, editApprover);
 router.delete('/api/approvers/:id', adminApiOnly, removeApprover);
 

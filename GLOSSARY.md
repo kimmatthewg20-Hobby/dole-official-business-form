@@ -17,10 +17,12 @@ The choice staff make under Date of Official Business ("File as" on the form). I
 
 **Division**:
 A named unit of the office that a form is filed under, with a short code (2-4 letters) used in the reference code. The admin keeps the list; staff must pick from it.
+The admin sets the order of the Divisions, and staff see them in that order.
 _Avoid_: Office, unit (an employee's "assigned unit" is a different thing)
 
 **Approver**:
 A person (name and position) who may be named as "Approved by" on a form. The admin keeps the list; staff must pick from it.
+The admin sets the order of the Approvers, and staff see them in that order.
 _Avoid_: Approving person, signatory
 
 **Reference code**:

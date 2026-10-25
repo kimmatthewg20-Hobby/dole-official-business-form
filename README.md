@@ -9,7 +9,7 @@ Version alpha pero pwede na.
 ### Core Functionality
 - **Submit and manage official business forms** - Create, edit, and track official business forms
 - **Multiple date selection** - Select single or multiple dates for official business using calendar picker
-- **Employee management** - Add, edit, and remove employees from forms
+- **Employee management** - The admin's Employees tab (`/admin#employees`) lists the Employee directory; employees named on a submitted form are added automatically, and the admin edits or removes them
 - **Form validation** - Comprehensive validation for all required fields:
   - Date of Official Business (required)
   - From/To locations (required)
@@ -136,8 +136,7 @@ The server will run on port 3000 by default (http://localhost:3000).
 ├── vercel.json           # Vercel deployment configuration
 ├── public/               # Frontend files
 │   ├── index.html        # Main form page
-│   ├── admin.html        # Admin panel
-│   ├── employees.html   # Employee management
+│   ├── admin.html        # Admin panel (Form options, Security, Data, Employees tabs)
 │   ├── tracker.html      # Form tracker with search
 │   ├── logo.png         # Application logo
 │   ├── print.js         # Print template generator
@@ -154,7 +153,6 @@ The server will run on port 3000 by default (http://localhost:3000).
 - `GET /tracker` - Form tracker page
 - `GET /print/:id` - View/print form by ID
 - `POST /api/submit` - Submit new form
-- `GET /api/retrieve/:id` - Retrieve form data
 - `GET /api/tracker` - Get tracker data (paginated, 15 per page)
 - `GET /api/tracker/all` - Get all tracker data for search (single query, efficient)
 - `GET /api/settings` - Get system settings
@@ -167,6 +165,8 @@ The server will run on port 3000 by default (http://localhost:3000).
 - `POST /api/admin/change-password` - Change admin password
 - `POST /api/settings` - Update settings
 - `GET /api/cleanup/test` - Test/run data cleanup (with query params: `days`, `dryRun`)
+- `GET /api/retrieve/:id`, `GET /api/entries`, `GET /api/entries/paginated`, `GET /api/entries/:id` - Read forms by id or as a list
+- `GET /api/employees`, `GET /api/employees/:id`, `GET /api/employees/:id/history` and the add, edit, delete, bulk-replace and initialize routes - The Employee directory (staff only get `GET /api/directory/suggest`)
 
 ### Scheduled Endpoint
 - `GET /api/cron/cleanup` - Runs the 25-day cleanup and returns `{ success, deleted }`. Called by Vercel Cron; it needs `Authorization: Bearer <CRON_SECRET>` and refuses every call (401) when `CRON_SECRET` is not set

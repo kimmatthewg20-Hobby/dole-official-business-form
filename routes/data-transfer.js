@@ -10,7 +10,7 @@ const express = require('express');
 const db = require('../db');
 const { adminApiOnly } = require('./admin-auth');
 const { validateImportFile } = require('./data-transfer-validation');
-const { writeImport, LIST_COLUMNS } = require('./data-transfer-writes');
+const { writeImport, LIST_COLUMNS, LIST_EXPORT_ORDER } = require('./data-transfer-writes');
 
 const router = express.Router();
 
@@ -31,7 +31,10 @@ const EXPORTED_SETTINGS_COLUMNS = [
 async function exportLists() {
   const lists = {};
   for (const [table, columns] of Object.entries(LIST_COLUMNS)) {
-    lists[table] = await db.all(`SELECT ${columns.join(', ')} FROM ${table} ORDER BY id`, []);
+    lists[table] = await db.all(
+      `SELECT ${columns.join(', ')} FROM ${table} ORDER BY ${LIST_EXPORT_ORDER[table]}`,
+      [],
+    );
   }
   return lists;
 }

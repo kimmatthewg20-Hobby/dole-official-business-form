@@ -116,15 +116,15 @@ module.exports = [
     },
   },
   {
-    name: 'the public Approver list is sorted by name',
+    name: 'the public Approver list keeps the admin\'s order, so a new one is listed last',
     async run({ baseUrl, db }) {
       await withNoApprovers(db, async () => {
         const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
         await addedApproverId(baseUrl, { name: 'zeta Santos', position: 'Chief' }, cookie);
         await addedApproverId(baseUrl, { name: 'Ana Reyes', position: 'Director' }, cookie);
         assert.deepEqual(await listApprovers(baseUrl), [
-          { name: 'Ana Reyes', position: 'Director' },
           { name: 'zeta Santos', position: 'Chief' },
+          { name: 'Ana Reyes', position: 'Director' },
         ]);
       });
     },

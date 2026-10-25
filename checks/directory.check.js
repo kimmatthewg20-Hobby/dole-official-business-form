@@ -29,9 +29,10 @@ module.exports = [
       const byName = await listDirectory(baseUrl, listed[0].full_name);
       assert.ok(byName.some((e) => e.id === listed[0].id));
       assert.equal((await listDirectory(baseUrl, 'no-such-text-anywhere')).length, 0);
-      const lookup = await fetch(`${baseUrl}/api/employees/${listed[0].id}`);
+      const headers = { Cookie: await loginCookie(baseUrl, TEST_ADMIN_PASSWORD) };
+      const lookup = await fetch(`${baseUrl}/api/employees/${listed[0].id}`, { headers });
       assert.deepEqual((await lookup.json()).employee, listed[0]);
-      assert.equal((await fetch(`${baseUrl}/api/employees/999999`)).status, NOT_FOUND);
+      assert.equal((await fetch(`${baseUrl}/api/employees/999999`, { headers })).status, NOT_FOUND);
     },
   },
   {

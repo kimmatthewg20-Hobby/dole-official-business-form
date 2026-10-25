@@ -10,9 +10,9 @@ const path = require('node:path');
 
 const FAILING_NAME = 'Boom Trigger';
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
-const STAFF_PAGES = ['index.html', 'tracker.html', 'employees.html'];
+const STAFF_PAGES = ['index.html', 'tracker.html'];
 // Routes that need an admin session; a staff page calling one would only ever be refused.
-const ADMIN_ONLY_ROUTE_PREFIXES = ['/api/delete', '/api/update', '/api/retrieve'];
+const ADMIN_ONLY_ROUTE_PREFIXES = ['/api/delete', '/api/update', '/api/retrieve', '/api/entries', '/api/employees'];
 const MISSING_ID = 999999;
 
 const EDIT_BODY = {
@@ -177,7 +177,7 @@ module.exports = [
     },
   },
   {
-    name: 'no staff page or script calls a delete, update-by-id or read-by-id route',
+    name: 'no staff page or script calls a delete, update-by-id, read-by-id or directory route',
     async run() {
       const scripts = fs.readdirSync(path.join(PUBLIC_DIR, 'js')).filter((name) => !name.startsWith('admin-'));
       const files = [...STAFF_PAGES, 'print.js', 'release-form.js', ...scripts.map((name) => path.join('js', name))];

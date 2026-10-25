@@ -1,0 +1,90 @@
+/* Employees tab: search bar, messages, the starting-list offer and the page buttons.
+   The table itself is in admin-employees-table.css. */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.employee-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ui-space-3);
+  margin-bottom: var(--ui-space-4);
+}
+
+.employee-search {
+  flex: 1;
+  max-width: 25rem;
+}
+
+.employee-alert:not(:empty) {
+  margin-bottom: var(--ui-space-3);
+}
+
+.employee-alert__message {
+  padding: var(--ui-space-3);
+  border: 1px solid;
+  border-radius: var(--ui-radius-small);
+  font-size: var(--ui-font-size-small);
+}
+
+.employee-alert__message--error {
+  border-color: var(--ui-color-danger);
+  background: #fef3f2;
+  color: var(--ui-color-danger);
+}
+
+.employee-alert__message--success {
+  border-color: #145c32;
+  background: #ecfdf3;
+  color: #145c32;
+}
+
+.employee-initialize {
+  margin-top: var(--ui-space-4);
+}
+
+.employee-initialize .ui-btn {
+  margin-top: var(--ui-space-2);
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  margin-top: var(--ui-space-4);
+}
+
+.pagination-btn {
+  border: 1px solid var(--ui-color-border);
+  background: var(--ui-color-surface);
+  color: var(--ui-color-text);
+}
+
+.pagination-btn.active {
+  border-color: var(--ui-color-accent);
+  background: var(--ui-color-accent);
+  color: var(--ui-color-accent-text);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+  .employee-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .employee-search {
+    max-width: none;
+  }
+}

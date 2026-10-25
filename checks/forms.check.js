@@ -46,7 +46,7 @@ module.exports = [
         assert.equal(formData.date_of_ob, '2026-03-02');
         assert.deepEqual(employees, VALID_SUBMISSION.employees);
 
-        const entry = await getJson(baseUrl, `/api/entries/${id}`);
+        const entry = await getJson(baseUrl, `/api/entries/${id}`, cookie);
         assert.equal(entry.formData.time, '08:00 - 17:30');
         assert.equal(entry.employees.length, 3);
         assert.equal(entry.formData.purpose, 'Site visit');
@@ -141,27 +141,28 @@ module.exports = [
         const second = await insertForm(db, { minute: 2, office: 'Beta Office', employees: ['Zed Match', 'Other'] });
         const third = await insertForm(db, { minute: 3, office: 'Zed Office', employees: ['Nobody'] });
         await insertForm(db, { minute: 4, office: 'Gamma', employees: ['Else'] });
+        const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
 
-        const found = await getJson(baseUrl, '/api/entries?search=Zed');
+        const found = await getJson(baseUrl, '/api/entries?search=Zed', cookie);
         assert.deepEqual(found.entries.map((e) => e.id).sort(), [first, second, third].sort());
         assert.equal(found.pagination.total, 3);
         assert.equal(found.pagination.totalPages, 1);
 
-        const paged = await getJson(baseUrl, `/api/entries?search=Zed&limit=${ENTRIES_PAGE_LIMIT}&page=2`);
+        const paged = await getJson(baseUrl, `/api/entries?search=Zed&limit=${ENTRIES_PAGE_LIMIT}&page=2`, cookie);
         assert.equal(paged.entries.length, 1);
         assert.equal(paged.pagination.total, 3);
         assert.equal(paged.pagination.totalPages, 2);
         assert.equal(paged.pagination.currentPage, 2);
 
-        const byOffice = await getJson(baseUrl, '/api/entries?search=Gamma');
+        const byOffice = await getJson(baseUrl, '/api/entries?search=Gamma', cookie);
         assert.equal(byOffice.entries.length, 1);
         assert.equal(byOffice.entries[0].formData.name, 'Else');
 
-        const none = await getJson(baseUrl, '/api/entries?search=NoSuchThing');
+        const none = await getJson(baseUrl, '/api/entries?search=NoSuchThing', cookie);
         assert.deepEqual(none.entries, []);
         assert.equal(none.pagination.total, 0);
 
-        const everything = await getJson(baseUrl, '/api/entries');
+        const everything = await getJson(baseUrl, '/api/entries', cookie);
         assert.equal(everything.pagination.total, 4);
         assert.equal(everything.entries[0].employees.length > 0, true);
       });
@@ -173,7 +174,8 @@ module.exports = [
       await withFormsRestored(db, async () => {
         const ids = [];
         for (let i = 0; i < 3; i += 1) ids.push(await insertForm(db, { minute: i }));
-        const page = await getJson(baseUrl, '/api/entries/paginated?page=2&limit=2');
+        const cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
+        const page = await getJson(baseUrl, '/api/entries/paginated?page=2&limit=2', cookie);
         assert.deepEqual(page.entries.map((e) => e.id), [ids[0]]);
         assert.deepEqual(page.pagination, { total: 3, page: 2, limit: 2, totalPages: 2 });
         assert.equal(page.entries[0].employees.length, 1);

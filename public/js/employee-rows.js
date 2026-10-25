@@ -1,4 +1,4 @@
-// Builds the Employees page table rows as HTML strings; every value is escaped here, in one place.
+// Builds the admin Employees tab table rows as HTML strings; every value is escaped here, in one place.
 (function (root, factory) {
   const escape = typeof module !== 'undefined' && module.exports
     ? require('./escape-html').escapeHtml
@@ -10,23 +10,37 @@
   const EMPLOYEE_COLUMNS = 5;
   const HISTORY_COLUMNS = 4;
   const NOT_AVAILABLE = 'N/A';
+  const NEEDS_DETAILS = 'Needs details';
+  const DETAIL_FIELDS = ['employee_id', 'firstname', 'last_name'];
 
   // data-label lets the phone layout show each cell with its column name.
   function cell(label, text) {
     return `<td data-label="${escapeHtml(label)}">${escapeHtml(text)}</td>`;
   }
 
-  function actionButton(kind, title, icon, id) {
-    return `<button type="button" class="action-btn ${kind}-btn" title="${title}" aria-label="${title}" data-id="${escapeHtml(id)}">`
-      + `<i class="material-icons" aria-hidden="true">${icon}</i></button>`;
+  // Shown words and a label naming the employee keep each action clear to sighted and screen-reader users.
+  function actionButton(kind, action, icon, employee) {
+    const label = escapeHtml(`${action} ${employee.full_name || ''}`.trim());
+    return `<button type="button" class="action-btn ${kind}-btn" title="${label}" aria-label="${label}" data-id="${escapeHtml(employee.id)}">`
+      + `<i class="material-icons" aria-hidden="true">${icon}</i><span class="action-btn__text">${action}</span></button>`;
+  }
+
+  // Employees added from a form have only a full name until the admin completes them.
+  function needsDetails(employee) {
+    return DETAIL_FIELDS.some((field) => !employee[field]);
+  }
+
+  function nameCell(employee) {
+    const tag = needsDetails(employee) ? ` <span class="needs-details-tag">${NEEDS_DETAILS}</span>` : '';
+    return `<td data-label="Full Name">${escapeHtml(employee.full_name || '')}${tag}</td>`;
   }
 
   function employeeRowHtml(employee, lastUsedText) {
-    const actions = actionButton('history', 'View History', 'history', employee.id)
-      + actionButton('edit', 'Edit', 'edit', employee.id)
-      + actionButton('delete', 'Delete', 'delete', employee.id);
+    const actions = actionButton('history', 'History', 'history', employee)
+      + actionButton('edit', 'Edit', 'edit', employee)
+      + actionButton('delete', 'Delete', 'delete', employee);
     return '<tr>'
-      + cell('Full Name', employee.full_name || '')
+      + nameCell(employee)
       + cell('Position', employee.position || '')
       + cell('Assigned Unit', employee.assigned_unit || '')
       + cell('Last Used', lastUsedText)
@@ -47,5 +61,5 @@
       + `<td data-label="Action">${details}</td></tr>`;
   }
 
-  return { EMPLOYEE_COLUMNS, HISTORY_COLUMNS, employeeRowHtml, messageRowHtml, historyRowHtml };
+  return { EMPLOYEE_COLUMNS, HISTORY_COLUMNS, needsDetails, employeeRowHtml, messageRowHtml, historyRowHtml };
 });

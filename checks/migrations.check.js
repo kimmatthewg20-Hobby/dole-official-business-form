@@ -140,7 +140,7 @@ module.exports = [
       const columns = await db.all('PRAGMA table_info(approvers)', []);
       assert.deepEqual(
         columns.map((column) => column.name),
-        ['id', 'name', 'position'],
+        ['id', 'name', 'position', 'sort_order'],
       );
       assert.ok((await leadingIndexedColumns(db, 'approvers')).includes('name'), 'an index starts with name');
     },

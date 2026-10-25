@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { TEST_ADMIN_PASSWORD } = require('../scripts/seed');
+const { loginCookie } = require('./admin-http');
 
 const SEED_SCRIPT = path.join(__dirname, '..', 'scripts', 'seed.js');
 const EXAMPLE_TURSO_URL = 'libsql://example-database.turso.io';
@@ -24,7 +25,8 @@ module.exports = [
   {
     name: 'the seed provides directory entries',
     async run({ baseUrl }) {
-      const response = await fetch(`${baseUrl}/api/employees`);
+      const Cookie = await loginCookie(baseUrl, TEST_ADMIN_PASSWORD);
+      const response = await fetch(`${baseUrl}/api/employees`, { headers: { Cookie } });
       assert.equal(response.status, 200);
       const { employees } = await response.json();
       assert.ok(employees.length > 0);

@@ -125,11 +125,12 @@ async function initializeDirectory(req, res) {
 }
 
 const router = express.Router();
-// Reading stays open: the employees page and form pickers are used without logging in.
-router.get('/api/employees', listEntries);
+// The whole directory is personal data, read only on the admin's Employees tab; staff get the
+// bounded name suggestions in directory-suggest.js.
+router.get('/api/employees', adminApiOnly, listEntries);
 router.post('/api/employees/initialize', adminApiOnly, initializeDirectory);
 router.post('/api/employees/bulk-replace', adminApiOnly, bulkReplace);
-router.get('/api/employees/:id', readEntry);
+router.get('/api/employees/:id', adminApiOnly, readEntry);
 router.post('/api/employees', adminApiOnly, addEntry);
 router.put('/api/employees/:id', adminApiOnly, updateEntry);
 router.delete('/api/employees/:id', adminApiOnly, deleteEntry);

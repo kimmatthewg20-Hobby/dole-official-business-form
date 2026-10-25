@@ -27,10 +27,16 @@ body {
   display: none !important;
 }
 
+/* The same width and card as the main page's .main-container, so both read as one app. */
 .settings-container {
-  max-width: 62rem;
-  margin: 0 auto;
-  padding: var(--ui-space-6) var(--ui-space-4);
+  /* The main page keeps 24px between its card and the window; the inset is the same here. */
+  width: calc(100% - 2 * var(--ui-space-6));
+  max-width: 1440px;
+  margin: var(--ui-space-6) auto;
+  padding: var(--ui-space-6);
+  background-color: var(--ui-color-surface);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-medium);
 }
 
 .settings-bar {
@@ -135,7 +141,11 @@ small.settings-note {
 
 @media (max-width: 600px) {
   .settings-container {
-    padding: var(--ui-space-3);
+    width: 100%;
+    margin: 0;
+    padding: var(--ui-space-4);
+    border: none;
+    border-radius: 0;
   }
 
   .card {

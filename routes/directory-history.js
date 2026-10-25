@@ -2,6 +2,7 @@
 
 const express = require('express');
 const db = require('../db');
+const { adminApiOnly } = require('./admin-auth');
 
 // Entries added from a form have only a full name, so first/last variations are used only when
 // both parts exist; otherwise the text "null null" would be searched. Forms keep the name as typed,
@@ -14,60 +15,50 @@ function nameVariations(employee) {
   return names.filter(Boolean).map((name) => name.trim().toLowerCase());
 }
 
-// Get employee travel history
+const HISTORY_PAGE_SIZE = 10;
+const FIRST_PAGE = 1;
+const DIGITS_ONLY = /^\d+$/;
+
+function requestedPage(raw) {
+  return DIGITS_ONLY.test(String(raw)) ? Math.max(Number(raw), FIRST_PAGE) : FIRST_PAGE;
+}
+
+// Get one page of an employee's travel history, newest first. A history can run long, so the
+// admin reads it ten forms at a time.
 async function readHistory(req, res) {
   try {
     const { id } = req.params;
-    
-    // First get the employee details
     const employee = await db.get('SELECT * FROM employees_directory WHERE id = ?', [id]);
-    
     if (!employee) {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
     const names = nameVariations(employee);
-    
-    console.log(`Searching history for employee ${id} (${employee.full_name})`);
-    
-    // Now search for this employee in the travel records by exact name patterns
-    const historyEntries = await db.all(
-      `SELECT 
-         ob.id, 
-         ob.date_of_ob, 
-         ob.dates_of_ob, 
-         ob.date_created,
-         ob.office,
-         ob.division,
-         ob.location_from, 
-         ob.location_to, 
-         ob.purpose,
-         ob.departure_time,
-         ob.return_time
-       FROM official_business ob 
-       JOIN employees e ON ob.id = e.ob_id 
-       WHERE lower(e.name) IN (${names.map(() => '?').join(', ')})
-       ORDER BY ob.date_created DESC`,
+    const match = `lower(e.name) IN (${names.map(() => '?').join(', ')})`;
+    const { total } = await db.get(
+      `SELECT COUNT(DISTINCT ob.id) AS total
+       FROM official_business ob JOIN employees e ON ob.id = e.ob_id WHERE ${match}`,
       names
     );
-    
-    // If no history entries found, return empty array
-    if (!historyEntries || historyEntries.length === 0) {
-      console.log(`No history found for employee ${id} (${employee.full_name}).`);
-      return res.json({ 
-        employee,
-        history: []
-      });
-    }
-    
-    console.log(`Found ${historyEntries.length} history entries for employee ${id} (${employee.full_name})`);
-    
-    // Format the data to match what the history modal expects
-    const formattedHistory = formatHistoryEntries(historyEntries);
-    
-    res.json({ 
+    const totalPages = Math.max(Math.ceil(total / HISTORY_PAGE_SIZE), FIRST_PAGE);
+    const page = Math.min(requestedPage(req.query.page), totalPages);
+
+    const historyEntries = await db.all(
+      `SELECT DISTINCT
+         ob.id, ob.date_of_ob, ob.dates_of_ob, ob.date_created, ob.office, ob.division,
+         ob.location_from, ob.location_to, ob.purpose, ob.departure_time, ob.return_time
+       FROM official_business ob
+       JOIN employees e ON ob.id = e.ob_id
+       WHERE ${match}
+       ORDER BY ob.date_created DESC, ob.id DESC
+       LIMIT ? OFFSET ?`,
+      [...names, HISTORY_PAGE_SIZE, (page - FIRST_PAGE) * HISTORY_PAGE_SIZE]
+    );
+
+    res.json({
       employee,
-      history: formattedHistory || []
+      history: formatHistoryEntries(historyEntries),
+      pagination: { page, totalPages, total },
     });
   } catch (err) {
     console.error('Error getting employee history:', err.message);
@@ -111,6 +102,6 @@ function formatHistoryEntries(entries) {
 }
 
 const router = express.Router();
-router.get('/api/employees/:id/history', readHistory);
+router.get('/api/employees/:id/history', adminApiOnly, readHistory);
 
-module.exports = { router };
+module.exports = { router, HISTORY_PAGE_SIZE };

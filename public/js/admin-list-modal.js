@@ -1,6 +1,6 @@
 // The add, edit and remove modal shared by the admin-kept pick-lists under Form options
-// (Divisions, Approvers). The server checks every change and the admin session; this page
-// only shows the list and the server's messages.
+// (Divisions, Approvers), with their order set by admin-list-sort.js. The server checks every
+// change and the admin session; this page only shows the list and the server's messages.
 (function () {
   const UNAUTHORIZED = 401;
   const SESSION_ENDED = 'Your admin session has ended. Please log in again.';
@@ -21,6 +21,8 @@
       form: byId(`${prefix}Form`),
       title: byId(`${prefix}ModalTitle`),
       errorBox: byId(`${prefix}Error`),
+      orderError: byId(`${prefix}OrderError`),
+      orderStatus: byId(`${prefix}OrderStatus`),
       addButton: byId(`add${noun}Btn`),
       removeButton: byId(`remove${noun}Btn`),
       cancelButton: byId(`cancel${noun}Btn`),
@@ -36,14 +38,20 @@
     let editingId = null;
     let openedBy = null;
 
-    function showError(message) {
-      ui.errorBox.textContent = message;
-      ui.errorBox.classList.remove(HIDDEN);
+    function showMessage(box, message) {
+      box.textContent = message;
+      box.classList.remove(HIDDEN);
     }
+
+    const showError = (message) => showMessage(ui.errorBox, message);
+    const showOrderError = (message) => showMessage(ui.orderError, message);
 
     // Text is set with textContent, so a stored name can never become page markup.
     function itemRow(item) {
       const row = document.createElement('tr');
+      row.dataset.id = item.id;
+      row.dataset.name = item.name;
+      row.appendChild(sorter.handleCell(item.name));
       for (const key of fieldKeys) {
         const cell = document.createElement('td');
         cell.textContent = item[key];
@@ -66,6 +74,7 @@
         const response = await fetch(route);
         const items = (await response.json())[listKey] || [];
         ui.list.replaceChildren(...items.map(itemRow));
+        sorter.rendered();
         ui.empty.classList.toggle(HIDDEN, items.length > 0);
       } catch (err) {
         ui.empty.textContent = `Could not load the ${noun}s.`;
@@ -89,8 +98,8 @@
       if (openedBy) openedBy.focus();
     }
 
-    // Returns true when the server accepted the change; otherwise shows its message.
-    async function send(method, url, body) {
+    // Returns true when the server accepted the change; otherwise reports its message.
+    async function send(method, url, body, report = showError) {
       try {
         const response = await fetch(url, {
           method,
@@ -100,16 +109,28 @@
         });
         if (response.ok) return true;
         if (response.status === UNAUTHORIZED) {
-          showError(SESSION_ENDED);
+          report(SESSION_ENDED);
           return false;
         }
         const data = await response.json().catch(() => ({}));
-        showError(data.error || SAVE_FAILED);
+        report(data.error || SAVE_FAILED);
       } catch (err) {
-        showError(SAVE_FAILED);
+        report(SAVE_FAILED);
       }
       return false;
     }
+
+    async function saveOrder(ids) {
+      const saved = await send('PUT', `${route}/order`, { ids }, showOrderError);
+      if (saved) ui.orderError.classList.add(HIDDEN);
+      return saved;
+    }
+
+    const sorter = window.AdminListSort.attach({
+      list: ui.list,
+      status: ui.orderStatus,
+      save: saveOrder,
+    });
 
     async function saveItem(event) {
       event.preventDefault();
@@ -127,7 +148,12 @@
     }
 
     async function removeItem() {
-      if (!confirm(removeQuestion(ui.fields.name.value.trim()))) return;
+      const confirmed = await window.AdminConfirm.ask({
+        title: `Remove ${noun}`,
+        message: removeQuestion(ui.fields.name.value.trim()),
+        confirmLabel: 'Remove',
+      });
+      if (!confirmed) return;
       const removed = await send('DELETE', `${route}/${editingId}`);
       if (!removed) return;
       closeModal();

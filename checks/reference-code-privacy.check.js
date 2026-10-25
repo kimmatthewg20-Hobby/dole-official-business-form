@@ -39,31 +39,34 @@ function getRoutes() {
 }
 
 // Each public GET route, filled in with real ids so it answers with the forms submitted below.
-function publicUrls(formIds, employeeId) {
+function publicUrls(formIds) {
   return {
     '/api/settings': ['/api/settings'],
-    '/api/entries': ['/api/entries', '/api/entries?search=Ana'],
-    '/api/entries/paginated': ['/api/entries/paginated'],
-    '/api/entries/:id': formIds.map((id) => `/api/entries/${id}`),
     '/api/tracker': ['/api/tracker'],
     '/api/tracker/all': ['/api/tracker/all'],
     '/print/:id': formIds.map((id) => `/print/${id}`),
-    '/api/employees': ['/api/employees', '/api/employees?search=Ana'],
-    '/api/employees/:id': [`/api/employees/${employeeId}`],
-    '/api/employees/:id/history': [`/api/employees/${employeeId}/history`],
     '/api/directory/suggest': ['/api/directory/suggest?q=Ana'],
     '/api/divisions': ['/api/divisions'],
     '/api/approvers': ['/api/approvers'],
   };
 }
 
-// Admin-only routes that read forms, asked without a session: the refusal must carry no code.
-function adminOnlyUrls(formIds) {
+// Admin-only routes that read forms or the Employee directory, asked without a session: the
+// refusal must carry no code.
+function adminOnlyUrls(formIds, employeeId) {
   return [
     '/api/admin/forms',
     '/api/export-data',
     '/api/cleanup/test?dryRun=true&days=1',
     ...formIds.map((id) => `/api/retrieve/${id}`),
+    '/api/entries',
+    '/api/entries?search=Ana',
+    '/api/entries/paginated',
+    ...formIds.map((id) => `/api/entries/${id}`),
+    '/api/employees',
+    '/api/employees?search=Ana',
+    `/api/employees/${employeeId}`,
+    `/api/employees/${employeeId}/history`,
   ];
 }
 
@@ -79,7 +82,7 @@ module.exports = [
   {
     name: 'every GET route is either checked for codes here or needs an admin session',
     async run() {
-      const walked = Object.keys(publicUrls([], 0));
+      const walked = Object.keys(publicUrls([]));
       const routes = getRoutes();
       assert.ok(routes.some((route) => route.path === '/api/tracker'), 'the walk reaches the mounted routers');
       assert.ok(routes.some((route) => route.adminOnly), 'the walk tells admin-only routes apart');
@@ -103,9 +106,8 @@ module.exports = [
         const employee = await db.get('SELECT id FROM employees_directory WHERE full_name = ?', [SEPARATE.employees[0].name]);
         assert.ok(employee, 'the submitted employee joined the directory');
         const formIds = forms.map((form) => form.id);
-        const routes = publicUrls(formIds, employee.id);
-        for (const url of Object.values(routes).flat()) await assertNoCode(baseUrl, url, codes, OK);
-        for (const url of adminOnlyUrls(formIds)) await assertNoCode(baseUrl, url, codes, UNAUTHORIZED);
+        for (const url of Object.values(publicUrls(formIds)).flat()) await assertNoCode(baseUrl, url, codes, OK);
+        for (const url of adminOnlyUrls(formIds, employee.id)) await assertNoCode(baseUrl, url, codes, UNAUTHORIZED);
       });
     },
   },

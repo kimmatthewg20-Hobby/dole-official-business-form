@@ -137,10 +137,10 @@ module.exports = [
     },
   },
   {
-    name: 'the Employees page has a Last Used column',
+    name: 'the admin Employees tab has a Last Used column',
     async run({ baseUrl }) {
-      const page = await (await fetch(`${baseUrl}/employees.html`)).text();
-      assert.match(page, /<th>Last Used<\/th>/);
+      const page = await (await fetch(`${baseUrl}/admin.html`)).text();
+      assert.match(page, /<th[^>]*>Last Used<\/th>/);
     },
   },
 ];

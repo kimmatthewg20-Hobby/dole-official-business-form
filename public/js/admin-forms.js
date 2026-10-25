@@ -1,12 +1,11 @@
 // The admin's list of forms with their Reference codes, under Data. Loaded when the tab is
-// opened, so the codes are only fetched once the admin is logged in and asks for them.
+// shown after login (AdminTabs), so the codes are only fetched once the admin is logged in.
 (function () {
   const ROUTE = '/api/admin/forms';
   const NO_CODE = '—';
   const FIRST_PAGE = 1;
   const LOAD_FAILED = 'Could not load the forms. Please log in again or try later.';
 
-  const tab = document.getElementById('tab-data');
   const body = document.getElementById('adminFormList');
   const empty = document.getElementById('adminFormEmpty');
   const status = document.getElementById('adminFormStatus');
@@ -58,7 +57,7 @@
     }
   }
 
-  tab.addEventListener('click', () => load(page));
+  window.AdminTabs.whenShown('data', () => load(page));
   previous.addEventListener('click', () => load(page - 1));
   next.addEventListener('click', () => load(page + 1));
 })();

@@ -26,9 +26,9 @@ Edit, delete and directory replace have no button in the pages; those three item
 - [ ] **Password change ends other sessions.** Log in on `/admin` in two browsers (or a normal and a private window). Change the password in the first: it stays logged in (the command above prints `200`); in the second it prints `401`. Change the password back.
 - [ ] **Admin routes are protected.** In a private window (not logged in), open `/api/cleanup/test?dryRun=true`. You get an error, not a list.
 - [ ] **Settings.** On `/admin`, change the division options and save. Reload `/`: the division list shows your new options. Change the admin password, log in again with the new one, then change it back.
-- [ ] **Directory replace (local and staging only, never production).** Open `/employees.html`: add an entry, edit it, delete it; the list follows each step. Then, logged in on `/admin`, in the console run a replace with one bad row:
+- [ ] **Directory replace (local and staging only, never production).** Log in on `/admin` and open the **Employees** tab (or `/admin#employees`): add an entry, edit it, delete it; the list follows each step. Then, logged in on `/admin`, in the console run a replace with one bad row:
   `fetch('/api/employees/bulk-replace', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({employees: [{firstname: 'Good', last_name: 'Row', position: 'Test', assigned_unit: 'TSSD'}, {firstname: 'Bad'}]})}).then(r => r.json()).then(console.log)`
-  It prints an error naming row 2, and `/employees.html` still shows the old directory unchanged.
+  It prints an error naming row 2, and the Employees tab still shows the old directory unchanged.
 - [ ] **Cleanup dry run.** On `/admin` under Data Cleanup, keep 25 days and click **Run Dry Test**. It lists only forms created more than 25 days ago and deletes nothing: the tracker shows the same forms afterwards. Do **not** click "Run Cleanup Now" on production.
 
 ## Cutover steps
@@ -45,7 +45,7 @@ Before you start: install the Turso CLI (`brew install tursodatabase/tap/turso`,
 4. **Check foreign keys.** `turso db shell ob-staging "PRAGMA foreign_keys;"` must print `1`. If it prints `0`, stop: deleting a form would leave its employees behind.
 5. **Preview deploy.** In Vercel, Project Settings, Environment Variables: add `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` with the staging values, scoped to **Preview** only. Add `SESSION_SECRET` scoped to **Preview**: a long random value (`openssl rand -hex 32`), kept nowhere else. Without it admin login is refused. Push the branch; Vercel builds a preview.
 6. **First login on the empty database.** There is no admin password stored yet, so `/admin` accepts only the value of the `ADMIN_PASSWORD` variable in Vercel; set it first, or nobody can log in (there is no built-in default). Log in with username `cnpoadmin`, then change the password straight away (Admin, Change Password; at least 10 characters). From then on `ADMIN_PASSWORD` is ignored.
-7. **Fill the empty tables.** In Admin, save the settings (office, division options). Open `/employees.html` while logged in as admin and load the employee directory (it offers to initialize an empty directory), or add people one by one.
+7. **Fill the empty tables.** In Admin, save the settings (office, division options). Open the **Employees** tab and load the employee directory (an empty directory offers **Load starting list**), or add people one by one.
 8. **Walk through** the TEST IT YOURSELF list on the preview URL. Forms you create here go to staging only.
 
 ### Production

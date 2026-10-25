@@ -52,6 +52,13 @@ function validateRows(rows, label, validate) {
   return { values };
 }
 
+// The order is rebuilt as 1..n from where each row stands in the file, and any sort_order the
+// file holds is never read: an export lists them in order already, an older one has none, and a
+// hand-edited value could repeat, skip or not be a number at all.
+function inFileOrder(values) {
+  return values.map((row, index) => ({ ...row, sort_order: index + 1 }));
+}
+
 function validateDivisions(rows) {
   const result = validateRows(rows, 'Division', validateDivision);
   if (result.error) return result;
@@ -64,7 +71,7 @@ function validateDivisions(rows) {
       result.values.map((row) => foldCapitals(row.name)),
       (first, second) => `Divisions ${first} and ${second} in the file share a name`,
     );
-  return repeat ? { error: repeat } : result;
+  return repeat ? { error: repeat } : { values: inFileOrder(result.values) };
 }
 
 function validateApprovers(rows) {
@@ -76,7 +83,7 @@ function validateApprovers(rows) {
     ),
     (first, second) => `Approvers ${first} and ${second} in the file share a name and position`,
   );
-  return repeat ? { error: repeat } : result;
+  return repeat ? { error: repeat } : { values: inFileOrder(result.values) };
 }
 
 function directoryText(value) {

@@ -1,7 +1,7 @@
 'use strict';
 
-// The admin and Employees pages show names, positions, units, purposes and destinations typed by
-// staff. Every value reaching innerHTML must go through the shared escaping helper.
+// The admin page and its Employees tab show names, positions, units, purposes and destinations
+// typed by staff. Every value reaching innerHTML must go through the shared escaping helper.
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -10,13 +10,20 @@ const { employeeRowHtml, messageRowHtml, historyRowHtml } = require('../public/j
 const views = require('../public/js/admin-cleanup-views');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
-const PAGES = ['admin.html', 'employees.html'];
+const ADMIN_PAGE = 'admin.html';
+const EMPLOYEES_TAB_SCRIPT = /^admin-employees.*\.js$/;
 const PAYLOAD = '<img src=x onerror=alert(1)>';
 const INNER_HTML_STATEMENT = /innerHTML\s*=[^;]*;/g;
 const INTERPOLATION = /\$\{([^}]*)\}/g;
 
 function readPublic(name) {
   return fs.readFileSync(path.join(PUBLIC_DIR, name), 'utf8');
+}
+
+function employeesTabScripts() {
+  return fs.readdirSync(path.join(PUBLIC_DIR, 'js'))
+    .filter((name) => EMPLOYEES_TAB_SCRIPT.test(name))
+    .map((name) => path.join('js', name));
 }
 
 function assertInert(html) {
@@ -26,9 +33,11 @@ function assertInert(html) {
 
 module.exports = [
   {
-    name: 'no admin or Employees page assigns raw interpolated text to innerHTML',
+    name: 'neither the admin page nor its Employees tab assigns raw interpolated text to innerHTML',
     run() {
-      for (const page of PAGES) {
+      const scripts = employeesTabScripts();
+      assert.ok(scripts.length > 0, 'the Employees tab scripts are found');
+      for (const page of [ADMIN_PAGE, ...scripts]) {
         const source = readPublic(page);
         for (const [statement] of source.matchAll(INNER_HTML_STATEMENT)) {
           for (const [, expression] of statement.matchAll(INTERPOLATION)) {
@@ -39,15 +48,13 @@ module.exports = [
     },
   },
   {
-    name: 'the admin and Employees pages use the shared stylesheet and keep no inline style block',
+    name: 'the admin page uses the shared stylesheet, keeps no inline style block and loads the escaping helper',
     run() {
-      for (const page of PAGES) {
-        const source = readPublic(page);
-        assert.ok(!source.includes('<style'), page);
-        assert.ok(source.includes('css/tokens.css') && source.includes('css/components.css'), page);
-      }
-      assert.ok(readPublic('employees.html').includes('js/escape-html.js'));
-      assert.ok(readPublic('admin.html').includes('js/escape-html.js'));
+      const source = readPublic(ADMIN_PAGE);
+      assert.ok(!source.includes('<style'));
+      assert.ok(source.includes('css/tokens.css') && source.includes('css/components.css'));
+      assert.ok(source.indexOf('js/escape-html.js') < source.indexOf('js/employee-rows.js'), 'escaping loads before the row builders');
+      assert.ok(source.indexOf('js/employee-rows.js') !== -1);
     },
   },
   {

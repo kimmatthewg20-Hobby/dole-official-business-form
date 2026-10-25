@@ -1,0 +1,129 @@
+/* The drag handle and the drop placeholder of the ordered Form options lists
+   (Divisions, Approvers; see admin-list-sort.js). */
+
+.list-table .list-sort-cell {
+  width: 1%;
+  padding-right: 0;
+  white-space: nowrap;
+}
+
+/* 2.75rem keeps the handle a comfortable target for a finger. touch-action: none stops the
+   browser from scrolling the page instead of moving the row. */
+.list-sort-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius-small);
+  background: transparent;
+  color: var(--ui-color-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.list-sort-handle:hover:not(:disabled) {
+  border-color: var(--ui-color-border);
+  background: var(--ui-color-page);
+  color: var(--ui-color-text);
+}
+
+.list-sort-handle:focus-visible {
+  outline: 2px solid var(--ui-color-focus);
+  outline-offset: 1px;
+  box-shadow: var(--ui-focus-ring);
+  color: var(--ui-color-text);
+}
+
+.list-sort-handle:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+/* The row being moved stands where it will land, between two accent lines. */
+.list-sort-row--dragging td {
+  background: var(--ui-color-page);
+  box-shadow:
+    inset 0 3px 0 var(--ui-color-accent),
+    inset 0 -3px 0 var(--ui-color-accent);
+}
+
+.list-sort-row--dragging .list-sort-handle {
+  color: var(--ui-color-accent);
+}
+
+body.list-sorting,
+body.list-sorting * {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* On a phone four columns do not fit, so each row shows the handle beside the name with the
+   code or position under it, and Edit at the end. */
+@media (max-width: 600px) {
+  .list-table--sortable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .list-table--sortable,
+  .list-table--sortable tbody {
+    display: block;
+  }
+
+  .list-table--sortable tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'handle name action'
+      'handle detail action';
+    align-items: center;
+    column-gap: var(--ui-space-2);
+    padding: var(--ui-space-2) 0;
+    border-bottom: 1px solid var(--ui-color-border);
+  }
+
+  .list-table--sortable td {
+    display: block;
+    padding: 0;
+    border-bottom: none;
+    overflow-wrap: break-word;
+  }
+
+  .list-table--sortable td.list-sort-cell {
+    grid-area: handle;
+    width: auto;
+  }
+
+  .list-table--sortable td:nth-child(2) {
+    grid-area: name;
+    font-weight: var(--ui-font-weight-semibold);
+  }
+
+  .list-table--sortable td:nth-child(3) {
+    grid-area: detail;
+    color: var(--ui-color-muted);
+    font-size: var(--ui-font-size-small);
+  }
+
+  .list-table--sortable td:last-child {
+    grid-area: action;
+  }
+
+  .list-table--sortable .list-sort-row--dragging {
+    background: var(--ui-color-page);
+    box-shadow:
+      inset 0 3px 0 var(--ui-color-accent),
+      inset 0 -3px 0 var(--ui-color-accent);
+  }
+
+  .list-table--sortable .list-sort-row--dragging td {
+    background: transparent;
+    box-shadow: none;
+  }
+}

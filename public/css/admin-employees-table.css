@@ -1,15 +1,14 @@
-/* Employee directory table and its pagination; becomes a list of labelled cards on phones. */
+/* Employees tab table: the Employee directory rows, their actions and the "Needs details" tag.
+   The table becomes a list of labelled cards on phones, so nothing scrolls sideways. */
 
-.employee-table,
-.table {
+.employee-table {
   width: 100%;
   border: 1px solid var(--ui-color-border);
   border-collapse: collapse;
   background: var(--ui-color-surface);
 }
 
-.employee-table th,
-.table th {
+.employee-table th {
   padding: var(--ui-space-3);
   border-bottom: 1px solid var(--ui-color-border);
   background: var(--ui-color-page);
@@ -19,8 +18,7 @@
   text-align: left;
 }
 
-.employee-table td,
-.table td {
+.employee-table td {
   padding: var(--ui-space-3);
   border-bottom: 1px solid var(--ui-color-border);
   overflow-wrap: anywhere;
@@ -44,14 +42,40 @@
   white-space: nowrap;
 }
 
-.action-btn {
+.action-btn,
+.pagination-btn {
   min-width: 2.5rem;
   min-height: 2.5rem;
-  border: none;
   border-radius: var(--ui-radius-small);
+  font: inherit;
+  cursor: pointer;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  padding: 0 var(--ui-space-2);
+  border: none;
   background: transparent;
   color: var(--ui-color-accent);
-  cursor: pointer;
+  font-size: var(--ui-font-size-small);
+}
+
+.action-btn .material-icons {
+  font-size: 1.125rem;
+}
+
+.needs-details-tag {
+  display: inline-block;
+  margin-left: var(--ui-space-1);
+  padding: 0 var(--ui-space-2);
+  border-radius: var(--ui-radius-pill);
+  background: #fef0c7;
+  color: #93370d;
+  font-size: var(--ui-font-size-small);
+  font-weight: var(--ui-font-weight-semibold);
+  white-space: nowrap;
 }
 
 .action-btn:hover {
@@ -62,39 +86,14 @@
   color: var(--ui-color-danger);
 }
 
-.pagination {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--ui-space-2);
-  margin-top: var(--ui-space-4);
-}
-
-.pagination-btn {
-  min-width: 2.5rem;
-  min-height: 2.5rem;
-  border: 1px solid var(--ui-color-border);
-  border-radius: var(--ui-radius-small);
-  background: var(--ui-color-surface);
-  color: var(--ui-color-text);
-  font: inherit;
-  cursor: pointer;
-}
-
-.pagination-btn.active {
-  border-color: var(--ui-color-accent);
-  background: var(--ui-color-accent);
-  color: var(--ui-color-accent-text);
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.action-btn:focus-visible,
+.pagination-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
 }
 
 @media (max-width: 700px) {
-  .employee-table thead,
-  .history-table thead {
+  .employee-table thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -105,55 +104,47 @@
   .employee-table,
   .employee-table tbody,
   .employee-table tr,
-  .employee-table td,
-  .history-table,
-  .history-table tbody,
-  .history-table tr,
-  .history-table td {
+  .employee-table td {
     display: block;
     width: 100%;
   }
 
-  .employee-table tr,
-  .history-table tr {
+  .employee-table tr {
     padding: var(--ui-space-2) var(--ui-space-3);
     border-bottom: 1px solid var(--ui-color-border);
   }
 
-  .employee-table td,
-  .history-table td {
+  .employee-table td {
     display: grid;
     grid-template-columns: 7rem 1fr;
     gap: var(--ui-space-2);
     padding: var(--ui-space-1) 0;
     border-bottom: none;
-    text-align: left;
   }
 
-  .employee-table td::before,
-  .history-table td::before {
+  .employee-table td::before {
     content: attr(data-label);
     color: var(--ui-color-muted);
     font-weight: var(--ui-font-weight-semibold);
   }
 
-  .employee-table td[colspan],
-  .history-table td[colspan] {
+  .employee-table td[colspan] {
     display: block;
   }
 
-  .employee-table td[colspan]::before,
-  .history-table td[colspan]::before {
+  .employee-table td[colspan]::before {
     content: none;
   }
 
   .employee-table td.action-col {
     display: flex;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--ui-space-1);
     min-width: 0;
+    white-space: normal;
   }
 
-  .action-col::before {
-    flex: 0 0 7rem;
+  .employee-table td.action-col::before {
+    content: none;
   }
 }

@@ -5,16 +5,20 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ADMIN_PAGE = path.join(__dirname, '..', 'public', 'admin.html');
-const CATEGORY_NAMES = ['Form options', 'Security', 'Data'];
+const CATEGORY_NAMES = ['Form options', 'Security', 'Data', 'Employees'];
 const CATEGORY_PANELS = {
   'form-options': 'divisionList',
   security: 'changePasswordForm',
   data: 'runCleanupBtn',
+  employees: 'employeeTableBody',
 };
+// The Employees tab replaces the old standalone page: its table, search, pagination and modals.
+const EMPLOYEE_CONTROLS = ['employeeSearch', 'employeePagination', 'employeeModal', 'employeeDeleteModal', 'employeeHistoryModal', 'employeeSummaryModal'];
+const EMPLOYEE_SCRIPTS = ['/js/employee-rows.js', '/js/admin-employees.js'];
 
 module.exports = [
   {
-    name: 'admin page has three categories, each holding its controls',
+    name: 'admin page has four categories, each holding its controls',
     run() {
       const html = fs.readFileSync(ADMIN_PAGE, 'utf8');
       for (const name of CATEGORY_NAMES) assert.ok(html.includes(`>${name}</button>`), name);
@@ -35,6 +39,9 @@ module.exports = [
         const panel = html.slice(start, end === -1 ? undefined : end);
         assert.ok(panel.includes(`id="${controlId}"`), `${tab} holds ${controlId}`);
       }
+      for (const id of EMPLOYEE_CONTROLS) assert.ok(html.includes(`id="${id}"`), id);
+      for (const script of EMPLOYEE_SCRIPTS) assert.ok(html.includes(`src="${script}"`), script);
+      assert.match(html, /<th[^>]*>Last Used<\/th>/);
     },
   },
 ];
