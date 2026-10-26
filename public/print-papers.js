@@ -57,6 +57,21 @@ const PAPER_STYLES = Object.entries(PAPER_SIZES)
   )
   .join('\n');
 
+// In print the page area is whatever the printer allows: Chrome raises the margins to the
+// printer's own unprintable edge, which can be taller than ours (inkjets often need about half an
+// inch at the bottom). The fixed heights above then overflow and the second form lands on a new
+// sheet, so on paper each form takes half of the real page height, 100vh, less the cut row.
+const PAPER_PRINT_STYLES = `
+  @media print {${Object.entries(PAPER_SIZES)
+    .map(
+      ([key, paper]) => `
+    html[data-paper="${key}"] .form-page {
+      min-height: calc(((100vh - ${CUT_GUIDE_HEIGHT_IN}in) / 2 - ${FIT_ALLOWANCE_IN}in) / ${paper.zoom});
+    }`
+    )
+    .join('')}
+  }`;
+
 const PAPER_OPTIONS_HTML = Object.entries(PAPER_SIZES)
   .map(([key, paper]) => `<option value="${key}" data-page-size="${paper.pageSize}">${paper.label}</option>`)
   .join('');
@@ -81,4 +96,4 @@ function toolbarHtml({ title, formNumber }) {
   </header>`;
 }
 
-module.exports = { PAGE_MARGIN, CUT_GUIDE_HEIGHT_IN, DEFAULT_PAPER, PAPER_SIZES, PAPER_STYLES, toolbarHtml };
+module.exports = { PAGE_MARGIN, CUT_GUIDE_HEIGHT_IN, DEFAULT_PAPER, PAPER_SIZES, PAPER_STYLES, PAPER_PRINT_STYLES, toolbarHtml };

@@ -126,4 +126,16 @@ module.exports = [
       assert.ok(!html.includes('<b>Head</b>'));
     },
   },
+  {
+    name: 'print: on paper each form takes half of the real page height, so a printer that needs bigger margins still gets two forms on a sheet',
+    run() {
+      const html = generatePrintableHTML(FORM);
+      for (const key of Object.keys(PAPER_SIZES)) {
+        const rule = new RegExp(`@media print \\{[\\s\\S]*?html\\[data-paper="${key}"\\] \\.form-page \\{\\s*min-height: calc\\(\\(\\(100vh - ([0-9.]+)in\\) / 2`);
+        const found = html.match(rule);
+        assert.ok(found, `${key}: no height that follows the page`);
+        assert.equal(Number(found[1]), CUT_GUIDE_HEIGHT_IN, `${key}: the cut row is counted off the page height`);
+      }
+    },
+  },
 ];
