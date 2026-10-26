@@ -200,18 +200,19 @@ function generatePrintableHTML(data) {
             </td>
             <td class="header-right">
               <div class="header-right-content">
-                <img src="https://batangmalaya.ph/wp-content/uploads/2022/12/1_dole.png" class="logo">
+                <img src="/dole-bicol-logo.svg" alt="DOLE Bicol logo" class="logo">
                 <div class="header-text">
                   Republic of the Philippines<br>
                   DEPARTMENT OF LABOR AND EMPLOYMENT<br>
-                  Intramuros, Manila
+                  Regional Office No. 5<br>
+                  Legazpi City
                 </div>
               </div>
             </td>
           </tr>
         </table>
         
-        <table>
+        <table class="roomy">
           <tr>
             <td style="width: 50%;">
               Name of Employee:<br>
@@ -279,14 +280,14 @@ function generatePrintableHTML(data) {
           </tr>
         </table>
         
-        <table>
+        <table class="roomy">
           <tr>
             <td style="width: 50%;" class="center-text approval-section">
-              <div style="margin-top: 60px;"><strong>${capitalizeText(employee.name)}</strong></div>
+              <div style="margin-top: 40px;"><strong>${capitalizeText(employee.name)}</strong></div>
               <div>Employee's Signature</div>
             </td>
             <td style="width: 50%;" class="center-text approval-section">
-              <div style="text-align: left;"><strong>Approved by:</strong></div><br><br><br>
+              <div style="text-align: left;"><strong>Approved by:</strong></div><br><br>
               <strong>${capitalizeText(approvedBy)}</strong><br>
               ${escapeHtml(approvedByPosition)}
             </td>
@@ -343,7 +344,9 @@ function generatePrintableHTML(data) {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Official Business Form - ${escapeHtml(formData.id)}</title>
-      <link rel="icon" href="https://batangmalaya.ph/wp-content/uploads/2022/12/1_dole.png" type="image/png">
+      <link rel="icon" type="image/svg+xml" href="/dole-bicol-logo.svg">
+      <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+      <link rel="apple-touch-icon" href="/apple-touch-icon.png">
       <style>${PRINT_STYLES}</style>
       <style id="pageSize"></style>
     </head>

@@ -44,4 +44,20 @@ module.exports = [
       assert.equal(found[0], SIGNATURE_COMMENT);
     },
   },
+  {
+    name: 'clean source: every page and the print page use the DOLE Bicol logo as the tab icon, and its files exist',
+    run() {
+      const pages = fs.readdirSync(PUBLIC_DIR).filter((name) => name.endsWith('.html'));
+      const printed = generatePrintableHTML(PRINT_FORM);
+      const sources = [...pages.map((page) => [page, fs.readFileSync(path.join(PUBLIC_DIR, page), 'utf8')]), ['print page', printed]];
+      for (const [name, html] of sources) {
+        assert.ok(html.includes('<link rel="icon" type="image/svg+xml" href="/dole-bicol-logo.svg">'), `${name}: SVG icon`);
+        assert.ok(html.includes('href="/favicon-192.png"'), `${name}: PNG icon for browsers without SVG icons`);
+        assert.ok(html.includes('rel="apple-touch-icon" href="/apple-touch-icon.png"'), `${name}: home-screen icon`);
+      }
+      for (const file of ['dole-bicol-logo.svg', 'favicon-192.png', 'apple-touch-icon.png']) {
+        assert.ok(fs.statSync(path.join(PUBLIC_DIR, file)).size > 0, file);
+      }
+    },
+  },
 ];

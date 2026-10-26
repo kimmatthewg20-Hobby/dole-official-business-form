@@ -138,4 +138,14 @@ module.exports = [
       }
     },
   },
+  {
+    name: 'print: the header shows the DOLE Bicol logo and the regional office lines, with no image fetched from another site',
+    run() {
+      const html = generatePrintableHTML(FORM);
+      assert.ok(html.includes('<img src="/dole-bicol-logo.svg" alt="DOLE Bicol logo" class="logo">'));
+      assert.match(html, /Republic of the Philippines<br>\s*DEPARTMENT OF LABOR AND EMPLOYMENT<br>\s*Regional Office No\. 5<br>\s*Legazpi City/);
+      assert.ok(!/Intramuros/.test(html), 'the old Manila address is gone');
+      assert.ok(!/https?:\/\/[^"' ]+\.(png|svg|jpg)/i.test(html), 'no logo is loaded from another site');
+    },
+  },
 ];

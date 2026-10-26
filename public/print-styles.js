@@ -56,24 +56,26 @@ const PRINT_STYLES = `
     border: 1px solid #2C3E50;
   }
   th, td {
-    padding: 3px 4px;
+    padding: 2px 4px;
     text-align: left;
   }
   .header-left { width: 25%; text-align: left; vertical-align: middle; font-weight: bold; }
   .header-center { width: 50%; text-align: center; vertical-align: middle; font-weight: bold; }
   .header-right { width: 10%; text-align: center; vertical-align: middle; }
-  .logo { width: 40px; height: auto; margin-left: 10px; margin-right: 10px; }
+  .logo { width: 48px; height: auto; margin-left: 8px; margin-right: 8px; }
   .header-right-content {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
   }
-  .header-text { text-align: center; white-space: nowrap; line-height: 1.2; font-size: 12px; }
+  .header-text { text-align: center; white-space: nowrap; line-height: 1.1; font-size: 11px; }
   .center-text { text-align: center; }
   .approval-section { height: 60px; min-height: 60px; }
-  .certificate-section { height: 80px; min-height: 80px; }
-  .instructions { font-size: 9px; line-height: 1.2; }
+  /* The employee row and the signature cells get more room; the certificate box gives it back. */
+  .roomy td { padding-top: 5px; padding-bottom: 5px; line-height: 1.35; }
+  .certificate-section { height: 58px; min-height: 58px; }
+  .instructions { font-size: 9px; line-height: 1.15; }
   .cut-guide {
     display: flex;
     align-items: center;
