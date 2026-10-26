@@ -20,8 +20,8 @@ function count(text, part) {
 }
 
 const MIN_HEIGHT_RULE = (key) =>
-  new RegExp(`html\\[data-paper="${key}"\\] \\.form-page \\{[^}]*min-height: ([0-9.]+)in;`);
-const ZOOM_RULE = (key) => new RegExp(`html\\[data-paper="${key}"\\] \\.form-page \\{[^}]*zoom: ([0-9.]+);`);
+  new RegExp(`html\\[data-paper="${key}"\\] \\.form-page \\{[^}]*min-height: calc\\(([0-9.]+)in / var\\(--form-zoom\\)\\)`);
+const ZOOM_RULE = (key) => new RegExp(`html\\[data-paper="${key}"\\] \\{ --form-zoom: ([0-9.]+); \\}`);
 
 module.exports = [
   {
@@ -36,9 +36,9 @@ module.exports = [
       const html = generatePrintableHTML(FORM);
       assert.equal(DEFAULT_PAPER, 'long');
       assert.match(html, /<html lang="en" data-paper="long">/);
-      assert.match(html, /<option value="long" data-page-size="8.5in 13in">Long \/ Folio<\/option>/);
-      assert.match(html, /<option value="a4" data-page-size="A4">A4<\/option>/);
-      assert.match(html, /<script src="\/js\/print-toolbar.js"><\/script>/);
+      assert.match(html, /<option value="long" data-page-size="8.5in 13in"[^>]*>Long \/ Folio<\/option>/);
+      assert.match(html, /<option value="a4" data-page-size="A4"[^>]*>A4<\/option>/);
+      assert.match(html, /<script src="\/js\/print-fit.js"><\/script>\s*<script src="\/js\/print-toolbar.js"><\/script>/);
     },
   },
   {
@@ -46,9 +46,10 @@ module.exports = [
     run() {
       const html = generatePrintableHTML(FORM);
       for (const [key, paper] of Object.entries(PAPER_SIZES)) {
-        const rule = new RegExp(`html\\[data-paper="${key}"\\] \\.form-page \\{\\s*width: ([0-9.]+)in;\\s*zoom: ([0-9.]+);`);
-        const [, designWidth, zoom] = html.match(rule);
-        assert.ok(Math.abs(designWidth * zoom - (paper.widthIn - 2 * SIDE_MARGIN_IN)) < ROUNDING_IN, key);
+        const rule = new RegExp(`html\\[data-paper="${key}"\\] \\.form-page \\{\\s*width: calc\\(([0-9.]+)in / var\\(--form-zoom\\)\\);\\s*zoom: var\\(--form-zoom\\);`);
+        const designWidth = Number(html.match(rule)[1]);
+        const zoom = Number(html.match(ZOOM_RULE(key))[1]);
+        assert.ok(Math.abs(designWidth - (paper.widthIn - 2 * SIDE_MARGIN_IN)) < ROUNDING_IN && zoom === paper.zoom, key);
       }
     },
   },
@@ -80,7 +81,7 @@ module.exports = [
     run() {
       const html = generatePrintableHTML(FORM);
       for (const [key, paper] of Object.entries(PAPER_SIZES)) {
-        const formHeight = Number(html.match(MIN_HEIGHT_RULE(key))[1]) * Number(html.match(ZOOM_RULE(key))[1]);
+        const formHeight = Number(html.match(MIN_HEIGHT_RULE(key))[1]);
         const printable = paper.heightIn - 2 * TOP_BOTTOM_MARGIN_IN;
         const used = 2 * formHeight + CUT_GUIDE_HEIGHT_IN;
         assert.ok(used <= printable, `${key} overflows`);

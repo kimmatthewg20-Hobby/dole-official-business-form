@@ -353,6 +353,7 @@ function generatePrintableHTML(data) {
     <body>
       ${toolbarHtml({ title: 'Official Business Form', formNumber: `Form No. ${escapeHtml(formData.id)}` })}
       ${employeeForms}
+      <script src="/js/print-fit.js"></script>
       <script src="/js/print-toolbar.js"></script>
     </body>
     </html>

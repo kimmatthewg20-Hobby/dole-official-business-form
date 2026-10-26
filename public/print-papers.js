@@ -16,6 +16,13 @@ const CUT_GUIDE_HEIGHT_IN = 0.25;
 // blank page.
 const FIT_ALLOWANCE_IN = 0.02;
 
+// Chrome raises a page's margins to the printer's own unprintable edge; an inkjet's bottom edge
+// can be about 0.2in more than ours. A sheet is fitted with this much to spare, so a form that
+// grows (a long purpose, a long destination) still lands two to a sheet on such a printer.
+const HARDWARE_RESERVE_IN = 0.25;
+// A sheet's forms never shrink below this share of their paper size, so the text stays readable.
+const MIN_FIT = 0.78;
+
 const DEFAULT_PAPER = 'long';
 const PAPER_SIZES = {
   long: { label: 'Long / Folio', pageSize: '8.5in 13in', widthIn: 8.5, heightIn: 13, zoom: 1 },
@@ -28,8 +35,8 @@ const PAPER_SIZES = {
   },
 };
 
-function designWidthIn(paper) {
-  return (paper.widthIn - 2 * MARGIN_SIDE_IN) / paper.zoom;
+function printableWidthIn(paper) {
+  return paper.widthIn - 2 * MARGIN_SIDE_IN;
 }
 
 // Half of the printable height, less the guide: every form is cut to the same size, so the
@@ -40,19 +47,22 @@ function formHeightIn(paper) {
 }
 
 // On screen a sheet is drawn as the paper; the print block in print-styles.js removes the padding
-// because the printer then supplies the margins.
+// because the printer then supplies the margins. --form-zoom is the paper's scale; a sheet whose
+// forms are too tall sets its own smaller value (js/print-toolbar.js), and the form's width and
+// height follow it, so the form still spans the printable width exactly.
 const PAPER_STYLES = Object.entries(PAPER_SIZES)
   .map(
     ([key, paper]) => `
+  html[data-paper="${key}"] { --form-zoom: ${paper.zoom}; }
   html[data-paper="${key}"] .sheet {
     width: ${paper.widthIn}in;
     min-height: ${paper.heightIn}in;
     padding: ${PAGE_MARGIN};
   }
   html[data-paper="${key}"] .form-page {
-    width: ${designWidthIn(paper)}in;
-    zoom: ${paper.zoom};
-    min-height: ${formHeightIn(paper) / paper.zoom}in;
+    width: calc(${printableWidthIn(paper)}in / var(--form-zoom));
+    zoom: var(--form-zoom);
+    min-height: calc(${formHeightIn(paper)}in / var(--form-zoom));
   }`
   )
   .join('\n');
@@ -66,14 +76,17 @@ const PAPER_PRINT_STYLES = `
     .map(
       ([key, paper]) => `
     html[data-paper="${key}"] .form-page {
-      min-height: calc(((100vh - ${CUT_GUIDE_HEIGHT_IN}in) / 2 - ${FIT_ALLOWANCE_IN}in) / ${paper.zoom});
+      min-height: calc(((100vh - ${CUT_GUIDE_HEIGHT_IN}in) / 2 - ${FIT_ALLOWANCE_IN}in) / var(--form-zoom));
     }`
     )
     .join('')}
   }`;
 
 const PAPER_OPTIONS_HTML = Object.entries(PAPER_SIZES)
-  .map(([key, paper]) => `<option value="${key}" data-page-size="${paper.pageSize}">${paper.label}</option>`)
+  .map(
+    ([key, paper]) =>
+      `<option value="${key}" data-page-size="${paper.pageSize}" data-height-in="${paper.heightIn}" data-zoom="${paper.zoom}">${paper.label}</option>`
+  )
   .join('');
 
 // A header bar fixed to the top of the page: the way back to the main page and the paper choice
@@ -84,7 +97,7 @@ function toolbarHtml({ title, formNumber }) {
     <div class="print-toolbar__start">
       <a class="print-back" href="/">&larr; Main page</a>
       <label class="paper-label" for="paperSize">Paper</label>
-      <select id="paperSize" data-margin="${PAGE_MARGIN}" data-default="${DEFAULT_PAPER}">${PAPER_OPTIONS_HTML}</select>
+      <select id="paperSize" data-margin="${PAGE_MARGIN}" data-default="${DEFAULT_PAPER}" data-margin-top-bottom-in="${MARGIN_TOP_BOTTOM_IN}" data-guide-in="${CUT_GUIDE_HEIGHT_IN}" data-allowance-in="${FIT_ALLOWANCE_IN}" data-reserve-in="${HARDWARE_RESERVE_IN}" data-min-fit="${MIN_FIT}">${PAPER_OPTIONS_HTML}</select>
     </div>
     <div class="print-toolbar__title">${title}<span class="print-toolbar__number">${formNumber}</span>
       <span class="print-toolbar__code" id="newFormCode" hidden>Reference code: <code></code></span>

@@ -104,4 +104,58 @@
     window.addEventListener('resize', scheduleCurrentPage);
     select.addEventListener('change', scheduleCurrentPage);
   }
+
+  // Fits each sheet: a sheet whose forms are taller than their half of the page (a long purpose
+  // or destination) is scaled down just enough to keep two forms on it. Short sheets keep the
+  // paper's own scale. The printer's unprintable edge is allowed for with a reserve.
+  var PX_PER_IN = 96;
+  var FIT_PASSES = 3;
+
+  function numberOf(name) {
+    return Number(select.getAttribute(name));
+  }
+
+  function availableFormPx(heightIn) {
+    var rows = heightIn - 2 * numberOf('data-margin-top-bottom-in') - numberOf('data-guide-in') - numberOf('data-reserve-in');
+    return (rows / 2 - numberOf('data-allowance-in')) * PX_PER_IN;
+  }
+
+  // The natural height ignores the stretch to the page, which only ever adds space.
+  function naturalHeights(forms) {
+    return forms.map(function (form) {
+      form.style.minHeight = '0px';
+      var height = form.getBoundingClientRect().height;
+      form.style.minHeight = '';
+      return height;
+    });
+  }
+
+  function fitSheet(sheet, option) {
+    var baseZoom = Number(option.getAttribute('data-zoom'));
+    var floor = baseZoom * numberOf('data-min-fit');
+    var available = availableFormPx(Number(option.getAttribute('data-height-in')));
+    var forms = Array.prototype.slice.call(sheet.querySelectorAll('.form-page'));
+    var zoom = baseZoom;
+    sheet.style.removeProperty('--form-zoom');
+    // Narrower text wraps differently, so a second look corrects the first estimate.
+    for (var pass = 0; pass < FIT_PASSES; pass += 1) {
+      var fit = window.PrintFit.fitFactor(naturalHeights(forms), available, floor / zoom);
+      if (fit === 1) return;
+      zoom = Math.max(floor, zoom * fit);
+      sheet.style.setProperty('--form-zoom', String(zoom));
+    }
+  }
+
+  function fitSheets() {
+    var option = select.options[select.selectedIndex];
+    sheets.forEach(function (sheet) {
+      fitSheet(sheet, option);
+    });
+    scheduleCurrentPage();
+  }
+
+  fitSheets();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSheets);
+  select.addEventListener('change', fitSheets);
+  window.addEventListener('beforeprint', fitSheets);
 })();
