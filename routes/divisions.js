@@ -40,12 +40,17 @@ async function findClash({ name, code }, exceptId) {
   return `The code ${code} is already used by ${clash.name}`;
 }
 
+// In the order the admin set; also read by the Assistant filing tools.
+function readDivisionsInOrder() {
+  return db.all(
+    'SELECT id, name, code FROM divisions ORDER BY sort_order, name COLLATE NOCASE, id LIMIT ?',
+    [MAX_DIVISIONS],
+  );
+}
+
 async function listDivisions(req, res) {
   try {
-    const divisions = await db.all(
-      'SELECT id, name, code FROM divisions ORDER BY sort_order, name COLLATE NOCASE, id LIMIT ?',
-      [MAX_DIVISIONS],
-    );
+    const divisions = await readDivisionsInOrder();
     res.json({ divisions });
   } catch (err) {
     serverError(res, 'Error listing Divisions', err);
@@ -107,4 +112,4 @@ router.put('/api/divisions/order', adminApiOnly, saveOrder(TABLE, NOUN));
 router.put('/api/divisions/:id', adminApiOnly, editDivision);
 router.delete('/api/divisions/:id', adminApiOnly, removeDivision);
 
-module.exports = { router, MAX_DIVISIONS };
+module.exports = { router, MAX_DIVISIONS, readDivisionsInOrder };
