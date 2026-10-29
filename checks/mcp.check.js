@@ -17,7 +17,7 @@ const {
 } = require('./mcp-helpers');
 
 const METHOD_NOT_ALLOWED = 405;
-const TOOLS_SO_FAR = ['find_employee', 'list_approvers', 'list_divisions'];
+const TOOLS_SO_FAR = ['find_employee', 'list_approvers', 'list_divisions', 'submit_official_business'];
 // Filing is all an assistant may do: no tool may change, remove or list stored forms.
 const FORBIDDEN_TOOL = /edit|update|delete|remove|cancel|form/i;
 const [DIVISIONS, APPROVERS] = LISTS;

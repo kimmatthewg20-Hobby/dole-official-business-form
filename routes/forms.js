@@ -1,38 +1,16 @@
 const express = require('express');
 const db = require('../db');
-const { validateSubmission, validateDateMode } = require('./form-validation');
-const { validateListedChoices } = require('./form-lists-validation');
-
-const { expandSubmission, insertSubmission } = require('./form-creation');
-const { isCodeUnavailable } = require('./reference-code');
+const { submitForm } = require('./form-submit');
 const { publicFormWithEmployees } = require('./public-form');
 const { adminApiOnly } = require('./admin-auth');
-
-const SERVICE_UNAVAILABLE = 503;
 
 const router = express.Router();
 
 // Submit: one submission stores one form, whichever Date mode is chosen.
 router.post('/api/submit', async (req, res) => {
-  const body = req.body || {};
-  const validationError = validateSubmission(body) || validateDateMode(body);
-  if (validationError) return res.status(400).json({ error: validationError });
-  try {
-    const listError = await validateListedChoices(body);
-    if (listError) return res.status(400).json({ error: listError });
-  } catch (error) {
-    console.error('Database error while checking the lists:', error);
-    return res.status(500).json({ error: 'Database error: ' + error.message });
-  }
-
-  try {
-    const form = await insertSubmission(body, expandSubmission(body), new Date().toISOString());
-    res.json({ success: true, id: form.id, forms: [form] });
-  } catch (error) {
-    if (isCodeUnavailable(error)) return res.status(SERVICE_UNAVAILABLE).json({ error: error.message });
-    console.error('Database error during form submission:', error);
-    res.status(500).json({ error: 'Database error: ' + error.message });
-  }
+  const { form, refusal } = await submitForm(req.body || {});
+  if (refusal) return res.status(refusal.status).json({ error: refusal.message });
+  res.json({ success: true, id: form.id, forms: [form] });
 });
 
 // Form ids are sequential, so reading a whole form by id is for the admin; staff open their

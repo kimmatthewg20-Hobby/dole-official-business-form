@@ -54,6 +54,14 @@ async function callTool(baseUrl, name, args = {}) {
   return JSON.parse(result.content[0].text);
 }
 
+// The plain words of a refused call, whether the tool or the input schema refused it.
+async function toolRefusal(baseUrl, name, args) {
+  const body = await (await postMcp(baseUrl, 'tools/call', { name, arguments: args })).json();
+  if (body.error) return body.error.message;
+  assert.equal(body.result.isError, true, JSON.stringify(body.result.content));
+  return body.result.content[0].text;
+}
+
 module.exports = {
   MCP_ROUTE,
   SESSION_HEADER,
@@ -62,4 +70,5 @@ module.exports = {
   initialize,
   toolNames,
   callTool,
+  toolRefusal,
 };
