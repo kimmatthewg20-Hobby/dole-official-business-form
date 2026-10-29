@@ -72,7 +72,8 @@ function websiteBody(filing, position) {
 // Returns { body } ready for submitForm, or { error } when the Approver is ambiguous.
 async function filingToWebsiteBody(filing) {
   const { position, error } = await approverPosition(filing);
-  return error ? { error } : { body: websiteBody(filing, position) };
+  if (error) return { error };
+  return { body: websiteBody(filing, position), units: filing.employees.map((employee) => employee.unit || '') };
 }
 
 module.exports = {

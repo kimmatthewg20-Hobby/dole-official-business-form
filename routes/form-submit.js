@@ -3,7 +3,7 @@
 // The one path from a submitted body to a stored form. The website's submit and the Assistant
 // filing tool both use it, so their validation, refusals and stored forms cannot drift.
 
-const { validateSubmission, validateDateMode } = require('./form-validation');
+const { validateSubmission, validateDateMode, validateUnits } = require('./form-validation');
 const { validateListedChoices } = require('./form-lists-validation');
 const { expandSubmission, insertSubmission } = require('./form-creation');
 const { isCodeUnavailable } = require('./reference-code');
@@ -27,9 +27,9 @@ async function listRefusal(body) {
   }
 }
 
-async function createForm(body) {
+async function createForm(body, units) {
   try {
-    return { form: await insertSubmission(body, expandSubmission(body), new Date().toISOString()) };
+    return { form: await insertSubmission(body, expandSubmission(body), new Date().toISOString(), { units }) };
   } catch (error) {
     if (isCodeUnavailable(error)) return refused(SERVICE_UNAVAILABLE, error.message);
     console.error('Database error during form submission:', error);
@@ -39,10 +39,12 @@ async function createForm(body) {
 
 // Returns { form: { id, datesOfOB, referenceCode } } once stored, or
 // { refusal: { status, message } } in the words the website shows.
-async function submitForm(body) {
-  const validationError = validateSubmission(body) || validateDateMode(body);
+// `units` is a separate argument, never read from the body: only the Assistant filing sets it,
+// so a unit sent to the website's submit is ignored.
+async function submitForm(body, units = []) {
+  const validationError = validateSubmission(body) || validateDateMode(body) || validateUnits(units);
   if (validationError) return refused(BAD_REQUEST, validationError);
-  return (await listRefusal(body)) || createForm(body);
+  return (await listRefusal(body)) || createForm(body, units);
 }
 
 module.exports = { submitForm };

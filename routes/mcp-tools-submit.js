@@ -14,7 +14,11 @@ const TEXT_CONTENT = 'text';
 
 const inputSchema = {
   employees: z
-    .array(z.object({ name: z.string().trim(), position: z.string().trim().optional() }))
+    .array(z.object({
+        name: z.string().trim(),
+        position: z.string().trim().optional(),
+        unit: z.string().trim().optional().describe('assigned unit, only for an employee find_employee did not find'),
+      }))
     .describe('Every employee on the form, each with name and position.'),
   dates: z.array(z.string().trim()).describe('Dates of the Official Business as yyyy-mm-dd.'),
   destination: z.string().trim().describe('Where the employees go.'),
@@ -50,9 +54,9 @@ function summaryText(body, form) {
 }
 
 async function submitOfficialBusiness(filing) {
-  const { body, error } = await filingToWebsiteBody(filing);
+  const { body, units, error } = await filingToWebsiteBody(filing);
   if (error) return toolRefusal(error);
-  const { form, refusal } = await submitForm(body);
+  const { form, refusal } = await submitForm(body, units);
   if (refusal) return toolRefusal(refusal.message);
   return jsonToolResult({
     id: form.id,
