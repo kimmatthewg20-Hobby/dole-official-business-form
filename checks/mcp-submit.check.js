@@ -66,7 +66,7 @@ module.exports = [
     },
   },
   {
-    name: 'the summary is two tables: the details of the form with the link and code, and the numbered employees',
+    name: 'the summary is one table: the details of the form, one row per employee, the link and the code',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
         const filed = await callTool(baseUrl, SUBMIT, FILING);
@@ -76,8 +76,9 @@ module.exports = [
           '| **Destination To** | Municipal Hall |', '| **Departure** | 8:00 AM |', '| **Expected Return** | 5:30 PM |',
           '| **Purpose** | Site visit |', '| **Division** | TSSD |',
           '| **To be approved by** | Head Person, Provincial Head |', `| **Link** | [${filed.printLink}]`,
-          `| **Code** | \`${filed.referenceCode}\` |`, '### Employees', '| # | Name | Position |',
-          '| 1 | Ana Reyes |', '| 2 | Ben Cruz |', '| 3 | Cora Diaz |'];
+          `| **Code** | \`${filed.referenceCode}\` |`,
+          '| **Employee 1** | Ana Reyes', '| **Employee 2** | Ben Cruz', '| **Employee 3** | Cora Diaz'];
+        assert.doesNotMatch(summary, /### Employees/, 'employees are rows of the one table');
         for (const text of expected) assert.ok(summary.includes(text), `${text} in: ${summary}`);
       });
     },

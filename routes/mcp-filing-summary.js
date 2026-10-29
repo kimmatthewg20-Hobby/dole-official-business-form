@@ -1,8 +1,8 @@
 'use strict';
 
-// The summary an Assistant filing hands back, written as Markdown tables: a title, one table
-// of the form's details and one of its employees, then the link and the Reference code. The
-// assistant shows it as it is, so every reply looks the same and reads at a glance.
+// The summary an Assistant filing hands back, written as Markdown: a title and one table with the
+// form's details, its employees, the link and the Reference code. The assistant shows it as it
+// is, so every reply looks the same and reads at a glance.
 
 const { formatDateWording } = require('../public/js/date-wording');
 const DateMode = require('../public/js/date-mode');
@@ -33,8 +33,12 @@ function detailRow(label, answer) {
   return `| **${label}** | ${answer} |`;
 }
 
-function employeeRow({ name, position }, index) {
-  return `| ${index + 1} | ${plain(name)} | ${plain(position || '')} |`;
+// One row per employee in the same table: a second table after a heading showed as raw text in
+// ChatGPT, while a single table showed correctly in both ChatGPT and Claude.
+function employeeRows(employees) {
+  return employees.map(({ name, position }, index) => {
+    return detailRow(`Employee ${index + 1}`, plain(position ? `${name}, ${position}` : name));
+  });
 }
 
 function filingSummary(body, datesOfOB, { printLink, referenceCode }) {
@@ -51,16 +55,11 @@ function filingSummary(body, datesOfOB, { printLink, referenceCode }) {
     detailRow('Expected Return', clockTime(body.returnTime)),
     detailRow('Purpose', plain(body.purpose)),
     detailRow('Division', plain(body.division)),
+    ...employeeRows(body.employees),
     detailRow('To be approved by', plain(approver)),
     // The link and the code are made by the server, so they need no escaping.
     detailRow('Link', `[${printLink}](${printLink})`),
     detailRow('Code', `\`${referenceCode}\``),
-    '',
-    '### Employees',
-    '',
-    '| # | Name | Position |',
-    '| :-: | :-- | :-- |',
-    ...body.employees.map(employeeRow),
   ].join('\n');
 }
 
