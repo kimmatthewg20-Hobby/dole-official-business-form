@@ -6,6 +6,7 @@
 const { readDivisionsInOrder } = require('./divisions');
 const { readApproversInOrder } = require('./approvers');
 const { jsonToolResult } = require('./mcp-tool-result');
+const { LIST_DIVISIONS_DESCRIPTION, LIST_APPROVERS_DESCRIPTION } = require('./mcp-guidance');
 
 const LIST_DIVISIONS = 'list_divisions';
 const LIST_APPROVERS = 'list_approvers';
@@ -25,18 +26,12 @@ async function listApprovers() {
 const tools = [
   {
     name: LIST_DIVISIONS,
-    description:
-      'Lists every Division (name and code) in the order the admin set. A form must be filed ' +
-      'under one of these Divisions. When you must ask the staff member for the Division, ' +
-      'offer these names in this order as numbered choices.',
+    description: LIST_DIVISIONS_DESCRIPTION,
     handler: listDivisions,
   },
   {
     name: LIST_APPROVERS,
-    description:
-      'Lists every Approver (name and position) in the order the admin set. A form must name ' +
-      'one of these Approvers. When you must ask the staff member for the Approver, offer ' +
-      'these in this order as numbered choices.',
+    description: LIST_APPROVERS_DESCRIPTION,
     handler: listApprovers,
   },
 ];

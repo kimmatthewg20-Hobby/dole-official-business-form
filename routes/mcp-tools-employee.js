@@ -6,6 +6,7 @@
 const { z } = require('zod');
 const { findEmployeesByName, MAX_QUERY_LENGTH } = require('./directory-suggest');
 const { jsonToolResult } = require('./mcp-tool-result');
+const { FIND_EMPLOYEE_DESCRIPTION } = require('./mcp-guidance');
 
 const FIND_EMPLOYEE = 'find_employee';
 
@@ -20,10 +21,7 @@ async function findEmployee({ name }) {
 const tools = [
   {
     name: FIND_EMPLOYEE,
-    description:
-      'Finds Employees in the Employee directory whose name starts with the given part of a ' +
-      'name, ignoring capitals. Returns at most a few matches, each with name, position and ' +
-      'assigned unit.',
+    description: FIND_EMPLOYEE_DESCRIPTION,
     inputSchema,
     handler: findEmployee,
   },

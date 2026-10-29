@@ -8,6 +8,7 @@ const { submitForm } = require('./form-submit');
 const { filingToWebsiteBody, DATE_MODE_CHOICES, DATE_MODE_LABELS, DEFAULT_FROM } = require('./mcp-filing-body');
 const { jsonToolResult } = require('./mcp-tool-result');
 const { filingLimitRefusal } = require('./mcp-filing-limit');
+const { SUBMIT_DESCRIPTION } = require('./mcp-guidance');
 
 const SUBMIT_OFFICIAL_BUSINESS = 'submit_official_business';
 const PRINT_ROUTE = '/print/';
@@ -73,13 +74,7 @@ async function submitOfficialBusiness(filing, { sourceAddress }) {
 const tools = [
   {
     name: SUBMIT_OFFICIAL_BUSINESS,
-    description:
-      'Files one Official Business form for the given employees, dates, destination, times, ' +
-      'purpose, Division and Approver, and returns its id, print link, Reference code and a ' +
-      'summary. The Division and Approver must be on list_divisions and list_approvers. Ask ' +
-      `only for what is missing; use "${DEFAULT_FROM}" and All Dates unless told otherwise. ` +
-      'Give the staff member the print link, the Reference code and the summary. The ' +
-      'Reference code lets anyone holding it edit the form, so share it only with them.',
+    description: SUBMIT_DESCRIPTION,
     inputSchema,
     handler: submitOfficialBusiness,
   },
