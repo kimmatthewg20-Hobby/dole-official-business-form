@@ -24,26 +24,33 @@
     return node;
   }
 
-  // The clipboard API is tried first; plain http pages, embedded views and browsers that deny
-  // it fall back to the textarea way.
-  async function writeToClipboard(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      try {
-        await navigator.clipboard.writeText(text);
-        return;
-      } catch (err) {
-        // denied: use the textarea way below
-      }
-    }
+  // The textarea way runs first and synchronously, inside the click, while the click still counts
+  // as a user action (opening a link in a new tab would use that up). The clipboard API is the
+  // way for browsers that refuse the textarea way.
+  function copyWithTextarea(text) {
     const scratch = el('textarea');
     scratch.value = text;
     scratch.setAttribute('readonly', '');
     scratch.className = 'connect-assistant__scratch';
     document.body.appendChild(scratch);
     scratch.select();
-    const copied = document.execCommand('copy');
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch (err) {
+      copied = false;
+    }
     scratch.remove();
-    if (!copied) throw new Error('copy failed');
+    return copied;
+  }
+
+  async function writeToClipboard(text) {
+    if (copyWithTextarea(text)) return;
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    throw new Error('copy failed');
   }
 
   function copyRow(labelText, value) {
@@ -184,5 +191,7 @@
   window.ConnectAssistant = {
     TAB_IDS: TABS.map((tab) => tab.id),
     panelFor: (tabId) => panels[tabId] || null,
+    copyText: writeToClipboard,
+    copyRow,
   };
 })();
