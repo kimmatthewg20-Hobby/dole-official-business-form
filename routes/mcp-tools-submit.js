@@ -54,11 +54,13 @@ async function submitOfficialBusiness(filing, { sourceAddress, siteAddress }) {
   if (error) return toolRefusal(error);
   const { form, refusal } = await submitForm(body, units);
   if (refusal) return toolRefusal(refusal.message);
+  const printLink = `${siteAddress}${PRINT_ROUTE}${form.id}`;
+  const { referenceCode } = form;
   return jsonToolResult({
     id: form.id,
-    printLink: `${siteAddress}${PRINT_ROUTE}${form.id}`,
-    referenceCode: form.referenceCode,
-    summary: filingSummary(body, form.datesOfOB),
+    printLink,
+    referenceCode,
+    summary: filingSummary(body, form.datesOfOB, { printLink, referenceCode }),
   });
 }
 

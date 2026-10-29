@@ -31,11 +31,12 @@ const FIND_EMPLOYEE_DESCRIPTION =
 
 const SUBMIT_DESCRIPTION =
   'Assistant filing: files one Official Business form. Ask only for what is missing, one ' +
-  'question at a time; offer options from list_divisions and list_approvers as a numbered ' +
+  'question at a time; offer list options as a numbered ' +
   'or multiple-choice question; never guess. Every employee named in the request stays on ' +
   'the form, also after you asked a question about one of them. File once, as soon as ' +
   'nothing is unclear, with no extra confirmation. Then reply with the returned summary ' +
-  'as it is, the print link and the Reference code, and nothing else. "Me" is the staff ' +
+  'exactly as it is, which is Markdown and already holds the link and the Reference code, ' +
+  'and add nothing else. "Me" is the staff ' +
   'member as you remember them; if you do not know, ask for the full name. From stays ' +
   `"${DEFAULT_FROM_TEXT}" and Date mode All Dates unless told otherwise (Separated Dates ` +
   'when each day is separate). Division: the one all employees\' assigned units match ' +

@@ -69,11 +69,15 @@ module.exports = [
     name: 'the summary is laid out as the form reads: dates, From and To, times, purpose, Division, numbered employees and Approver',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
-        const { summary } = await callTool(baseUrl, SUBMIT, FILING);
-        const expected = ['Date of Official Business: March 2-3, 2026', 'Destination From: Official Station',
-          'Destination To: Municipal Hall', 'Departure: 8:00 AM', 'Expected Return: 5:30 PM', 'Purpose: Site visit',
-          'Division: TSSD', 'Employees:\n1. Ana Reyes', '2. Ben Cruz', '3. Cora Diaz',
-          'To be approved by: Head Person, Provincial Head'];
+        const filed = await callTool(baseUrl, SUBMIT, FILING);
+        const { summary } = filed;
+        const expected = ['## **OFFICIAL BUSINESS FORM CREATED**',
+          '### Date of Official Business:\n**March 2-3, 2026**', '### Destination From:\n**Official Station**',
+          '### Destination To:\n**Municipal Hall**', '### Departure:\n**8:00 AM**', '### Expected Return:\n**5:30 PM**',
+          '### Purpose:\n**Site visit**', '### Division:\n**TSSD**',
+          '### Employee:\n1. **Ana Reyes', '2. **Ben Cruz', '3. **Cora Diaz',
+          '### To be approved by:\n**Head Person, Provincial Head**', `### Link:\n**[${filed.printLink}]`,
+          `### Code:\n**${filed.referenceCode}**`];
         for (const text of expected) assert.ok(summary.includes(text), `${text} in: ${summary}`);
       });
     },
