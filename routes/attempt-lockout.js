@@ -12,6 +12,7 @@ const db = require('../db');
 const ATTEMPT_KINDS = Object.freeze({
   ADMIN_LOGIN: 'admin-login',
   REFERENCE_CODE: 'reference-code',
+  ASSISTANT_FILING: 'assistant-filing',
 });
 const LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
 // A lockout started by wrong attempts spread over one window lasts one more window, so older
@@ -89,4 +90,41 @@ function createLockout({ kind, wrongAttemptsBeforeLockout, lockedOutMessage }) {
   return { refuseLockedOut, recordFailedAttempt, clearFailedAttempts };
 }
 
-module.exports = { ATTEMPT_KINDS, createLockout };
+// An attempt limit, unlike a Lockout, counts every attempt, right or wrong, and the window
+// slides: an address may make attemptsPerWindow attempts in any one window. Refused attempts
+// are not recorded, so asking again while refused never pushes the wait further out.
+function createAttemptLimit({ kind, attemptsPerWindow }) {
+  // Counting and recording are one statement, so calls running at once (a JSON-RPC batch,
+  // other Vercel instances) cannot all read a count under the limit and all go through.
+  async function recordWithinLimit(address, now) {
+    const { changes } = await db.run(
+      `INSERT INTO failed_logins (kind, source_address, failed_at)
+       SELECT ?, ?, ? WHERE (SELECT COUNT(*) FROM failed_logins
+         WHERE kind = ? AND source_address = ? AND failed_at > ?) < ?`,
+      [kind, address, now, kind, address, now - LOCKOUT_WINDOW_MS, attemptsPerWindow]
+    );
+    return changes > 0;
+  }
+
+  // The next attempt is allowed once the oldest of the counted attempts leaves the window.
+  async function msUntilNextAttempt(address, now) {
+    const oldestCounted = await db.get(
+      `SELECT failed_at FROM failed_logins WHERE kind = ? AND source_address = ? AND failed_at > ?
+       ORDER BY failed_at DESC LIMIT 1 OFFSET ?`,
+      [kind, address, now - LOCKOUT_WINDOW_MS, attemptsPerWindow - 1]
+    );
+    return oldestCounted ? Number(oldestCounted.failed_at) + LOCKOUT_WINDOW_MS - now : 0;
+  }
+
+  // Records the attempt and answers null, or answers how long until one is allowed.
+  async function takeAttempt(address) {
+    const now = Date.now();
+    await deleteExpiredFailedAttempts(now);
+    if (await recordWithinLimit(address, now)) return null;
+    return msUntilNextAttempt(address, now);
+  }
+
+  return { takeAttempt };
+}
+
+module.exports = { ATTEMPT_KINDS, createLockout, createAttemptLimit, sourceAddress };

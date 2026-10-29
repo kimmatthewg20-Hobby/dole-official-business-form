@@ -7,6 +7,7 @@ const { z } = require('zod');
 const { submitForm } = require('./form-submit');
 const { filingToWebsiteBody, DATE_MODE_CHOICES, DATE_MODE_LABELS, DEFAULT_FROM } = require('./mcp-filing-body');
 const { jsonToolResult } = require('./mcp-tool-result');
+const { filingLimitRefusal } = require('./mcp-filing-limit');
 
 const SUBMIT_OFFICIAL_BUSINESS = 'submit_official_business';
 const PRINT_ROUTE = '/print/';
@@ -53,7 +54,10 @@ function summaryText(body, form) {
   );
 }
 
-async function submitOfficialBusiness(filing) {
+// Every filing counts towards the limit, refused or not, so bad input cannot be sent endlessly.
+async function submitOfficialBusiness(filing, { sourceAddress }) {
+  const limitRefusal = await filingLimitRefusal(sourceAddress);
+  if (limitRefusal) return toolRefusal(limitRefusal);
   const { body, units, error } = await filingToWebsiteBody(filing);
   if (error) return toolRefusal(error);
   const { form, refusal } = await submitForm(body, units);
