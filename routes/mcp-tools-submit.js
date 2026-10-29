@@ -56,7 +56,7 @@ function summaryText(body, form) {
 }
 
 // Every filing counts towards the limit, refused or not, so bad input cannot be sent endlessly.
-async function submitOfficialBusiness(filing, { sourceAddress }) {
+async function submitOfficialBusiness(filing, { sourceAddress, siteAddress }) {
   const limitRefusal = await filingLimitRefusal(sourceAddress);
   if (limitRefusal) return toolRefusal(limitRefusal);
   const { body, units, error } = await filingToWebsiteBody(filing);
@@ -65,7 +65,7 @@ async function submitOfficialBusiness(filing, { sourceAddress }) {
   if (refusal) return toolRefusal(refusal.message);
   return jsonToolResult({
     id: form.id,
-    printLink: `${PRINT_ROUTE}${form.id}`,
+    printLink: `${siteAddress}${PRINT_ROUTE}${form.id}`,
     referenceCode: form.referenceCode,
     summary: summaryText(body, form),
   });

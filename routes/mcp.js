@@ -10,6 +10,7 @@ const {
 } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
 const { buildMcpServer } = require('./mcp-tools');
 const { sourceAddress } = require('./attempt-lockout');
+const { siteAddress } = require('./site-address');
 
 const MCP_ROUTE = '/mcp';
 const JSON_RPC_VERSION = '2.0';
@@ -26,7 +27,7 @@ function jsonRpcError(code, message) {
 }
 
 async function handleMcpRequest(req, res) {
-  const server = buildMcpServer({ sourceAddress: sourceAddress(req) });
+  const server = buildMcpServer({ sourceAddress: sourceAddress(req), siteAddress: siteAddress(req) });
   // No session id generator and plain JSON answers: nothing outlives this request.
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,

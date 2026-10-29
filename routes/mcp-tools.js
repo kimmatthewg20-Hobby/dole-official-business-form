@@ -19,7 +19,7 @@ function allTools() {
 }
 
 // A fresh server per request: nothing is kept between calls, as Vercel needs. The context
-// carries what a tool needs from the HTTP request ({ sourceAddress }), which the SDK hides.
+// carries what a tool needs from the HTTP request ({ sourceAddress, siteAddress }), which the SDK hides.
 // A tool without inputSchema gets no arguments from the SDK, so it is handed none.
 function buildMcpServer(context) {
   const server = new McpServer({ name: SERVER_NAME, version });

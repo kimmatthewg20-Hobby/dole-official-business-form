@@ -50,7 +50,7 @@ module.exports = [
       await withFormsRestored(db, async () => {
         const filed = await callTool(baseUrl, SUBMIT, FILING);
         assert.deepEqual(Object.keys(filed).sort(), ['id', 'printLink', 'referenceCode', 'summary']);
-        assert.equal(filed.printLink, `/print/${filed.id}`);
+        assert.equal(filed.printLink, `${baseUrl}/print/${filed.id}`);
         assert.match(filed.referenceCode, CODE_PATTERN);
         const { formData, employees } = await storedForm(baseUrl, filed.id);
         assert.deepEqual(employees, VALID_SUBMISSION.employees);
@@ -59,7 +59,7 @@ module.exports = [
         const found = await postJson(baseUrl, '/api/lookup/code', { code: filed.referenceCode });
         assert.equal(found.status, OK);
         assert.equal((await found.json()).formData.id, filed.id);
-        const printed = await fetch(`${baseUrl}${filed.printLink}`);
+        const printed = await fetch(filed.printLink);
         assert.equal(printed.status, OK);
         assert.ok((await printed.text()).includes('CORA DIAZ'));
       });
@@ -130,7 +130,7 @@ module.exports = [
         const stored = await storedForm(baseUrl, filed.id);
         assert.equal(stored.formData.purpose, purpose);
         assert.deepEqual(stored.employees, employees);
-        const html = await (await fetch(`${baseUrl}${filed.printLink}`)).text();
+        const html = await (await fetch(filed.printLink)).text();
         assert.ok(!html.includes('<script>alert(1)'));
         assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
       });
