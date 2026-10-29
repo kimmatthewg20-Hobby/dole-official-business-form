@@ -31,7 +31,7 @@ const RULES = {
     'Use it for each employee named',
     'ask which one',
     'full name, position and assigned unit',
-    'pass the unit',
+    'never assume a unit',
     'ask for the full name',
   ],
   list_divisions: ['match one Division exactly, ignoring capitals', 'otherwise ask'],

@@ -22,7 +22,8 @@ const FIND_EMPLOYEE_DESCRIPTION =
   'Finds Employees in the Employee directory whose name starts with the given part of a ' +
   'name, ignoring capitals, with name, position and assigned unit. Use it for each ' +
   'employee named. If several fit, ask which one. An employee it does not find needs the ' +
-  'full name, position and assigned unit from the staff member; pass the unit in ' +
+  'full name, position and assigned unit from the staff member; if one of the three is ' +
+  'missing, ask for it and never assume a unit. Pass the unit in ' +
   'submit_official_business. "Me" is the staff member as you remember them; if you do not ' +
   'know, ask for the full name.';
 

@@ -19,7 +19,7 @@ const inputSchema = {
     .array(z.object({
         name: z.string().trim(),
         position: z.string().trim().optional(),
-        unit: z.string().trim().optional().describe('assigned unit, only for an employee find_employee did not find'),
+        unit: z.string().trim().optional().describe('assigned unit the staff member gave, only for an employee find_employee did not find; never assume one'),
       }))
     .describe('Every employee on the form, each with name and position.'),
   dates: z.array(z.string().trim()).describe('Dates of the Official Business as yyyy-mm-dd.'),
