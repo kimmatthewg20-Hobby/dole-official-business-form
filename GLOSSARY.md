@@ -23,6 +23,7 @@ _Avoid_: Office, unit (an employee's "assigned unit" is a different thing)
 **Approver**:
 A person (name and position) who may be named as "Approved by" on a form. The admin keeps the list; staff must pick from it.
 The admin sets the order of the Approvers, and staff see them in that order.
+When staff do not name one, an Assistant filing uses the Approver whose position is Provincial Head, or the one whose position is Regional Director when the Provincial Head is among the employees on the form. If no Approver or more than one fits, it asks.
 _Avoid_: Approving person, signatory
 
 **Reference code**:
@@ -44,3 +45,7 @@ _Avoid_: Admin cookie, admin token
 **Lockout**:
 The period after repeated wrong attempts during which every further attempt from the same source is refused. It applies to admin logins (five wrong within fifteen minutes) and to Reference code lookups (ten wrong within fifteen minutes).
 _Avoid_: Ban, throttle
+
+**Assistant filing**:
+An Official Business form submitted by a staff member's own AI assistant on their request, instead of by the staff member on the form. The assistant asks only for what is missing and files without a further confirmation. The staff member gets the print link and the Reference code. Filing is all it does: editing and tracking stay on the form and the tracker.
+_Avoid_: Bot submission, AI form
