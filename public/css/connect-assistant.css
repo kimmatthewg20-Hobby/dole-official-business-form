@@ -174,14 +174,15 @@
   margin: var(--ui-space-2) 0 0;
 }
 
-.connect-assistant__safety,
 .connect-assistant__note {
   margin: var(--ui-space-3) 0 0;
   font-size: var(--ui-font-size-small);
 }
 
-.connect-assistant__safety {
+.connect-assistant__tip {
+  margin: var(--ui-space-4) 0 0;
   padding: var(--ui-space-2) var(--ui-space-3);
   border-left: 3px solid var(--ui-color-accent);
   background: var(--ui-color-page);
+  font-size: var(--ui-font-size-small);
 }

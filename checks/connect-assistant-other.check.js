@@ -56,11 +56,12 @@ module.exports = [
     },
   },
   {
-    name: 'no VS Code or other assistant entries appear, and shared pieces are reused',
+    name: 'no VS Code or other assistant entries appear, and there is no example card or safety note',
     run() {
       const other = read('js/connect-assistant-other.js');
       assert.doesNotMatch(other, /vs ?code|vscode|windsurf|gemini|copilot/i);
-      assert.ok(other.includes('shared.exampleCard()') && other.includes('shared.safetyNote()'));
+      assert.ok(other.includes('shared.tip()'));
+      assert.doesNotMatch(other, /exampleCard|safetyNote|guideNote|Then say/);
     },
   },
   {

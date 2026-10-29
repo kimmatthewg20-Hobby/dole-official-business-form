@@ -10,7 +10,6 @@ const path = require('node:path');
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const MAX_LINES_PER_FILE = 200;
 const TAB_FILES = ['js/connect-assistant-chatgpt.js', 'css/connect-assistant-chatgpt.css'];
-const CHATGPT_GUIDE = 'https://developers.openai.com/api/docs/guides/custom-mcp-server';
 const INTERPOLATED_MARKUP = /innerHTML|insertAdjacentHTML|outerHTML|document\.write/;
 
 const read = (relative) => fs.readFileSync(path.join(PUBLIC_DIR, relative), 'utf8');
@@ -61,13 +60,11 @@ module.exports = [
     },
   },
   {
-    name: 'the ChatGPT tab reuses the shared pieces and links the official guide',
+    name: 'the ChatGPT tab reuses the shared open link and steps and has no example card, safety note or guide link',
     run() {
       const chatgpt = read('js/connect-assistant-chatgpt.js');
-      for (const piece of ['shared.exampleCard()', 'shared.safetyNote()', 'shared.guideNote(GUIDE_URL)']) {
-        assert.ok(chatgpt.includes(piece), `${piece} missing`);
-      }
-      assert.ok(chatgpt.includes(`'${CHATGPT_GUIDE}'`));
+      assert.ok(chatgpt.includes('shared.openButton(') && chatgpt.includes('shared.steps(') && chatgpt.includes('shared.tip()'));
+      assert.doesNotMatch(chatgpt, /exampleCard|safetyNote|guideNote|GUIDE_URL|Then say|Official guide/);
     },
   },
   {

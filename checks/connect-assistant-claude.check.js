@@ -10,9 +10,6 @@ const path = require('node:path');
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const MAX_LINES_PER_FILE = 200;
 const SCRIPT_FILES = ['js/connect-assistant-shared.js', 'js/connect-assistant-claude.js'];
-const CLAUDE_GUIDE = 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp';
-const SAFETY_NOTE = 'The Reference code appears in your chat. Anyone who can read that chat can edit the form, so do not share it.';
-const EXAMPLE = 'File an OB for me and <colleague> on <date> to <place>, <times>, to <purpose>';
 const INTERPOLATED_MARKUP = /innerHTML|insertAdjacentHTML|outerHTML|document\.write/;
 
 const read = (relative) => fs.readFileSync(path.join(PUBLIC_DIR, relative), 'utf8');
@@ -54,21 +51,18 @@ module.exports = [
     },
   },
   {
-    name: 'the shared example card, safety note and guide link are reusable pieces',
+    name: 'the shared pieces are the open link and the steps, with no example card, safety note or guide link',
     run() {
       const shared = read('js/connect-assistant-shared.js');
-      assert.ok(shared.includes(EXAMPLE));
-      assert.ok(shared.includes("'Then say:'"));
-      assert.ok(shared.includes(SAFETY_NOTE));
-      assert.ok(shared.includes('Menu names may differ in your version.'));
-      assert.ok(shared.includes("'Official guide'"));
-      assert.ok(shared.includes("link.rel = 'noopener noreferrer'"));
-      assert.ok(shared.includes("link.target = '_blank'"));
-      assert.ok(shared.includes('window.ConnectAssistantShared = {'));
-      for (const name of ['openButton', 'steps', 'exampleCard', 'safetyNote', 'guideNote']) {
+      const claude = read('js/connect-assistant-claude.js');
+      assert.ok(shared.includes('window.ConnectAssistantShared = { el, openButton, steps, tip }'));
+      for (const name of ['openButton', 'steps', 'tip']) {
         assert.ok(new RegExp(`function ${name}\\(`).test(shared), `${name} missing`);
       }
-      assert.ok(read('js/connect-assistant-claude.js').includes(`'${CLAUDE_GUIDE}'`));
+      assert.ok(shared.includes('start a chat with "File an OB for…"'));
+      assert.ok(shared.includes('upload an invitation or memo'));
+      assert.ok(claude.includes('shared.tip()'));
+      assert.doesNotMatch(shared + claude, /exampleCard|safetyNote|guideNote|Then say|Reference code appears|Menu names|Official guide/);
     },
   },
   {

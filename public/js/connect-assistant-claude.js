@@ -7,7 +7,6 @@
   const panel = shell.panelFor('claude');
   const OPEN_LABEL = 'Copy address & open Claude';
   const CLAUDE_URL = 'https://claude.ai';
-  const GUIDE_URL = 'https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp';
   const NAME_FIELD = 'Name';
   const ADDRESS_FIELD = 'MCP server URL';
   const STEPS = [
@@ -27,8 +26,6 @@
   panel.append(
     shared.openButton(OPEN_LABEL, CLAUDE_URL, config.MCP_ADDRESS),
     list,
-    shared.exampleCard(),
-    shared.safetyNote(),
-    shared.guideNote(GUIDE_URL),
+    shared.tip(),
   );
 })();

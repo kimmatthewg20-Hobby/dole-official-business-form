@@ -3,11 +3,7 @@
 (function () {
   const shell = window.ConnectAssistant;
   if (!shell) return;
-  const EXAMPLE_LABEL = 'Then say:';
-  const EXAMPLE_SENTENCE = 'File an OB for me and <colleague> on <date> to <place>, <times>, to <purpose>';
-  const SAFETY_NOTE = 'The Reference code appears in your chat. Anyone who can read that chat can edit the form, so do not share it.';
-  const MENU_NOTE = 'Menu names may differ in your version.';
-  const GUIDE_LINK_LABEL = 'Official guide';
+  const TIP_TEXT = 'Once connected, start a chat with "File an OB for…". You can also upload an invitation or memo and the assistant writes the purpose for you.';
   const COPIED_STATUS = 'Address copied. Now follow the steps below.';
   const COPY_FAILED_STATUS = 'Could not copy. Use the Copy button next to the address at the top, then follow the steps below.';
 
@@ -53,25 +49,9 @@
     return list;
   }
 
-  function exampleCard() {
-    const card = el('div', 'connect-assistant__example');
-    card.appendChild(shell.copyRow(EXAMPLE_LABEL, EXAMPLE_SENTENCE));
-    return card;
+  function tip() {
+    return el('p', 'connect-assistant__tip', TIP_TEXT);
   }
 
-  function safetyNote() {
-    return el('p', 'connect-assistant__safety', SAFETY_NOTE);
-  }
-
-  function guideNote(guideUrl) {
-    const note = el('p', 'connect-assistant__note', `${MENU_NOTE} `);
-    const link = el('a', 'connect-assistant__guide', GUIDE_LINK_LABEL);
-    link.href = guideUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    note.appendChild(link);
-    return note;
-  }
-
-  window.ConnectAssistantShared = { el, openButton, steps, exampleCard, safetyNote, guideNote };
+  window.ConnectAssistantShared = { el, openButton, steps, tip };
 })();

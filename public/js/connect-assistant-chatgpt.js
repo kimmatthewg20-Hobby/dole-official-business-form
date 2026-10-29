@@ -7,7 +7,6 @@
   const panel = shell.panelFor('chatgpt');
   const OPEN_LABEL = 'Copy address & open ChatGPT';
   const CHATGPT_URL = 'https://chatgpt.com';
-  const GUIDE_URL = 'https://developers.openai.com/api/docs/guides/custom-mcp-server';
   const NAME_FIELD = 'Name';
   const ADDRESS_FIELD = 'Server URL';
   const AUTH_FIELD = 'Authentication';
@@ -44,8 +43,6 @@
   panel.append(
     shared.openButton(OPEN_LABEL, CHATGPT_URL, config.MCP_ADDRESS),
     list,
-    shared.exampleCard(),
-    shared.safetyNote(),
-    shared.guideNote(GUIDE_URL),
+    shared.tip(),
   );
 })();

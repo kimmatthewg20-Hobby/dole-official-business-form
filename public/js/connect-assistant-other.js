@@ -33,5 +33,5 @@
     return box;
   }
 
-  panel.append(claudeCodeSection(), cursorSection(), shared.exampleCard(), shared.safetyNote());
+  panel.append(claudeCodeSection(), cursorSection(), shared.tip());
 })();
