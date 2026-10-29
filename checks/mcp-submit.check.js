@@ -66,12 +66,14 @@ module.exports = [
     },
   },
   {
-    name: 'the summary names the employees, dates, place, times, purpose, Division, Approver and Date mode',
+    name: 'the summary is laid out as the form reads: dates, From and To, times, purpose, Division, numbered employees and Approver',
     async run({ baseUrl, db }) {
       await withFormsRestored(db, async () => {
         const { summary } = await callTool(baseUrl, SUBMIT, FILING);
-        const expected = ['Ana Reyes', 'Ben Cruz', 'Cora Diaz', '2026-03-02', '2026-03-03', 'Official Station',
-          'Municipal Hall', '08:00', '17:30', 'Site visit', 'TSSD', 'Head Person', 'Provincial Head', 'All Dates'];
+        const expected = ['Date of Official Business: March 2-3, 2026', 'Destination From: Official Station',
+          'Destination To: Municipal Hall', 'Departure: 8:00 AM', 'Expected Return: 5:30 PM', 'Purpose: Site visit',
+          'Division: TSSD', 'Employees:\n1. Ana Reyes', '2. Ben Cruz', '3. Cora Diaz',
+          'To be approved by: Head Person, Provincial Head'];
         for (const text of expected) assert.ok(summary.includes(text), `${text} in: ${summary}`);
       });
     },

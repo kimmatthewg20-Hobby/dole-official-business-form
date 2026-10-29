@@ -5,7 +5,8 @@
 
 const { z } = require('zod');
 const { submitForm } = require('./form-submit');
-const { filingToWebsiteBody, DATE_MODE_CHOICES, DATE_MODE_LABELS, DEFAULT_FROM } = require('./mcp-filing-body');
+const { filingToWebsiteBody, DATE_MODE_CHOICES, DEFAULT_FROM } = require('./mcp-filing-body');
+const { filingSummary } = require('./mcp-filing-summary');
 const { jsonToolResult } = require('./mcp-tool-result');
 const { filingLimitRefusal } = require('./mcp-filing-limit');
 const { SUBMIT_DESCRIPTION } = require('./mcp-guidance');
@@ -45,16 +46,6 @@ function toolRefusal(message) {
   return { content: [{ type: TEXT_CONTENT, text: message }], isError: true };
 }
 
-function summaryText(body, form) {
-  const names = body.employees.map((employee) => employee.name).join(', ');
-  return (
-    `${names} on ${form.datesOfOB.join(', ')} (${DATE_MODE_LABELS[body.dateMode]}), ` +
-    `from ${body.locationFrom} to ${body.locationTo}, ${body.departureTime} to ${body.returnTime}. ` +
-    `Purpose: ${body.purpose}. Division: ${body.division}. ` +
-    `Approved by: ${body.approvedBy}, ${body.approvedByPosition}.`
-  );
-}
-
 // Every filing counts towards the limit, refused or not, so bad input cannot be sent endlessly.
 async function submitOfficialBusiness(filing, { sourceAddress, siteAddress }) {
   const limitRefusal = await filingLimitRefusal(sourceAddress);
@@ -67,7 +58,7 @@ async function submitOfficialBusiness(filing, { sourceAddress, siteAddress }) {
     id: form.id,
     printLink: `${siteAddress}${PRINT_ROUTE}${form.id}`,
     referenceCode: form.referenceCode,
-    summary: summaryText(body, form),
+    summary: filingSummary(body, form.datesOfOB),
   });
 }
 

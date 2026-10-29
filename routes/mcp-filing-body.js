@@ -23,10 +23,6 @@ const DATE_MODE_CHOICES = {
   'Separated Dates': DateMode.MULTIPLE_SEPARATE_DAYS,
   'Multiple Separate Days': DateMode.MULTIPLE_SEPARATE_DAYS,
 };
-const DATE_MODE_LABELS = {
-  [DateMode.MORE_THAN_ONE_DAY]: 'All Dates',
-  [DateMode.MULTIPLE_SEPARATE_DAYS]: 'Separated Dates',
-};
 
 function severalApprovers(name) {
   return (
@@ -80,6 +76,5 @@ module.exports = {
   WEBSITE_OFFICE,
   DEFAULT_FROM,
   DATE_MODE_CHOICES,
-  DATE_MODE_LABELS,
   filingToWebsiteBody,
 };

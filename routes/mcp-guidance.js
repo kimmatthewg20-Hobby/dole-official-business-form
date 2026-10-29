@@ -21,27 +21,29 @@ const LIST_APPROVERS_DESCRIPTION =
 const FIND_EMPLOYEE_DESCRIPTION =
   'Finds Employees in the Employee directory whose name starts with the given part of a ' +
   'name, ignoring capitals, with name, position and assigned unit. Use it for each ' +
-  'employee named. If several fit, ask which one. An employee it does not find needs the ' +
-  'full name, position and assigned unit from the staff member; if one of the three is ' +
-  'missing, ask for it and never assume a unit. Pass the unit in ' +
+  'employee named, one person at a time and one name or part of a name per call; a list ' +
+  'such as "Arvin, Darlene Rico" is several people. If nothing is found, try a shorter part ' +
+  'or another word of the name before asking. If several fit, ask which one. An employee it ' +
+  'does not find needs the full name, position and assigned unit from the staff member; if ' +
+  'one of the three is missing, ask for it and never assume a unit. Pass the unit in ' +
   'submit_official_business. "Me" is the staff member as you remember them; if you do not ' +
   'know, ask for the full name.';
 
 const SUBMIT_DESCRIPTION =
-  'Assistant filing: files one Official Business form and returns its id, print link, ' +
-  'Reference code and summary. Ask only for what is missing, one question at a time; offer ' +
-  'options from list_divisions and list_approvers as a numbered or multiple-choice question; ' +
-  'never guess. File as soon as nothing is unclear, with no extra confirmation, then give ' +
-  'the print link, the Reference code and the summary. "Me" is the staff member as you ' +
-  'remember them; if you do not know, ask for the full name. From stays ' +
+  'Assistant filing: files one Official Business form. Ask only for what is missing, one ' +
+  'question at a time; offer options from list_divisions and list_approvers as a numbered ' +
+  'or multiple-choice question; never guess. Every employee named in the request stays on ' +
+  'the form, also after you asked a question about one of them. File once, as soon as ' +
+  'nothing is unclear, with no extra confirmation. Then reply with the returned summary ' +
+  'as it is, the print link and the Reference code, and nothing else. "Me" is the staff ' +
+  'member as you remember them; if you do not know, ask for the full name. From stays ' +
   `"${DEFAULT_FROM_TEXT}" and Date mode All Dates unless told otherwise (Separated Dates ` +
   'when each day is separate). Division: the one all employees\' assigned units match ' +
   'exactly, ignoring capitals; otherwise ask. Approver: the one whose position is ' +
   'Provincial Head, or the Regional Director when the Provincial Head is on the form; a ' +
   'named Approver wins; no match or several means ask. Summarise an uploaded memo or ' +
   'invitation into a one or two short sentence purpose; dates, place and time may come from ' +
-  'it when left out. Only the staff member should get the Reference code, which lets ' +
-  'anyone holding it edit the form.';
+  'it when left out. The Reference code lets anyone holding it edit the form.';
 
 module.exports = {
   LIST_DIVISIONS_DESCRIPTION,
