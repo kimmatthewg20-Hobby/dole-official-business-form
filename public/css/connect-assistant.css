@@ -1,0 +1,147 @@
+/* The "File with AI" button in the form page's header band and its modal. */
+.header-section {
+  position: relative;
+}
+
+.connect-assistant-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-2) var(--ui-space-4);
+  border: 1px solid var(--ui-color-accent);
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-color-surface);
+  color: var(--ui-color-accent);
+  font: inherit;
+  font-size: var(--ui-font-size-small);
+  font-weight: var(--ui-font-weight-semibold);
+  cursor: pointer;
+  box-shadow: var(--ui-shadow-raised);
+}
+
+.connect-assistant-btn:hover {
+  background: var(--ui-color-accent);
+  color: var(--ui-color-accent-text);
+}
+
+.connect-assistant-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ui-focus-ring);
+}
+
+.connect-assistant-btn .material-icons {
+  font-size: 1.125rem;
+}
+
+.connect-assistant-btn__short {
+  display: none;
+}
+
+.connect-assistant[hidden] {
+  display: none;
+}
+
+.connect-assistant {
+  z-index: 1000;
+}
+
+.connect-assistant__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+  margin-bottom: var(--ui-space-4);
+}
+
+.connect-assistant__title {
+  margin: 0;
+  font-size: var(--ui-font-size-heading);
+}
+
+.connect-assistant__row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--ui-space-1) var(--ui-space-3);
+  align-items: center;
+  margin-bottom: var(--ui-space-3);
+}
+
+.connect-assistant__label {
+  grid-column: 1 / -1;
+  color: var(--ui-color-muted);
+  font-size: var(--ui-font-size-small);
+}
+
+.connect-assistant__value {
+  min-width: 0;
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-small);
+  background: var(--ui-color-page);
+  font-size: var(--ui-font-size-small);
+  overflow-wrap: anywhere;
+}
+
+.connect-assistant__copy {
+  min-width: 6.5rem;
+}
+
+.connect-assistant__tabs {
+  display: flex;
+  gap: var(--ui-space-1);
+  margin-top: var(--ui-space-4);
+  border-bottom: 1px solid var(--ui-color-border);
+}
+
+.connect-assistant__tab {
+  padding: var(--ui-space-2) var(--ui-space-4);
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--ui-color-muted);
+  font: inherit;
+  font-weight: var(--ui-font-weight-semibold);
+  cursor: pointer;
+}
+
+.connect-assistant__tab[aria-selected="true"] {
+  border-bottom-color: var(--ui-color-accent);
+  color: var(--ui-color-accent);
+}
+
+.connect-assistant__panel {
+  min-height: 6rem;
+  padding-top: var(--ui-space-4);
+}
+
+.connect-assistant__panel[hidden] {
+  display: none;
+}
+
+.connect-assistant__scratch {
+  position: fixed;
+  top: 0;
+  left: -9999px;
+}
+
+@media (max-width: 600px) {
+  .connect-assistant-btn {
+    padding: var(--ui-space-2) var(--ui-space-3);
+  }
+
+  .connect-assistant-btn__full {
+    display: none;
+  }
+
+  .connect-assistant-btn__short {
+    display: inline;
+  }
+
+  .connect-assistant__tab {
+    flex: 1;
+    padding-inline: var(--ui-space-2);
+  }
+}

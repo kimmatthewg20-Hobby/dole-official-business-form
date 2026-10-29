@@ -27,12 +27,18 @@
   <link rel="stylesheet" href="css/form-page-panels.css">
   <link rel="stylesheet" href="css/form-page-database.css">
   <link rel="stylesheet" href="css/form-page-chrome.css">
+  <link rel="stylesheet" href="css/connect-assistant.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
 <div class="Background-container">
   <div class="main-container">
     <div class="header-section">
+      <button type="button" id="connectAssistantBtn" class="connect-assistant-btn" aria-haspopup="dialog" aria-label="File with AI">
+        <span class="material-icons" aria-hidden="true">auto_awesome</span>
+        <span class="connect-assistant-btn__full">File with AI</span>
+        <span class="connect-assistant-btn__short" aria-hidden="true">AI</span>
+      </button>
       <img src="logo.png" alt="DOLE Logo" class="logo" onclick="window.location.reload()">
       
       <div style="line-height:100%;">
@@ -744,6 +750,9 @@
     });
   </script>
 
+  <div id="connectAssistantMount"></div>
+  <script src="js/connect-assistant-config.js"></script>
+  <script src="js/connect-assistant.js"></script>
   <script src="js/sidebar.js"></script>
 </div>
 </body>
