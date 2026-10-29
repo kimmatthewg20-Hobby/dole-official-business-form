@@ -1,8 +1,8 @@
 'use strict';
 
-// The summary an Assistant filing hands back, written as Markdown in the layout staff read: a
-// title, a small heading per field with its answer in bold below it. The assistant shows it as
-// it is, so every reply looks the same.
+// The summary an Assistant filing hands back, written as Markdown tables: a title, one table
+// of the form's details and one of its employees, then the link and the Reference code. The
+// assistant shows it as it is, so every reply looks the same and reads at a glance.
 
 const { formatDateWording } = require('../public/js/date-wording');
 const DateMode = require('../public/js/date-mode');
@@ -11,7 +11,7 @@ const TIME_PATTERN = /^(\d{1,2}):(\d{2})$/;
 const NOON_HOUR = 12;
 const HOURS_ON_CLOCK = 12;
 const SEPARATED_NOTE = ' (Separated Dates: each day prints on its own form)';
-const TITLE = '## **OFFICIAL BUSINESS FORM CREATED**';
+const TITLE = '## **OFFICIAL BUSINESS FORM CREATED**\n';
 const MARKDOWN_SPECIALS = /([\\`*_{}[\]<>#|])/g;
 const LINE_BREAKS = /\s*[\r\n]+\s*/g;
 
@@ -29,15 +29,12 @@ function plain(text) {
   return String(text).replace(LINE_BREAKS, ' ').replace(MARKDOWN_SPECIALS, '\\$1');
 }
 
-function field(label, answer) {
-  return `### ${label}\n**${answer}**`;
+function detailRow(label, answer) {
+  return `| **${label}** | ${answer} |`;
 }
 
-function employeeList(employees) {
-  const lines = employees.map(({ name, position }, index) => {
-    return `${index + 1}. **${plain(position ? `${name}, ${position}` : name)}**`;
-  });
-  return `### Employee:\n${lines.join('\n')}`;
+function employeeRow({ name, position }, index) {
+  return `| ${index + 1} | ${plain(name)} | ${plain(position || '')} |`;
 }
 
 function filingSummary(body, datesOfOB, { printLink, referenceCode }) {
@@ -45,19 +42,26 @@ function filingSummary(body, datesOfOB, { printLink, referenceCode }) {
   const approver = [body.approvedBy, body.approvedByPosition].filter(Boolean).join(', ');
   return [
     TITLE,
-    field('Date of Official Business:', `${formatDateWording(datesOfOB)}${separated ? SEPARATED_NOTE : ''}`),
-    field('Destination From:', plain(body.locationFrom)),
-    field('Destination To:', plain(body.locationTo)),
-    field('Departure:', clockTime(body.departureTime)),
-    field('Expected Return:', clockTime(body.returnTime)),
-    field('Purpose:', plain(body.purpose)),
-    field('Division:', plain(body.division)),
-    employeeList(body.employees),
-    field('To be approved by:', plain(approver)),
+    '| Official Business | Details |',
+    '| :-- | :-- |',
+    detailRow('Date of Official Business', `${formatDateWording(datesOfOB)}${separated ? SEPARATED_NOTE : ''}`),
+    detailRow('Destination From', plain(body.locationFrom)),
+    detailRow('Destination To', plain(body.locationTo)),
+    detailRow('Departure', clockTime(body.departureTime)),
+    detailRow('Expected Return', clockTime(body.returnTime)),
+    detailRow('Purpose', plain(body.purpose)),
+    detailRow('Division', plain(body.division)),
+    detailRow('To be approved by', plain(approver)),
     // The link and the code are made by the server, so they need no escaping.
-    field('Link:', `[${printLink}](${printLink})`),
-    field('Code:', referenceCode),
-  ].join('\n\n');
+    detailRow('Link', `[${printLink}](${printLink})`),
+    detailRow('Code', `\`${referenceCode}\``),
+    '',
+    '### Employees',
+    '',
+    '| # | Name | Position |',
+    '| :-: | :-- | :-- |',
+    ...body.employees.map(employeeRow),
+  ].join('\n');
 }
 
 module.exports = { filingSummary };
