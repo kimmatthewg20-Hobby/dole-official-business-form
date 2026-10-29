@@ -17,7 +17,7 @@ const {
 } = require('./mcp-helpers');
 
 const METHOD_NOT_ALLOWED = 405;
-const TOOLS_SO_FAR = ['list_approvers', 'list_divisions'];
+const TOOLS_SO_FAR = ['find_employee', 'list_approvers', 'list_divisions'];
 // Filing is all an assistant may do: no tool may change, remove or list stored forms.
 const FORBIDDEN_TOOL = /edit|update|delete|remove|cancel|form/i;
 const [DIVISIONS, APPROVERS] = LISTS;
@@ -44,7 +44,7 @@ module.exports = [
     },
   },
   {
-    name: 'tools/list answers twice without any session and shows only the list tools so far',
+    name: 'tools/list answers twice without any session and shows exactly the filing tools so far',
     async run({ baseUrl }) {
       assert.deepEqual(await toolNames(baseUrl), TOOLS_SO_FAR);
       const again = await toolNames(baseUrl);

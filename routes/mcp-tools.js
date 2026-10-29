@@ -8,9 +8,10 @@
 const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
 const { version } = require('../package.json');
 const listTools = require('./mcp-tools-lists');
+const employeeTools = require('./mcp-tools-employee');
 
 const SERVER_NAME = 'dole-official-business-form';
-const TOOL_MODULES = [listTools];
+const TOOL_MODULES = [listTools, employeeTools];
 
 function allTools() {
   return TOOL_MODULES.flatMap((module) => module.tools);
