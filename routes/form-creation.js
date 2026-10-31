@@ -37,12 +37,12 @@ async function divisionCode(client, divisionName) {
 
 // The form, its Reference code and the directory writes for its employees are stored in one
 // transaction, so a failure part-way stores none of them.
-function insertSubmission(body, record, now, { insertOne = insertForm, randomIndex } = {}) {
+function insertSubmission(body, record, now, { insertOne = insertForm, randomIndex, units } = {}) {
   return db.transaction(async (client) => {
     const codeOptions = { divisionCode: await divisionCode(client, body.division), now: new Date(now), randomIndex };
     const referenceCode = await assignReferenceCode(client, codeOptions);
     const created = await insertOne(client, body, { ...record, referenceCode }, now);
-    await rememberEmployees(client, body.employees, body.division, now);
+    await rememberEmployees(client, body.employees, body.division, now, units);
     return created;
   });
 }

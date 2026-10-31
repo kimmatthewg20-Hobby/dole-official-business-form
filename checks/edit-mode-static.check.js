@@ -15,7 +15,8 @@ const CODE_IN_QUERY = /[?&](code|edit|referenceCode|reference_code)=/i;
 const CODE_READ_FROM_QUERY = /req\.query\.(code|edit|referenceCode|reference_code)\b/;
 const CODE_PUT_IN_SEARCH = /searchParams\.(set|append)\(\s*['"`](code|edit)/;
 const SCRIPT_TAG = /<script src="(js\/[^"]+)"/g;
-const API_ROUTE = /\/api\/[A-Za-z/_-]+/g;
+// Not preceded by a host name: a link to another site is not a call to our routes.
+const API_ROUTE = /(?<![\w.-])\/api\/[A-Za-z/_-]+/g;
 // What the form page may call: its own lists and submit, plus finding and saving with a code.
 const FORM_PAGE_ROUTES = [
   '/api/settings',

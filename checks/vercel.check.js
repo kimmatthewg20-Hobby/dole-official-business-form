@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { CRON_CLEANUP_ROUTE } = require('../routes/cron-cleanup');
+const { MCP_ROUTE } = require('../routes/mcp');
 
 const SERVER_MODULE = path.join(__dirname, '..', 'server.js');
 const EXAMPLE_TURSO_URL = 'libsql://example-database.turso.io';
@@ -22,6 +23,14 @@ function loadAppOnVercel(databaseEnv, cwd) {
     env: { ...process.env, VERCEL: ON_VERCEL, ...databaseEnv },
     encoding: 'utf8',
   });
+}
+
+// Where Vercel sends a request for the path: the first route with a destination that matches.
+function servingDest(config, pathname) {
+  const servingRoute = config.routes.find(
+    (route) => route.dest && new RegExp(`^${route.src}$`).test(pathname)
+  );
+  return servingRoute && servingRoute.dest;
 }
 
 module.exports = [
@@ -45,10 +54,14 @@ module.exports = [
     async run() {
       const config = JSON.parse(fs.readFileSync(VERCEL_CONFIG, 'utf8'));
       assert.deepEqual(config.crons, [{ path: CRON_CLEANUP_ROUTE, schedule: DAILY_CLEANUP_SCHEDULE }]);
-      const servingRoute = config.routes.find(
-        (route) => route.dest && new RegExp(`^${route.src}$`).test(CRON_CLEANUP_ROUTE)
-      );
-      assert.equal(servingRoute && servingRoute.dest, SERVER_DEST);
+      assert.equal(servingDest(config, CRON_CLEANUP_ROUTE), SERVER_DEST);
+    },
+  },
+  {
+    name: 'vercel.json routes the MCP endpoint to the app',
+    async run() {
+      const config = JSON.parse(fs.readFileSync(VERCEL_CONFIG, 'utf8'));
+      assert.equal(servingDest(config, MCP_ROUTE), SERVER_DEST);
     },
   },
 ];

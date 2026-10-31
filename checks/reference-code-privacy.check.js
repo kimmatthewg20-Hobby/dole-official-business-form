@@ -13,8 +13,9 @@ const DateMode = require('../public/js/date-mode');
 const OK = 200;
 const UNAUTHORIZED = 401;
 const CODE_FIELD_NAMES = ['reference_code', 'referenceCode'];
-// Pages and probes that list no forms, and the cron route that answers only with counts.
-const NOT_FORM_LISTINGS = ['/favicon.ico', '/admin', '/', '/tracker', '/healthz', '/api/admin/check', '/api/cron/cleanup'];
+// Pages and probes that list no forms, the cron route that answers only with counts, and the
+// MCP endpoint, whose GET is always refused because it keeps no sessions.
+const NOT_FORM_LISTINGS = ['/favicon.ico', '/admin', '/', '/tracker', '/healthz', '/api/admin/check', '/api/cron/cleanup', '/mcp'];
 const SEPARATE = {
   ...VALID_SUBMISSION,
   dateMode: DateMode.MULTIPLE_SEPARATE_DAYS,

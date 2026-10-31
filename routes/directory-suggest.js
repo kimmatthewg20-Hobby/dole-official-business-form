@@ -15,19 +15,26 @@ const BAD_REQUEST = 400;
 // and the name_key index can read just that range.
 const HIGHEST_CHARACTER = String.fromCodePoint(0x10ffff);
 
+// Name, position and assigned unit of the entries whose name starts with the typed text. The
+// website route drops the unit; the Assistant filing tool shows it.
+async function findEmployeesByName(typed) {
+  const key = nameKey(typed);
+  if (!key) return [];
+  return db.all(
+    `SELECT full_name AS name, position, assigned_unit AS unit FROM employees_directory
+     WHERE name_key >= ? AND name_key < ? ORDER BY name_key LIMIT ?`,
+    [key, key + HIGHEST_CHARACTER, SUGGESTION_LIMIT]
+  );
+}
+
 async function suggestEmployees(req, res) {
   const typed = req.query.q === undefined ? '' : req.query.q;
   if (typeof typed !== 'string' || typed.length > MAX_QUERY_LENGTH) {
     return res.status(BAD_REQUEST).json({ error: 'Please type part of a name' });
   }
-  const key = nameKey(typed);
-  if (!key) return res.json({ employees: [] });
   try {
-    const employees = await db.all(
-      `SELECT full_name AS name, position FROM employees_directory
-       WHERE name_key >= ? AND name_key < ? ORDER BY name_key LIMIT ?`,
-      [key, key + HIGHEST_CHARACTER, SUGGESTION_LIMIT]
-    );
+    const found = await findEmployeesByName(typed);
+    const employees = found.map(({ name, position }) => ({ name, position }));
     res.json({ employees });
   } catch (err) {
     console.error('Error suggesting employees:', err.message);
@@ -38,4 +45,4 @@ async function suggestEmployees(req, res) {
 const router = express.Router();
 router.get('/api/directory/suggest', suggestEmployees);
 
-module.exports = { router, SUGGESTION_LIMIT, MAX_QUERY_LENGTH };
+module.exports = { router, findEmployeesByName, SUGGESTION_LIMIT, MAX_QUERY_LENGTH };

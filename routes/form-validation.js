@@ -65,4 +65,9 @@ function validateDateMode(body) {
   return formCount > DateMode.MAX_FORMS_PER_SUBMISSION ? DateMode.formLimitMessage(formCount) : null;
 }
 
-module.exports = { validateSubmission, validateDateMode };
+// Units come only from the Assistant filing, one per employee (or none).
+function validateUnits(units) {
+  return units.every((unit) => isOptionalText(unit, MAX_SHORT_TEXT_LENGTH)) ? null : 'Assigned unit is too long';
+}
+
+module.exports = { validateSubmission, validateDateMode, validateUnits };

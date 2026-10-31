@@ -37,13 +37,18 @@ async function findClash({ name, position }, exceptId) {
   return clash ? `${clash.name} is already an Approver as ${clash.position}` : null;
 }
 
+// In the order the admin set; also read by the Assistant filing tools.
+function readApproversInOrder() {
+  return db.all(
+    `SELECT id, name, position FROM approvers
+     ORDER BY sort_order, name COLLATE NOCASE, position, id LIMIT ?`,
+    [MAX_APPROVERS],
+  );
+}
+
 async function listApprovers(req, res) {
   try {
-    const approvers = await db.all(
-      `SELECT id, name, position FROM approvers
-       ORDER BY sort_order, name COLLATE NOCASE, position, id LIMIT ?`,
-      [MAX_APPROVERS],
-    );
+    const approvers = await readApproversInOrder();
     res.json({ approvers });
   } catch (err) {
     serverError(res, 'Error listing Approvers', err);
@@ -108,4 +113,4 @@ router.put('/api/approvers/order', adminApiOnly, saveOrder(TABLE, NOUN));
 router.put('/api/approvers/:id', adminApiOnly, editApprover);
 router.delete('/api/approvers/:id', adminApiOnly, removeApprover);
 
-module.exports = { router, MAX_APPROVERS };
+module.exports = { router, MAX_APPROVERS, readApproversInOrder };
