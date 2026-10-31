@@ -22,3 +22,15 @@ build/
 # Local libSQL database (npm run db:migrate)
 local.db
 local.db-*
+
+# >>> AI tooling (local only, managed by project-setup)
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.mcp.json
+.agents/
+skills-lock.json
+.scratch/
+.conductor/
+docs/agents/
+# <<< AI tooling
